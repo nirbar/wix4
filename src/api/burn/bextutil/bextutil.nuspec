@@ -15,7 +15,7 @@
     <projectUrl>$projectUrl$</projectUrl>
     <repository type="$repositorytype$" url="$repositoryurl$" commit="$repositorycommit$" />
     <dependencies>
-      <dependency id="WixToolset.DUtil" version="[$version$,$nextmajorversion$)" />
+      <dependency id="PanelSwWix4.DUtil" version="[$version$,$nextmajorversion$)" />
     </dependencies>
   </metadata>
 
@@ -23,7 +23,7 @@
     <file src="$eulaTxt$" />
     <file src="$iconPng$" />
     <file src="$projectFolder$\README.md" />
-    <file src="$projectFolder$\build\$id$.props" target="build\" />
+    <file src="$projectFolder$\build\$wixid$.props" target="build\$id$.props" />
     <file src="$projectFolder$\inc\*" target="build\native\include" />
     <file src="$projectFolder$\..\inc\BootstrapperExtensionTypes.h" target="build\native\include" />
     <file src="$projectFolder$\..\inc\BootstrapperExtensionEngineTypes.h" target="build\native\include" />

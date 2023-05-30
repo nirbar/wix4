@@ -17,9 +17,9 @@ To pay the Maintenance Fee, [become a Sponsor](https://github.com/sponsors/wixto
 Add the WiX Extension as a PackageReference to your .wixproj:
 
 ```
-<Project Sdk="WixToolset.Sdk/6.0.0">
+<Project Sdk="PanelSwWix4.Sdk/6.0.0">
   <ItemGroup>
-    <PackageReference Include="WixToolset.PowerShell.wixext" Version="6.0.0" />
+    <PackageReference Include="PanelSwWix4.PowerShell.wixext" />
   </ItemGroup>
 </Project>
 ```

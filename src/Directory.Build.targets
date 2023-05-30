@@ -20,14 +20,21 @@
   <Import Project="$(RootBuildFolder)SomeVerInfo.props" Condition=" '$(SomeVerInfoImported)'!='true' " />
   <Import Project="internal/SetBuildNumber/SomeVerInfo.targets" />
 
-  <PropertyGroup>
-    <RepositoryUrl Condition=" '$(RepositoryUrl)'=='' ">https://github.com/wixtoolset/wix</RepositoryUrl>
-    <RepositoryType Condition=" '$(RepositoryType)'=='' ">git</RepositoryType>
-    <RepositoryCommit Condition=" '$(RepositoryCommit)'=='' ">$(SomeVerInfoSha)</RepositoryCommit>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  <Target Name="__FixupGitBaseVersion" BeforeTargets="_GitPopulateVersionInfo">
+    <PropertyGroup>
+      <BuildRunNumber Condition=" '$(BuildRunNumber)' == '' ">0</BuildRunNumber>
+      <GitBaseVersion>$(GitBaseVersion.Replace('{apiversion}', '$(ApiVersion)'))</GitBaseVersion>
+      <GitBaseVersion>$(GitBaseVersion.Replace('{build}', "$(BuildRunNumber.PadLeft(4, '0'))"))</GitBaseVersion>
+      <GitBaseVersion>$(GitBaseVersion.Replace('{height}', '$(GitCommits)'))</GitBaseVersion>
+      <GitBaseVersion>$(GitBaseVersion.Replace('{commits}', '$(GitCommits)'))</GitBaseVersion>
+      <RepositoryUrl Condition=" '$(RepositoryUrl)'=='' and '$(GitRepositoryUrl)'!='' ">$(GitRepositoryUrl.Replace('.git',''))</RepositoryUrl>
+      <RepositoryType Condition=" '$(RepositoryType)'=='' ">git</RepositoryType>
+      <RepositoryCommit Condition=" '$(RepositoryCommit)'=='' ">$(SomeVerInfoSha)</RepositoryCommit>
+      <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
-    <ProjectUrl Condition=" '$(ProjectUrl)'=='' and '$(RepositoryUrl)'!='' ">$(RepositoryUrl)</ProjectUrl>
-  </PropertyGroup>
+      <ProjectUrl Condition=" '$(ProjectUrl)'=='' and '$(RepositoryUrl)'!='' ">$(RepositoryUrl)</ProjectUrl>
+    </PropertyGroup>
+  </Target>
 
   <PropertyGroup>
     <GenerateNuspecDependsOn>
@@ -37,14 +44,26 @@
     </GenerateNuspecDependsOn>
   </PropertyGroup>
 
+  <PropertyGroup Label="Default nuspec properties">
+    <WixPackageId Condition=" '$(WixPackageId)'=='' And '$(PackageId)'!='' ">$(PackageId)</WixPackageId>
+    <WixPackageId Condition=" '$(WixPackageId)'=='' ">$(MSBuildProjectName)</WixPackageId>
+    <WixPackageId>$(WixPackageId.Replace('PanelSwWix4.', 'WixToolset.'))</WixPackageId>
+    <PackageId Condition=" '$(PackageId)'=='' ">$(MSBuildProjectName)</PackageId>
+    <PackageId>$(PackageId.Replace('WixToolset.', 'PanelSwWix4.'))</PackageId>
+    <Title Condition=" '$(Title)'=='' ">$(Description)</Title>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(IsWixExtension)' == 'true' ">
+    <Content Include="$(MSBuildProjectDirectory)\$(MSBuildProjectName).targets" PackagePath="build\$(PackageId).targets"/>
+    <Content Include="$(TargetPath)" PackagePath="wixext4" />
+  </ItemGroup>
+
   <Target Name="__SetNuspecProperties"
           Condition=" Exists('$(MSBuildProjectName).nuspec') ">
     <PropertyGroup>
       <NuspecFile Condition=" '$(NuspecFile)'=='' ">$(MSBuildProjectName).nuspec</NuspecFile>
-      <PackageId Condition=" '$(PackageId)'=='' ">$(MSBuildProjectName)</PackageId>
-      <Title Condition=" '$(Title)'=='' ">$(Description)</Title>
       <NuspecBasePath Condition=" '$(NuspecBasePath)'=='' ">$(OutputPath)</NuspecBasePath>
-      <NuspecProperties>$(NuspecProperties);Id=$(PackageId);Version=$(PackageVersion);MajorVersion=$(SomeVerInfoMajor);NextMajorVersion=$(SomeVerInfoNextMajor);Authors=$(Authors);Configuration=$(Configuration)</NuspecProperties>
+      <NuspecProperties>$(NuspecProperties);Id=$(PackageId);WixId=$(WixPackageId);Version=$(PackageVersion);MajorVersion=$(SomeVerInfoMajor);NextMajorVersion=$(SomeVerInfoNextMajor);Authors=$(Authors);Configuration=$(Configuration)</NuspecProperties>
       <NuspecProperties>$(NuspecProperties);Copyright=$(Copyright);Description=$(Description);Title=$(Title)</NuspecProperties>
       <NuspecProperties>$(NuspecProperties);RepositoryType=$(RepositoryType);RepositoryCommit=$(RepositoryCommit);RepositoryUrl=$(RepositoryUrl)</NuspecProperties>
       <NuspecProperties>$(NuspecProperties);PackageTags=$(PackageTags)</NuspecProperties>

@@ -19,6 +19,14 @@ int WINAPI wWinMain(
     LPWSTR sczPath = NULL;
     HANDLE hEngineFile = INVALID_HANDLE_VALUE;
 
+#ifdef DEBUGGABLE_RELEASE
+    DWORD dwSize = ::GetEnvironmentVariableW(L"DEBUG_BURN", nullptr, 0);
+    if (dwSize > 0)
+    {
+        ::MessageBoxW(NULL, L"DEBUG_BURN environment variable is set. You may attach a debugger now.\nTo disable this message, delete the environment variable 'DEBUG_BURN'", L"DEBUG_BURN", MB_OK);
+    }
+#endif
+
     LPCWSTR rgsczSafelyLoadSystemDlls[] =
     {
         L"cabinet.dll", // required by Burn.

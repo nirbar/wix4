@@ -8,12 +8,13 @@
     <NoWarn>NU5100</NoWarn>
     <WixExtensionPackageFolder>wixext6</WixExtensionPackageFolder>
     <PackageTags>$(PackageTags) wixext CustomActions</PackageTags>
+    <IsWixExtension>true</IsWixExtension>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="$(MSBuildProjectName).targets" PackagePath="build" />
     <Content Include="$(TargetPath)" PackagePath="$(WixExtensionPackageFolder)" />
 
-    <PackageReference Include="WixToolset.Extensibility" PrivateAssets="all" />
+    <PackageReference Include="PanelSwWix4.Extensibility" PrivateAssets="all" />
   </ItemGroup>
 </Project>

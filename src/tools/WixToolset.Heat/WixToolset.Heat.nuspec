@@ -20,7 +20,7 @@
     <file src="$eulaTxt$" />
     <file src="$iconPng$" />
     <file src="$projectFolder$\README.md" />
-    <file src="$projectFolder$\$id$.targets" target="build" />
+    <file src="$projectFolder$\$wixid$.targets" target="build\$id$.targets" />
     <file src="tools\**\*" target="tools" />
   </files>
 </package>
