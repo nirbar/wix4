@@ -3,9 +3,9 @@
     <OutputType>Bundle</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.BootstrapperApplications.wixext" />
-    <PackageReference Include="WixToolset.Util.wixext" />
-    <PackageReference Include="WixToolset.NetFx.wixext" />
+    <PackageReference Include="PanelSwWix4.BootstrapperApplications.wixext" />
+    <PackageReference Include="PanelSwWix4.Util.wixext" />
+    <PackageReference Include="PanelSwWix4.NetFx.wixext" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\TestBA\TestBAWixlib\testbawixlib.wixproj" />

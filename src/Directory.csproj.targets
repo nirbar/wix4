@@ -22,7 +22,7 @@
   <ItemGroup Condition=" '$(IsWixTestProject)'!='true' ">
     <Content Include="$(PackageEulaSource)" Pack="true" PackagePath="/" />
     <Content Include="$(PackageIconSource)" Pack="true" PackagePath="/" />
-    <Content Include="$(PackageLicenseAcceptanceTargets)" Pack="true" PackagePath="build/$(MSBuildProjectName).targets"
+    <Content Include="$(PackageLicenseAcceptanceTargets)" Pack="true" PackagePath="build/$(MSBuildProjectName.Replace('WixToolset.', 'PanelSwWix4.')).targets"
              Condition=" '$(IsWixExtension)' != 'true' " />
   </ItemGroup>
 

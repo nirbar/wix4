@@ -22,6 +22,14 @@ EXTERN_C int WINAPI wWinMain(
     HRESULT hr = S_OK;
     IBootstrapperApplication* pApplication = NULL;
 
+#ifdef DEBUGGABLE_RELEASE
+    DWORD dwSize = ::GetEnvironmentVariableW(L"DEBUG_WIXSTDBA", nullptr, 0);
+    if (dwSize > 0)
+    {
+        ::MessageBoxW(NULL, L"DEBUG_WIXSTDBA environment variable is set. You may attach a debugger now.\nTo disable this message, delete the environment variable 'DEBUG_WIXSTDBA'", L"DEBUG_WIXSTDBA", MB_OK);
+    }
+#endif
+
     DutilInitialize(&WixstdbaTraceError);
 
     hr = CreateWixStandardBootstrapperApplication(hInstance, &pApplication);

@@ -13,8 +13,9 @@
     <RestoreIgnoreFailedSources>true</RestoreIgnoreFailedSources>
 
     <!-- SomeVer configuration -->
-    <SomeVerAutoIncrement>major</SomeVerAutoIncrement>
-    <SomeVerDefaultPreReleaseIdentifiers>build</SomeVerDefaultPreReleaseIdentifiers>
+    <BuildRunNumber Condition=" '$(BuildRunNumber)' == '' ">0</BuildRunNumber>
+    <SomeVerAutoIncrement>minor</SomeVerAutoIncrement>
+    <SomeVerDefaultPreReleaseIdentifiers>psw-wix-$(BuildRunNumber.PadLeft(4, '0'))</SomeVerDefaultPreReleaseIdentifiers>
     <SomeVerIncludeDefaultPreReleaseIdentifiersWithPrereleases>true</SomeVerIncludeDefaultPreReleaseIdentifiersWithPrereleases>
     <SomeVerTagPrefix>v</SomeVerTagPrefix>
 

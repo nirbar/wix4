@@ -227,6 +227,15 @@ namespace WixToolset.Core.ExtensibilityServices
                     assembly = Assembly.LoadFrom(extensionPath);
                     return true;
                 }
+
+                string extensionFileName = Path.GetFileName(extensionPath);
+                if (extensionFileName.StartsWith("PanelSwWix4.", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    extensionFileName = "WixToolset." + extensionFileName.Substring("PanelSwWix4.".Length);
+                    extensionPath = Path.Combine(Path.GetDirectoryName(extensionPath), extensionFileName);
+
+                    return TryLoadFromPath(extensionPath, out assembly);
+                }
             }
             catch (IOException e) when (e is FileLoadException || e is FileNotFoundException)
             {

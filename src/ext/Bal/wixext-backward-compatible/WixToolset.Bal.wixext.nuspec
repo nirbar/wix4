@@ -20,7 +20,7 @@
     <file src="$eulaTxt$" />
     <file src="$iconPng$" />
     <file src="$projectFolder$\README.md" />
-    <file src="$projectFolder$\WixToolset.Bal.wixext.targets"  target="build" />
+    <file src="$projectFolder$\$wixid$.targets"  target="build\$id$.targets" />
     <file src="$licenseAcceptanceTargets$" target="build" />
     <file src="WixToolset.BootstrapperApplications.wixext.dll" target="$wixExtensionPackageFolder$" />
   </files>

@@ -15,6 +15,14 @@ EXTERN_C int WINAPI wWinMain(
     HRESULT hr = S_OK;
     IBootstrapperApplication* pApplication = NULL;
 
+#ifdef DEBUGGABLE_RELEASE
+    DWORD dwSize = ::GetEnvironmentVariableW(L"DEBUG_WIXUIBA", nullptr, 0);
+    if (dwSize > 0)
+    {
+        ::MessageBoxW(NULL, L"DEBUG_WIXUIBA environment variable is set. You may attach a debugger now.\nTo disable this message, delete the environment variable 'DEBUG_WIXUIBA'", L"DEBUG_WIXUIBA", MB_OK);
+    }
+#endif
+
     hr = CreateWixInternalUIBootstrapperApplication(hInstance, &pApplication);
     ExitOnFailure(hr, "Failed to create WiX internal UI bootstrapper application.");
 

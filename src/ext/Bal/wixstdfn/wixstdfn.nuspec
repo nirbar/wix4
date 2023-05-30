@@ -16,8 +16,8 @@
     <repository type="$repositorytype$" url="$repositoryurl$" commit="$repositorycommit$" />
     <dependencies>
       <group targetFramework="Native">
-        <dependency id="WixToolset.BootstrapperApplicationApi" version="[$version$,$nextmajorversion$)" />
-        <dependency id="WixToolset.DUtil" version="[$version$,$nextmajorversion$)" />
+        <dependency id="PanelSwWix4.BootstrapperApplicationApi" version="[$version$,$nextmajorversion$)" />
+        <dependency id="PanelSwWix4.DUtil" version="[$version$,$nextmajorversion$)" />
       </group>
     </dependencies>
   </metadata>
@@ -26,7 +26,7 @@
     <file src="$eulaTxt$" />
     <file src="$iconPng$" />
     <file src="$projectFolder$\README.md" />
-    <file src="$projectFolder$\build\$id$.props" target="build\" />
+    <file src="$projectFolder$\build\$wixid$.props" target="build\$id$.props" />
     <file src="$licenseAcceptanceTargets$" target="build\$id$.targets" />
     <file src="$projectFolder$\inc\*" target="lib\native\include" />
     <file src="..\..\v143\x86\wixstdfn.lib" target="lib\native\v14\x86" />
