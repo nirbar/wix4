@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Bundle Id="WixToolsetTest.TestBundle" Name="!(bind.productCode.test.msi)-!(bind.bundleId.v3bundle.exe)-!(bind.bundleCode.v3bundle.exe)-!(bind.upgradeCode.test.msi)" Version="!(bind.packageVersion.Major.test.msi).!(bind.packageVersion.Minor.test.msi).!(bind.packageVersion.Build.test.msi).!(bind.packageVersion.Revision.test.msi)" Manufacturer="Example Corporation">
+    <BootstrapperApplication Id="fakeba" SourceFile="fakeba.dll" />
+
+    <Chain>
+      <MsiPackage SourceFile="test.msi" />
+      <BundlePackage SourceFile="v3bundle.exe" RepairCondition="0" />
+    </Chain>
+  </Bundle>
+</Wix>
