@@ -9,3 +9,4 @@
 This repository contains the PanelSwWix4: A custom WiX Toolset codebase
 
 # Customizations:
+- [6298](https://github.com/wixtoolset/issues/issues/6298): Extract detached containers with "wix burn extract"
