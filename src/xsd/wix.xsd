@@ -1270,19 +1270,39 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="MsiTransaction">
+    <xs:annotation>
+      <xs:documentation>Installs MSI and MSP packages in a transaction. All the packages in the transaction must target the same platform (x86 / x64).</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:any namespace="##other" processContents="lax">
+          <xs:annotation>
+            <xs:documentation>
+              Extensibility point in the WiX XML Schema. Schema extensions can register additional
+              elements at this point in the schema. The extension's
+              <html:code>CompilerExtension.ParseElement()</html:code>
+              method will be called with the rollback boundary identifier as the 'RollbackBoundaryId' key in
+              <html:code>contextValues</html:code>.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:any>
+      </xs:choice>
+      <xs:attribute name="Id" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>
+            Identifier for this rollback boundary, for ordering and cross-referencing. If this attribute is
+            not provided a stable identifier will be generated.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:attribute name="LogPathVariable" type="xs:string">
         <xs:annotation>
           <xs:documentation>
             Name of a Variable that will hold the path to the log file when the rollback boundary is a MSI package transaction.
             An empty value will cause the variable to not be set. The default is "WixBundleLog_[RollbackBoundaryId]".
-          </xs:documentation>
-        </xs:annotation>
-      </xs:attribute>
-      <xs:attribute name="Transaction" type="YesNoTypeUnion">
-        <xs:annotation>
-          <xs:documentation>
-            Specifies whether the rollback boundary is wrapped in an MSI transaction. The default is "no".
-            Only MsiPackages and MspPackages may be inside of a rollback boundary with Transaction set to "yes".
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
