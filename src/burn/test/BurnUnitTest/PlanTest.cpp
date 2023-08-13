@@ -19,6 +19,7 @@ struct REDIRECTED_LOGGING_CONTEXT
 
 static LPCWSTR wzArpEntryExeManifestFileName = L"ExePackage_PerUserArpEntry_manifest.xml";
 static LPCWSTR wzMsiTransactionManifestFileName = L"MsiTransaction_BundleAv1_manifest.xml";
+static LPCWSTR wzMsiTransaction2ManifestFileName = L"MsiTransaction_BundleAv2_manifest.xml";
 static LPCWSTR wzMultipleBundlePackageManifestFileName = L"BundlePackage_Multiple_manifest.xml";
 static LPCWSTR wzSingleExeManifestFileName = L"Failure_BundleD_manifest.xml";
 static LPCWSTR wzSingleMsiManifestFileName = L"BasicFunctionality_BundleA_manifest.xml";
@@ -406,7 +407,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"TestExe");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -419,7 +420,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteExePackage(pPlan, fRollback, dwIndex++, L"TestExe", BOOTSTRAPPER_ACTION_STATE_UNINSTALL);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -498,7 +499,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
             Assert::Equal(dwIndex, pPlan->cExecuteActions);
@@ -506,7 +507,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
             Assert::Equal(dwIndex, pPlan->cRollbackActions);
@@ -580,7 +581,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"TestExe");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -593,7 +594,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteExePackage(pPlan, fRollback, dwIndex++, L"TestExe", BOOTSTRAPPER_ACTION_STATE_INSTALL);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -622,7 +623,7 @@ namespace Bootstrapper
         }
 
         [Fact]
-        void MsiTransactionInstallTest()
+        void MsiTransactionInstallTest1()
         {
             HRESULT hr = S_OK;
             BURN_ENGINE_STATE engineState = { };
@@ -664,7 +665,7 @@ namespace Bootstrapper
             ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 1);
             ValidateCachePackage(pPlan, fRollback, dwIndex++, L"PackageA", TRUE, BURN_CACHE_PACKAGE_TYPE_REQUIRED, BURN_CACHE_PACKAGE_TYPE_NONE);
             ValidateCacheSignalSyncpoint(pPlan, fRollback, dwIndex++, L"PackageA");
-            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 9);
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 8);
             ValidateCachePackage(pPlan, fRollback, dwIndex++, L"PackageB", TRUE, BURN_CACHE_PACKAGE_TYPE_REQUIRED, BURN_CACHE_PACKAGE_TYPE_NONE);
             ValidateCacheSignalSyncpoint(pPlan, fRollback, dwIndex++, L"PackageB");
             ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 14);
@@ -677,7 +678,7 @@ namespace Bootstrapper
             ValidateCacheRollbackPackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 1);
             ValidateCacheRollbackPackage(pPlan, fRollback, dwIndex++, L"PackageB");
-            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 9);
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 8);
             ValidateCacheRollbackPackage(pPlan, fRollback, dwIndex++, L"PackageC");
             ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 14);
             Assert::Equal(dwIndex, pPlan->cRollbackCacheActions);
@@ -687,7 +688,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -698,15 +699,13 @@ namespace Bootstrapper
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"rbaOCA08D8ky7uBOK71_6FWz1K3TuQ", TRUE, TRUE);
-            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteBeginMsiTransaction(pPlan, fRollback, dwIndex++, L"rbaOCA08D8ky7uBOK71_6FWz1K3TuQ");
+            ValidateExecuteBeginMsiTransaction(pPlan, fRollback, dwIndex++, L"txMyTransaction", FALSE);
             dwExecuteCheckpointId += 1; // cache checkpoints
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageB");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageB", registerActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageB", BOOTSTRAPPER_ACTION_STATE_INSTALL, BURN_MSI_PROPERTY_INSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageB", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", registerActions1, 1);
@@ -716,11 +715,13 @@ namespace Bootstrapper
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageC");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageC", registerActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageC", BOOTSTRAPPER_ACTION_STATE_INSTALL, BURN_MSI_PROPERTY_INSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageC", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteCommitMsiTransaction(pPlan, fRollback, dwIndex++, L"rbaOCA08D8ky7uBOK71_6FWz1K3TuQ");
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCommitMsiTransaction(pPlan, fRollback, dwIndex++, L"txMyTransaction", FALSE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
             ValidateExecuteRelatedBundle(pPlan, fRollback, dwIndex++, L"{FD9920AD-DBCA-4C6C-8CD5-B47431CE8D21}", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, NULL);
@@ -729,7 +730,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageA", unregisterActions1, 1);
@@ -740,13 +741,12 @@ namespace Bootstrapper
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"rbaOCA08D8ky7uBOK71_6FWz1K3TuQ", TRUE, TRUE);
-            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"PackageB");
             dwExecuteCheckpointId += 1; // cache checkpoints
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageB", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageB", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, BURN_MSI_PROPERTY_UNINSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageB", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", unregisterActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -756,7 +756,179 @@ namespace Bootstrapper
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageC", unregisterActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageC", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, BURN_MSI_PROPERTY_UNINSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageC", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
+            ValidateExecuteRelatedBundle(pPlan, fRollback, dwIndex++, L"{FD9920AD-DBCA-4C6C-8CD5-B47431CE8D21}", BOOTSTRAPPER_ACTION_STATE_INSTALL, NULL);
+            Assert::Equal(dwIndex, pPlan->cRollbackActions);
+
+            Assert::Equal(4ul, pPlan->cExecutePackagesTotal);
+            Assert::Equal(7ul, pPlan->cOverallProgressTicksTotal);
+
+            dwIndex = 0;
+            ValidateRestoreRelatedBundle(pPlan, dwIndex++, L"{FD9920AD-DBCA-4C6C-8CD5-B47431CE8D21}", BOOTSTRAPPER_ACTION_STATE_INSTALL, NULL);
+            Assert::Equal(dwIndex, pPlan->cRestoreRelatedBundleActions);
+
+            dwIndex = 0;
+            Assert::Equal(dwIndex, pPlan->cCleanActions);
+
+            UINT uIndex = 0;
+            ValidatePlannedProvider(pPlan, uIndex++, L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", NULL);
+            Assert::Equal(uIndex, pPlan->cPlannedProviders);
+
+            Assert::Equal(3ul, pEngineState->packages.cPackages);
+            ValidateNonPermanentPackageExpectedStates(&pEngineState->packages.rgPackages[0], L"PackageA", BURN_PACKAGE_REGISTRATION_STATE_PRESENT, BURN_PACKAGE_REGISTRATION_STATE_PRESENT);
+            ValidateNonPermanentPackageExpectedStates(&pEngineState->packages.rgPackages[1], L"PackageB", BURN_PACKAGE_REGISTRATION_STATE_PRESENT, BURN_PACKAGE_REGISTRATION_STATE_PRESENT);
+            ValidateNonPermanentPackageExpectedStates(&pEngineState->packages.rgPackages[2], L"PackageC", BURN_PACKAGE_REGISTRATION_STATE_PRESENT, BURN_PACKAGE_REGISTRATION_STATE_PRESENT);
+        }
+
+        [Fact]
+        void MsiTransactionInstallTest2()
+        {
+            HRESULT hr = S_OK;
+            BURN_ENGINE_STATE engineState = { };
+            BURN_ENGINE_STATE* pEngineState = &engineState;
+            BURN_PLAN* pPlan = &engineState.plan;
+
+            InitializeEngineStateForCorePlan(wzMsiTransaction2ManifestFileName, pEngineState);
+            DetectPackagesAsAbsent(pEngineState);
+            DetectRelatedBundle(pEngineState, L"{FD9920AD-DBCA-4C6C-8CD5-B47431CE8D21}", L"1.0.0.0", BOOTSTRAPPER_RELATION_UPGRADE);
+
+            hr = CorePlan(pEngineState, BOOTSTRAPPER_ACTION_INSTALL, BOOTSTRAPPER_SCOPE_DEFAULT);
+            NativeAssert::Succeeded(hr, "CorePlan failed");
+
+            Assert::Equal<DWORD>(BOOTSTRAPPER_ACTION_INSTALL, pPlan->action);
+            NativeAssert::StringEqual(L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", pPlan->wzBundleCode);
+            NativeAssert::StringEqual(L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", pPlan->wzBundleProviderKey);
+            Assert::Equal<BOOL>(FALSE, pPlan->fEnabledForwardCompatibleBundle);
+            Assert::Equal<BOOL>(TRUE, pPlan->fPerMachine);
+            Assert::Equal<BOOL>(TRUE, pPlan->fCanAffectMachineState);
+            Assert::Equal<BOOL>(FALSE, pPlan->fDisableRollback);
+            Assert::Equal<BOOL>(FALSE, pPlan->fDisallowRemoval);
+            Assert::Equal<BOOL>(FALSE, pPlan->fDowngrade);
+            Assert::Equal<DWORD>(BURN_REGISTRATION_ACTION_OPERATIONS_CACHE_BUNDLE | BURN_REGISTRATION_ACTION_OPERATIONS_WRITE_PROVIDER_KEY, pPlan->dwRegistrationOperations);
+
+            BOOL fRollback = FALSE;
+            DWORD dwIndex = 0;
+            ValidateDependentRegistrationAction(pPlan, fRollback, dwIndex++, TRUE, L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}");
+            Assert::Equal(dwIndex, pPlan->cRegistrationActions);
+
+            fRollback = TRUE;
+            dwIndex = 0;
+            ValidateDependentRegistrationAction(pPlan, fRollback, dwIndex++, FALSE, L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}");
+            Assert::Equal(dwIndex, pPlan->cRollbackRegistrationActions);
+
+            fRollback = FALSE;
+            dwIndex = 0;
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 1);
+            ValidateCachePackage(pPlan, fRollback, dwIndex++, L"PackageA", TRUE, BURN_CACHE_PACKAGE_TYPE_REQUIRED, BURN_CACHE_PACKAGE_TYPE_NONE);
+            ValidateCacheSignalSyncpoint(pPlan, fRollback, dwIndex++, L"PackageA");
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 8);
+            ValidateCachePackage(pPlan, fRollback, dwIndex++, L"PackageB", TRUE, BURN_CACHE_PACKAGE_TYPE_REQUIRED, BURN_CACHE_PACKAGE_TYPE_NONE);
+            ValidateCacheSignalSyncpoint(pPlan, fRollback, dwIndex++, L"PackageB");
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 16);
+            ValidateCachePackage(pPlan, fRollback, dwIndex++, L"PackageC", TRUE, BURN_CACHE_PACKAGE_TYPE_REQUIRED, BURN_CACHE_PACKAGE_TYPE_NONE);
+            ValidateCacheSignalSyncpoint(pPlan, fRollback, dwIndex++, L"PackageC");
+            Assert::Equal(dwIndex, pPlan->cCacheActions);
+
+            fRollback = TRUE;
+            dwIndex = 0;
+            ValidateCacheRollbackPackage(pPlan, fRollback, dwIndex++, L"PackageA");
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 1);
+            ValidateCacheRollbackPackage(pPlan, fRollback, dwIndex++, L"PackageB");
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 8);
+            ValidateCacheRollbackPackage(pPlan, fRollback, dwIndex++, L"PackageC");
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 16);
+            Assert::Equal(dwIndex, pPlan->cRollbackCacheActions);
+
+            Assert::Equal(522548ull, pPlan->qwCacheSizeTotal);
+
+            fRollback = FALSE;
+            dwIndex = 0;
+            DWORD dwExecuteCheckpointId = 2;
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageA", registerActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageA", BOOTSTRAPPER_ACTION_STATE_INSTALL, BURN_MSI_PROPERTY_INSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", registerActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteBeginMsiTransaction(pPlan, fRollback, dwIndex++, L"txMyTransaction1", TRUE);
+            dwExecuteCheckpointId += 1; // cache checkpoints
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageB");
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageB", registerActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageB", BOOTSTRAPPER_ACTION_STATE_INSTALL, BURN_MSI_PROPERTY_INSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageB", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", registerActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCommitMsiTransaction(pPlan, fRollback, dwIndex++, L"txMyTransaction1", TRUE);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteBeginMsiTransaction(pPlan, fRollback, dwIndex++, L"txMyTransaction2", TRUE);
+            dwExecuteCheckpointId += 1; // cache checkpoints
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageC");
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageC", registerActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageC", BOOTSTRAPPER_ACTION_STATE_INSTALL, BURN_MSI_PROPERTY_INSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageC", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", registerActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCommitMsiTransaction(pPlan, fRollback, dwIndex++, L"txMyTransaction2", TRUE);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
+            ValidateExecuteRelatedBundle(pPlan, fRollback, dwIndex++, L"{FD9920AD-DBCA-4C6C-8CD5-B47431CE8D21}", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, NULL);
+            Assert::Equal(dwIndex, pPlan->cExecuteActions);
+
+            fRollback = TRUE;
+            dwIndex = 0;
+            dwExecuteCheckpointId = 2;
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
+            ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageA", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageA", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, BURN_MSI_PROPERTY_UNINSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"PackageB");
+            dwExecuteCheckpointId += 1; // cache checkpoints
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageB", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageB", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, BURN_MSI_PROPERTY_UNINSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageB", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"PackageC");
+            dwExecuteCheckpointId += 1; // cache checkpoints
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageC", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageC", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, BURN_MSI_PROPERTY_UNINSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageC", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -821,7 +993,13 @@ namespace Bootstrapper
 
             fRollback = FALSE;
             dwIndex = 0;
-            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 9);
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 2);
+            ValidateCachePackage(pPlan, fRollback, dwIndex++, L"PackageC", FALSE, BURN_CACHE_PACKAGE_TYPE_NONE, BURN_CACHE_PACKAGE_TYPE_REQUIRED);
+            ValidateCacheSignalSyncpoint(pPlan, fRollback, dwIndex++, L"PackageC");
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 8);
+            ValidateCachePackage(pPlan, fRollback, dwIndex++, L"PackageB", FALSE, BURN_CACHE_PACKAGE_TYPE_NONE, BURN_CACHE_PACKAGE_TYPE_REQUIRED);
+            ValidateCacheSignalSyncpoint(pPlan, fRollback, dwIndex++, L"PackageB");
+            ValidateCacheCheckpoint(pPlan, fRollback, dwIndex++, 15);
             ValidateCachePackage(pPlan, fRollback, dwIndex++, L"PackageA", FALSE, BURN_CACHE_PACKAGE_TYPE_NONE, BURN_CACHE_PACKAGE_TYPE_REQUIRED);
             ValidateCacheSignalSyncpoint(pPlan, fRollback, dwIndex++, L"PackageA");
             Assert::Equal(dwIndex, pPlan->cCacheActions);
@@ -830,30 +1008,35 @@ namespace Bootstrapper
             dwIndex = 0;
             Assert::Equal(dwIndex, pPlan->cRollbackCacheActions);
 
-            Assert::Equal(185118ull, pPlan->qwCacheSizeTotal);
+            Assert::Equal(522548ull, pPlan->qwCacheSizeTotal);
 
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"rbaOCA08D8ky7uBOK71_6FWz1K3TuQ", TRUE, TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteBeginMsiTransaction(pPlan, fRollback, dwIndex++, L"rbaOCA08D8ky7uBOK71_6FWz1K3TuQ");
+            ValidateExecuteBeginMsiTransaction(pPlan, fRollback, dwIndex++, L"txMyTransaction", FALSE);
+            dwExecuteCheckpointId += 1; // cache checkpoints
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageC");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageC", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", unregisterActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageC", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageC", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, BURN_MSI_PROPERTY_UNINSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            dwExecuteCheckpointId += 1; // cache checkpoints
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageB");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageB", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", unregisterActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageB", unregisterActions1, 1);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageB", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, BURN_MSI_PROPERTY_UNINSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteCommitMsiTransaction(pPlan, fRollback, dwIndex++, L"rbaOCA08D8ky7uBOK71_6FWz1K3TuQ");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteCommitMsiTransaction(pPlan, fRollback, dwIndex++, L"txMyTransaction", FALSE);
             dwExecuteCheckpointId += 1; // cache checkpoints
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
@@ -864,28 +1047,31 @@ namespace Bootstrapper
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageA", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, BURN_MSI_PROPERTY_UNINSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
             Assert::Equal(dwIndex, pPlan->cExecuteActions);
 
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"rbaOCA08D8ky7uBOK71_6FWz1K3TuQ", TRUE, TRUE);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            dwExecuteCheckpointId += 1; // cache checkpoints
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageC", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageC", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageC", BOOTSTRAPPER_ACTION_STATE_INSTALL, BURN_MSI_PROPERTY_INSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            dwExecuteCheckpointId += 1;
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageB", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageB", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
+            ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageB", BOOTSTRAPPER_ACTION_STATE_INSTALL, BURN_MSI_PROPERTY_INSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             dwExecuteCheckpointId += 1; // cache checkpoints
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{E6469F05-BDC8-4EB8-B218-67412543EFAA}", registerActions1, 1);
@@ -895,12 +1081,10 @@ namespace Bootstrapper
             ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageA", BOOTSTRAPPER_ACTION_STATE_INSTALL, BURN_MSI_PROPERTY_INSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
-            ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
             Assert::Equal(dwIndex, pPlan->cRollbackActions);
 
             Assert::Equal(3ul, pPlan->cExecutePackagesTotal);
-            Assert::Equal(4ul, pPlan->cOverallProgressTicksTotal);
+            Assert::Equal(6ul, pPlan->cOverallProgressTicksTotal);
 
             dwIndex = 0;
             Assert::Equal(dwIndex, pPlan->cRestoreRelatedBundleActions);
@@ -979,7 +1163,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1002,7 +1186,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteBundlePackage(pPlan, fRollback, dwIndex++, L"PackageA", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, L"{35192ED0-C70A-49B2-9D12-3B1FA39B5E6F}");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1089,7 +1273,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{35192ED0-C70A-49B2-9D12-3B1FA39B5E6F}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             dwExecuteCheckpointId += 1; // cache checkpoints
@@ -1105,7 +1289,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             dwExecuteCheckpointId += 1; // cache checkpoints
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1188,7 +1372,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageB");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1211,7 +1395,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageB", L"{35192ED0-C70A-49B2-9D12-3B1FA39B5E6F}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1299,7 +1483,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{A6F0CBF7-1578-450C-B9D7-9CF2EEC40002}", unregisterActions1, 1);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageA", unregisterActions1, 1);
             ValidateUninstallMsiCompatiblePackage(pPlan, fRollback, dwIndex++, L"PackageA", 0);
@@ -1311,7 +1495,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
@@ -1406,7 +1590,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1428,7 +1612,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageA", unregisterActions1, 1);
@@ -1525,7 +1709,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1542,7 +1726,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageA", unregisterActions1, 1);
@@ -1625,7 +1809,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"ExeA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1638,7 +1822,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteExePackage(pPlan, fRollback, dwIndex++, L"ExeA", BOOTSTRAPPER_ACTION_STATE_UNINSTALL);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1718,7 +1902,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
             Assert::Equal(dwIndex, pPlan->cExecuteActions);
@@ -1726,7 +1910,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
             Assert::Equal(dwIndex, pPlan->cRollbackActions);
@@ -1803,7 +1987,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1813,7 +1997,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1960,7 +2144,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteMsiPackage(pPlan, fRollback, dwIndex++, L"PackageA", BOOTSTRAPPER_ACTION_STATE_UNINSTALL, BURN_MSI_PROPERTY_UNINSTALL, INSTALLUILEVEL_NONE, FALSE, BOOTSTRAPPER_MSI_FILE_VERSIONING_MISSING_OR_OLDER, 0);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -1971,7 +2155,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
@@ -2052,7 +2236,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageA", registerActions1, 1);
@@ -2067,7 +2251,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2149,7 +2333,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2167,7 +2351,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageA", unregisterActions1, 1);
@@ -2250,7 +2434,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
             Assert::Equal(dwIndex, pPlan->cExecuteActions);
@@ -2258,7 +2442,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteRollbackBoundaryEnd(pPlan, fRollback, dwIndex++);
             Assert::Equal(dwIndex, pPlan->cRollbackActions);
@@ -2332,7 +2516,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2349,7 +2533,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{A6F0CBF7-1578-450C-B9D7-9CF2EEC40002}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2500,7 +2684,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{A6F0CBF7-1578-450C-B9D7-9CF2EEC40002}", unregisterActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2511,7 +2695,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{A6F0CBF7-1578-450C-B9D7-9CF2EEC40002}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2586,7 +2770,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{A6F0CBF7-1578-450C-B9D7-9CF2EEC40002}", unregisterActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2599,7 +2783,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 1;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{A6F0CBF7-1578-450C-B9D7-9CF2EEC40002}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageProvider(pPlan, fRollback, dwIndex++, L"PackageA", registerActions1, 1);
@@ -2677,7 +2861,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2694,7 +2878,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{A6F0CBF7-1578-450C-B9D7-9CF2EEC40002}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2784,7 +2968,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"test.msu");
             ValidateExecuteMsuPackage(pPlan, fRollback, dwIndex++, L"test.msu", BOOTSTRAPPER_ACTION_STATE_INSTALL);
@@ -2796,7 +2980,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"test.msu");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -2879,7 +3063,7 @@ namespace Bootstrapper
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
             BURN_EXECUTE_ACTION* pExecuteAction = NULL;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             dwExecuteCheckpointId += 1; // cache checkpoints
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"NetFx48Web");
@@ -2915,7 +3099,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             dwExecuteCheckpointId += 1; // cache checkpoints
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -3013,7 +3197,7 @@ namespace Bootstrapper
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
             BURN_EXECUTE_ACTION* pExecuteAction = NULL;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PatchA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -3040,7 +3224,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PatchA", L"{22D1DDBA-284D-40A7-BD14-95EA07906F21}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -3139,7 +3323,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"PackageA");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -3156,7 +3340,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecutePackageDependency(pPlan, fRollback, dwIndex++, L"PackageA", L"{22D1DDBA-284D-40A7-BD14-95EA07906F21}", registerActions1, 1);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -3247,7 +3431,7 @@ namespace Bootstrapper
             fRollback = FALSE;
             dwIndex = 0;
             DWORD dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteWaitCachePackage(pPlan, fRollback, dwIndex++, L"NetFx48Web");
             ValidateExecuteExePackage(pPlan, fRollback, dwIndex++, L"NetFx48Web", BOOTSTRAPPER_ACTION_STATE_INSTALL);
@@ -3269,7 +3453,7 @@ namespace Bootstrapper
             fRollback = TRUE;
             dwIndex = 0;
             dwExecuteCheckpointId = 2;
-            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE, FALSE);
+            ValidateExecuteRollbackBoundaryStart(pPlan, fRollback, dwIndex++, L"WixDefaultBoundary", TRUE);
             ValidateExecuteUncachePackage(pPlan, fRollback, dwIndex++, L"NetFx48Web");
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
             ValidateExecuteCheckpoint(pPlan, fRollback, dwIndex++, dwExecuteCheckpointId++);
@@ -3782,13 +3966,14 @@ namespace Bootstrapper
             __in BURN_PLAN* pPlan,
             __in BOOL fRollback,
             __in DWORD dwIndex,
-            __in LPCWSTR wzRollbackBoundaryId
+            __in LPCWSTR wzTransactionId,
+            __in BOOL fDeleted
             )
         {
             BURN_EXECUTE_ACTION* pAction = ValidateExecuteActionExists(pPlan, fRollback, dwIndex);
             Assert::Equal<DWORD>(BURN_EXECUTE_ACTION_TYPE_BEGIN_MSI_TRANSACTION, pAction->type);
-            NativeAssert::StringEqual(wzRollbackBoundaryId, pAction->msiTransaction.pRollbackBoundary->sczId);
-            Assert::Equal<BOOL>(FALSE, pAction->fDeleted);
+            NativeAssert::StringEqual(wzTransactionId, pAction->msiTransaction.pMsiTransaction->sczId);
+            Assert::Equal<BOOL>(fDeleted, pAction->fDeleted);
         }
 
         void ValidateExecuteCheckpoint(
@@ -3808,13 +3993,14 @@ namespace Bootstrapper
             __in BURN_PLAN* pPlan,
             __in BOOL fRollback,
             __in DWORD dwIndex,
-            __in LPCWSTR wzRollbackBoundaryId
+            __in LPCWSTR wzRollbackBoundaryId,
+            __in BOOL fDeleted
             )
         {
             BURN_EXECUTE_ACTION* pAction = ValidateExecuteActionExists(pPlan, fRollback, dwIndex);
             Assert::Equal<DWORD>(BURN_EXECUTE_ACTION_TYPE_COMMIT_MSI_TRANSACTION, pAction->type);
-            NativeAssert::StringEqual(wzRollbackBoundaryId, pAction->msiTransaction.pRollbackBoundary->sczId);
-            Assert::Equal<BOOL>(FALSE, pAction->fDeleted);
+            NativeAssert::StringEqual(wzRollbackBoundaryId, pAction->msiTransaction.pMsiTransaction->sczId);
+            Assert::Equal<BOOL>(fDeleted, pAction->fDeleted);
         }
 
         void ValidateExecuteRelatedBundle(
@@ -3997,15 +4183,13 @@ namespace Bootstrapper
             __in BOOL fRollback,
             __in DWORD dwIndex,
             __in LPCWSTR wzId,
-            __in BOOL fVital,
-            __in BOOL fTransaction
+            __in BOOL fVital
             )
         {
             BURN_EXECUTE_ACTION* pAction = ValidateExecuteActionExists(pPlan, fRollback, dwIndex);
             Assert::Equal<DWORD>(BURN_EXECUTE_ACTION_TYPE_ROLLBACK_BOUNDARY_START, pAction->type);
             NativeAssert::StringEqual(wzId, pAction->rollbackBoundary.pRollbackBoundary->sczId);
             Assert::Equal<BOOL>(fVital, pAction->rollbackBoundary.pRollbackBoundary->fVital);
-            Assert::Equal<BOOL>(fTransaction, pAction->rollbackBoundary.pRollbackBoundary->fTransaction);
             Assert::Equal<BOOL>(FALSE, pAction->fDeleted);
         }
 

@@ -164,6 +164,8 @@ namespace WixToolset.Data
         WixBundlePayloadGroup,
         WixBundleRelatedPackage,
         WixBundleRollbackBoundary,
+        WixBundleMsiTransaction,
+        WixBundleEndMsiTransaction,
         WixBundleSlipstreamMsp,
         WixBundleTag,
         WixBundleUpdate,
@@ -667,6 +669,12 @@ namespace WixToolset.Data
 
                 case SymbolDefinitionType.WixBundleRollbackBoundary:
                     return SymbolDefinitions.WixBundleRollbackBoundary;
+
+                case SymbolDefinitionType.WixBundleMsiTransaction:
+                    return SymbolDefinitions.WixBundleMsiTransaction;
+
+                case SymbolDefinitionType.WixBundleEndMsiTransaction:
+                    return SymbolDefinitions.WixBundleEndMsiTransaction;
 
                 case SymbolDefinitionType.WixBundleSlipstreamMsp:
                     return SymbolDefinitions.WixBundleSlipstreamMsp;

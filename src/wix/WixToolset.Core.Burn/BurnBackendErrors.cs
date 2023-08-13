@@ -233,6 +233,11 @@ namespace WixToolset.Core.Burn
             return Message(sourceLineNumbers, Ids.UnsupportedAllUsersValue, "The MSI '{0}' set the ALLUSERS Property to '{0}' which is not supported. Remove the Property with Id='ALLUSERS' and use Package/@Scope attribute instead.", path, value);
         }
 
+        public static Message MsiTransactionX86AndX64Packages(SourceLineNumber sourceLineNumbers, string packageId)
+        {
+            return Message(sourceLineNumbers, Ids.MsiTransactionX86AndX64Packages, "Package '{0}' bitness differs from the bitness of preceding package(s). MSI transactions must contain only x86 packages or only x64 packages.", packageId);
+        }
+
         private static Message Message(SourceLineNumber sourceLineNumber, Ids id, string format, params object[] args)
         {
             return new Message(sourceLineNumber, MessageLevel.Error, (int)id, format, args);
@@ -281,6 +286,7 @@ namespace WixToolset.Core.Burn
             MissingPrimaryBootstrapperApplication = 8015,
             TooManyBootstrapperApplications = 8016,
             BundleMissingBootstrapperApplicationContainer = 8017,
+            MsiTransactionX86AndX64Packages = 8018,
         } // last available is 8499. 8500 is BurnBackendWarnings.
     }
 }
