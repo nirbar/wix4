@@ -363,7 +363,7 @@
           <xs:documentation>
             File name and optionally a relative path to use as the prefix for the log file. The
             default is to use the Bundle/@Name or, if Bundle/@Name is not specified, the value
-            "Setup".
+            "Setup". If the prefix resolves to a folder with no file name, then the process name is used as the file name.
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
