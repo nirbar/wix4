@@ -10,3 +10,4 @@ This repository contains the PanelSwWix4: A custom WiX Toolset codebase
 
 # Customizations:
 - [6298](https://github.com/wixtoolset/issues/issues/6298): Extract detached containers with "wix burn extract"
+- ExePackage/@DetectVersionVariable: Support using one of the XxxSearch elements to provide a version number in a variable to test against the package's version.
