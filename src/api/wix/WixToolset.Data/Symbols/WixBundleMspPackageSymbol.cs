@@ -14,6 +14,7 @@ namespace WixToolset.Data
                 new IntermediateFieldDefinition(nameof(WixBundleMspPackageSymbolFields.PatchCode), IntermediateFieldType.String),
                 new IntermediateFieldDefinition(nameof(WixBundleMspPackageSymbolFields.Manufacturer), IntermediateFieldType.String),
                 new IntermediateFieldDefinition(nameof(WixBundleMspPackageSymbolFields.PatchXml), IntermediateFieldType.String),
+                new IntermediateFieldDefinition(nameof(WixBundleMspPackageSymbolFields.Wix3DependencyMode), IntermediateFieldType.Number),
             },
             typeof(WixBundleMspPackageSymbol));
     }
@@ -29,6 +30,7 @@ namespace WixToolset.Data.Symbols
         PatchCode,
         Manufacturer,
         PatchXml,
+        Wix3DependencyMode,
     }
 
     [Flags]
@@ -88,6 +90,12 @@ namespace WixToolset.Data.Symbols
                     this.Attributes &= ~WixBundleMspPackageAttributes.Slipstream;
                 }
             }
+        }
+
+        public YesNoType Wix3DependencyMode
+        {
+            get => (YesNoType)(int)this.Fields[(int)WixBundleMspPackageSymbolFields.Wix3DependencyMode];
+            set => this.Set((int)WixBundleMspPackageSymbolFields.Wix3DependencyMode, (int)value);
         }
     }
 }

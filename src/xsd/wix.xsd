@@ -122,6 +122,11 @@
           <xs:documentation>If set to yes, creates a bootstrapper that requires elevation when launched. The default is no.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="Wix3DependencyMode" type="YesNoTypeUnion">
+        <xs:annotation>
+          <xs:documentation>If 'yes' then default MSI/MSP provider key is the ProductCode/PatchCode. The default is 'no'.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:attribute name="Condition" type="xs:string">
         <xs:annotation>
           <xs:documentation>
@@ -989,6 +994,11 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="Wix3DependencyMode" type="YesNoTypeUnion">
+        <xs:annotation>
+          <xs:documentation>If 'yes' then default provider key is the ProductCode. The default is 'no'.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
   <xs:element name="MspPackage">
@@ -1038,6 +1048,11 @@
             Specifies whether to automatically slipstream the patch for any target msi packages in the chain. The default is "no".
             Even when the value is "no", you can still author the SlipstreamMsp element under MsiPackage elements as desired.
           </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="Wix3DependencyMode" type="YesNoTypeUnion">
+        <xs:annotation>
+          <xs:documentation>If 'yes' then default provider key is the PatchCode. The default is 'no'.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
     </xs:complexType>

@@ -356,7 +356,7 @@ namespace WixToolset.Core.Burn
             }
 
             {
-                var command = new ProcessDependencyProvidersCommand(this.ServiceProvider, section, facades);
+                var command = new ProcessDependencyProvidersCommand(this.ServiceProvider, section, facades, bundleSymbol.Wix3DependencyMode);
                 command.Execute();
 
                 if (!String.IsNullOrEmpty(command.BundleProviderKey))
