@@ -12,13 +12,14 @@ namespace WixToolset.Core.Burn.Bind
 
     internal class ProcessDependencyProvidersCommand
     {
-        public ProcessDependencyProvidersCommand(IServiceProvider serviceProvider, IntermediateSection section, PackageFacades facades)
+        public ProcessDependencyProvidersCommand(IServiceProvider serviceProvider, IntermediateSection section, PackageFacades facades, bool wix3DependencyMode)
         {
             this.Messaging = serviceProvider.GetService<IMessaging>();
             this.BackendHelper = serviceProvider.GetService<IBackendHelper>();
 
             this.Section = section;
             this.Facades = facades;
+            this.DefaultWix3DependencyMode = wix3DependencyMode;
         }
 
         public string BundleProviderKey { get; private set; }
@@ -30,6 +31,8 @@ namespace WixToolset.Core.Burn.Bind
         private IntermediateSection Section { get; }
 
         private PackageFacades Facades { get; }
+
+        private bool DefaultWix3DependencyMode { get; }
 
         /// <summary>
         /// Sets the explicitly provided bundle provider key, if provided. And...
@@ -101,14 +104,23 @@ namespace WixToolset.Core.Burn.Bind
             foreach (var facade in this.Facades.Values)
             {
                 string key = null;
+                var wix3DependencyMode = this.DefaultWix3DependencyMode;
 
                 if (facade.SpecificPackageSymbol is WixBundleMsiPackageSymbol msiPackage)
                 {
                     key = msiPackage.ProductCode;
+                    if (msiPackage.Wix3DependencyMode != YesNoType.NotSet)
+                    {
+                        wix3DependencyMode = msiPackage.Wix3DependencyMode == YesNoType.Yes;
+                    }
                 }
                 else if (facade.SpecificPackageSymbol is WixBundleMspPackageSymbol mspPackage)
                 {
                     key = mspPackage.PatchCode;
+                    if (mspPackage.Wix3DependencyMode != YesNoType.NotSet)
+                    {
+                        wix3DependencyMode = mspPackage.Wix3DependencyMode == YesNoType.Yes;
+                    }
                 }
 
                 if (!String.IsNullOrEmpty(key) && !dependencySymbolsByPackageId.Contains(facade.PackageId))
@@ -116,7 +128,7 @@ namespace WixToolset.Core.Burn.Bind
                     this.Section.AddSymbol(new WixDependencyProviderSymbol(facade.PackageSymbol.SourceLineNumbers, facade.PackageSymbol.Id)
                     {
                         ParentRef = facade.PackageId,
-                        ProviderKey = $"{key}_v{facade.PackageSymbol.Version}",
+                        ProviderKey = wix3DependencyMode ? key : $"{key}_v{facade.PackageSymbol.Version}",
                         Version = facade.PackageSymbol.Version,
                         DisplayName = facade.PackageSymbol.DisplayName
                     });

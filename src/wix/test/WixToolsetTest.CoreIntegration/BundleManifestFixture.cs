@@ -430,5 +430,229 @@ namespace WixToolsetTest.CoreIntegration
                 }, setVariables);
             }
         }
+
+        [Fact]
+        public void CanBuildBundleWithWix3DependencyMode()
+        {
+            var folder = TestData.Get("TestData");
+
+            using (var fs = new DisposableFileSystem())
+            {
+                var baseFolder = fs.GetFolder();
+                var dataPath = Path.Combine(folder, ".Data");
+
+                var msiIntermediateFolder = Path.Combine(baseFolder, "obj", "msi");
+                var msiBinFolder = Path.Combine(baseFolder, "bin", "msi");
+                var msiPath = Path.Combine(msiBinFolder, "test.msi");
+
+                var bundleIntermediateFolder = Path.Combine(baseFolder, "obj", "bundle");
+                var bundleBinFolder = Path.Combine(baseFolder, "bin", "bundle");
+                var bundlePath = Path.Combine(bundleBinFolder, "bundle.exe");
+                var bundlePdbPath = Path.Combine(bundleBinFolder, "bundle.wixpdb");
+
+                var baFolderPath = Path.Combine(baseFolder, "extract", "ba");
+                var extractFolderPath = Path.Combine(baseFolder, "extract", "files");
+
+                var result = WixRunner.Execute(new[]
+                {
+                    "build",
+                    Path.Combine(folder, "BundleWithWix3DependencyMode", "AllUsersPackage.wxs"),
+                    "-bindpath", dataPath,
+                    "-intermediateFolder", msiIntermediateFolder,
+                    "-o", msiPath
+                });
+
+                result.AssertSuccess();
+
+                result = WixRunner.Execute(new[]
+                {
+                    "build",
+                    Path.Combine(folder, "BundleWithWix3DependencyMode", "BundleWithWix3DependencyMode.wxs"),
+                    "-bindpath", dataPath,
+                    "-bindpath", msiBinFolder,
+                    "-intermediateFolder", bundleIntermediateFolder,
+                    "-o", bundlePath
+                });
+
+                result.AssertSuccess();
+
+                var extractResult = BundleExtractor.ExtractBAContainer(null, bundlePath, baFolderPath, extractFolderPath);
+                extractResult.AssertSuccess();
+
+                var packageElements = extractResult.GetManifestTestXmlLines("/burn:BurnManifest/burn:Chain/burn:MsiPackage/burn:Provides");
+                WixAssert.CompareLineByLine(new[]
+                {
+                "<Provides Key='{33333333-3333-3333-3333-333333333333}' Version='1.0' DisplayName='All Users Package' />",
+                }, packageElements);
+            }
+        }
+
+        [Fact]
+        public void CanBuildBundleWithWix3DependencyMode2()
+        {
+            var folder = TestData.Get("TestData");
+
+            using (var fs = new DisposableFileSystem())
+            {
+                var baseFolder = fs.GetFolder();
+                var dataPath = Path.Combine(folder, ".Data");
+
+                var msiIntermediateFolder = Path.Combine(baseFolder, "obj", "msi");
+                var msiBinFolder = Path.Combine(baseFolder, "bin", "msi");
+                var msiPath = Path.Combine(msiBinFolder, "test.msi");
+
+                var bundleIntermediateFolder = Path.Combine(baseFolder, "obj", "bundle");
+                var bundleBinFolder = Path.Combine(baseFolder, "bin", "bundle");
+                var bundlePath = Path.Combine(bundleBinFolder, "bundle.exe");
+                var bundlePdbPath = Path.Combine(bundleBinFolder, "bundle.wixpdb");
+
+                var baFolderPath = Path.Combine(baseFolder, "extract", "ba");
+                var extractFolderPath = Path.Combine(baseFolder, "extract", "files");
+
+                var result = WixRunner.Execute(new[]
+                {
+                    "build",
+                    Path.Combine(folder, "BundleWithWix3DependencyMode", "AllUsersPackage.wxs"),
+                    "-bindpath", dataPath,
+                    "-intermediateFolder", msiIntermediateFolder,
+                    "-o", msiPath
+                });
+
+                result.AssertSuccess();
+
+                result = WixRunner.Execute(new[]
+                {
+                    "build",
+                    Path.Combine(folder, "BundleWithWix3DependencyMode", "BundleWithWix3DependencyMode2.wxs"),
+                    "-bindpath", dataPath,
+                    "-bindpath", msiBinFolder,
+                    "-intermediateFolder", bundleIntermediateFolder,
+                    "-o", bundlePath
+                });
+
+                result.AssertSuccess();
+
+                var extractResult = BundleExtractor.ExtractBAContainer(null, bundlePath, baFolderPath, extractFolderPath);
+                extractResult.AssertSuccess();
+
+                var packageElements = extractResult.GetManifestTestXmlLines("/burn:BurnManifest/burn:Chain/burn:MsiPackage/burn:Provides");
+                WixAssert.CompareLineByLine(new[]
+                {
+                "<Provides Key='{33333333-3333-3333-3333-333333333333}' Version='1.0' DisplayName='All Users Package' />",
+                }, packageElements);
+            }
+        }
+
+        [Fact]
+        public void CanBuildBundleWitNohWix3DependencyMode()
+        {
+            var folder = TestData.Get("TestData");
+
+            using (var fs = new DisposableFileSystem())
+            {
+                var baseFolder = fs.GetFolder();
+                var dataPath = Path.Combine(folder, ".Data");
+
+                var msiIntermediateFolder = Path.Combine(baseFolder, "obj", "msi");
+                var msiBinFolder = Path.Combine(baseFolder, "bin", "msi");
+                var msiPath = Path.Combine(msiBinFolder, "test.msi");
+
+                var bundleIntermediateFolder = Path.Combine(baseFolder, "obj", "bundle");
+                var bundleBinFolder = Path.Combine(baseFolder, "bin", "bundle");
+                var bundlePath = Path.Combine(bundleBinFolder, "bundle.exe");
+                var bundlePdbPath = Path.Combine(bundleBinFolder, "bundle.wixpdb");
+
+                var baFolderPath = Path.Combine(baseFolder, "extract", "ba");
+                var extractFolderPath = Path.Combine(baseFolder, "extract", "files");
+
+                var result = WixRunner.Execute(new[]
+                {
+                    "build",
+                    Path.Combine(folder, "BundleWithWix3DependencyMode", "AllUsersPackage.wxs"),
+                    "-bindpath", dataPath,
+                    "-intermediateFolder", msiIntermediateFolder,
+                    "-o", msiPath
+                });
+
+                result.AssertSuccess();
+
+                result = WixRunner.Execute(new[]
+                {
+                    "build",
+                    Path.Combine(folder, "BundleWithWix3DependencyMode", "BundleWithNoWix3DependencyMode.wxs"),
+                    "-bindpath", dataPath,
+                    "-bindpath", msiBinFolder,
+                    "-intermediateFolder", bundleIntermediateFolder,
+                    "-o", bundlePath
+                });
+
+                result.AssertSuccess();
+
+                var extractResult = BundleExtractor.ExtractBAContainer(null, bundlePath, baFolderPath, extractFolderPath);
+                extractResult.AssertSuccess();
+
+                var packageElements = extractResult.GetManifestTestXmlLines("/burn:BurnManifest/burn:Chain/burn:MsiPackage/burn:Provides");
+                WixAssert.CompareLineByLine(new[]
+                {
+                "<Provides Key='{33333333-3333-3333-3333-333333333333}_v1.0' Version='1.0' DisplayName='All Users Package' />",
+                }, packageElements);
+            }
+        }
+
+        [Fact]
+        public void CanBuildBundleWitNohWix3DependencyMode2()
+        {
+            var folder = TestData.Get("TestData");
+
+            using (var fs = new DisposableFileSystem())
+            {
+                var baseFolder = fs.GetFolder();
+                var dataPath = Path.Combine(folder, ".Data");
+
+                var msiIntermediateFolder = Path.Combine(baseFolder, "obj", "msi");
+                var msiBinFolder = Path.Combine(baseFolder, "bin", "msi");
+                var msiPath = Path.Combine(msiBinFolder, "test.msi");
+
+                var bundleIntermediateFolder = Path.Combine(baseFolder, "obj", "bundle");
+                var bundleBinFolder = Path.Combine(baseFolder, "bin", "bundle");
+                var bundlePath = Path.Combine(bundleBinFolder, "bundle.exe");
+                var bundlePdbPath = Path.Combine(bundleBinFolder, "bundle.wixpdb");
+
+                var baFolderPath = Path.Combine(baseFolder, "extract", "ba");
+                var extractFolderPath = Path.Combine(baseFolder, "extract", "files");
+
+                var result = WixRunner.Execute(new[]
+                {
+                    "build",
+                    Path.Combine(folder, "BundleWithWix3DependencyMode", "AllUsersPackage.wxs"),
+                    "-bindpath", dataPath,
+                    "-intermediateFolder", msiIntermediateFolder,
+                    "-o", msiPath
+                });
+
+                result.AssertSuccess();
+
+                result = WixRunner.Execute(new[]
+                {
+                    "build",
+                    Path.Combine(folder, "BundleWithWix3DependencyMode", "BundleWithNoWix3DependencyMode2.wxs"),
+                    "-bindpath", dataPath,
+                    "-bindpath", msiBinFolder,
+                    "-intermediateFolder", bundleIntermediateFolder,
+                    "-o", bundlePath
+                });
+
+                result.AssertSuccess();
+
+                var extractResult = BundleExtractor.ExtractBAContainer(null, bundlePath, baFolderPath, extractFolderPath);
+                extractResult.AssertSuccess();
+
+                var packageElements = extractResult.GetManifestTestXmlLines("/burn:BurnManifest/burn:Chain/burn:MsiPackage/burn:Provides");
+                WixAssert.CompareLineByLine(new[]
+                {
+                "<Provides Key='{33333333-3333-3333-3333-333333333333}_v1.0' Version='1.0' DisplayName='All Users Package' />",
+                }, packageElements);
+            }
+        }
     }
 }

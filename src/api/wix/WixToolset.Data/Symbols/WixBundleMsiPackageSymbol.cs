@@ -17,6 +17,7 @@ namespace WixToolset.Data
                 new IntermediateFieldDefinition(nameof(WixBundleMsiPackageSymbolFields.ProductLanguage), IntermediateFieldType.Number),
                 new IntermediateFieldDefinition(nameof(WixBundleMsiPackageSymbolFields.ProductName), IntermediateFieldType.String),
                 new IntermediateFieldDefinition(nameof(WixBundleMsiPackageSymbolFields.Manufacturer), IntermediateFieldType.String),
+                new IntermediateFieldDefinition(nameof(WixBundleMsiPackageSymbolFields.Wix3DependencyMode), IntermediateFieldType.Number),
             },
             typeof(WixBundleMsiPackageSymbol));
     }
@@ -35,6 +36,7 @@ namespace WixToolset.Data.Symbols
         ProductLanguage,
         ProductName,
         Manufacturer,
+        Wix3DependencyMode,
     }
 
     [Flags]
@@ -129,6 +131,12 @@ namespace WixToolset.Data.Symbols
                     this.Attributes &= ~WixBundleMsiPackageAttributes.ForcePerMachine;
                 }
             }
+        }
+
+        public YesNoType Wix3DependencyMode
+        {
+            get => (YesNoType)(int)this.Fields[(int)WixBundleMsiPackageSymbolFields.Wix3DependencyMode];
+            set => this.Set((int)WixBundleMsiPackageSymbolFields.Wix3DependencyMode, (int)value);
         }
     }
 }

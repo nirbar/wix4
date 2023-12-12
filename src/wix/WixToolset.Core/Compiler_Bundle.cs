@@ -185,6 +185,12 @@ namespace WixToolset.Core
                                 attributes |= WixBundleAttributes.DisableRemove;
                             }
                             break;
+                        case "Wix3DependencyMode":
+                            if (YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib))
+                            {
+                                attributes |= WixBundleAttributes.Wix3DependencyMode;
+                            }
+                            break;
                         case "HelpTelephone":
                             helpTelephone = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
@@ -2292,6 +2298,7 @@ namespace WixToolset.Core
             string arpDisplayVersion = null;
             var arpWin64 = YesNoType.NotSet;
             var arpUseUninstallString = YesNoType.NotSet;
+            var wix3DependencyMode = YesNoType.NotSet;
 
             var expectedNetFx4Args = new string[] { "/q", "/norestart" };
 
@@ -2367,6 +2374,10 @@ namespace WixToolset.Core
                         case "ForcePerMachine":
                             forcePerMachine = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             allowed = (packageType == WixBundlePackageType.Msi);
+                            break;
+                        case "Wix3DependencyMode":
+                            wix3DependencyMode = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
+                            allowed = (packageType == WixBundlePackageType.Msi) || (packageType == WixBundlePackageType.Msp);
                             break;
                         case "LogPathVariable":
                             logPathVariable = this.Core.GetAttributeValue(sourceLineNumbers, attrib, EmptyRule.CanBeEmpty);
@@ -2840,7 +2851,9 @@ namespace WixToolset.Core
 
                         this.Core.AddSymbol(new WixBundleMsiPackageSymbol(sourceLineNumbers, id)
                         {
-                            Attributes = msiAttributes
+                            Attributes = msiAttributes,
+                            Wix3DependencyMode = wix3DependencyMode
+
                         });
                         break;
 
@@ -2850,7 +2863,8 @@ namespace WixToolset.Core
 
                         this.Core.AddSymbol(new WixBundleMspPackageSymbol(sourceLineNumbers, id)
                         {
-                            Attributes = mspAttributes
+                            Attributes = mspAttributes,
+                            Wix3DependencyMode = wix3DependencyMode
                         });
                         break;
 
