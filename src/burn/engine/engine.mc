@@ -1323,3 +1323,9 @@ Language=English
 Scope command-line switch ignored because the bundle doesn't have any packages with configurable scope.
 .
 
+MessageId=704
+Severity=Warning
+SymbolicName=MSG_EXT_ATTACHED_CONTAINER_FAILED
+Language=English
+Container extension can not open attached container '%1!ls!'. Unloading the container and retrying.
+.
