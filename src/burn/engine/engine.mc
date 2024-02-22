@@ -1296,10 +1296,23 @@ Language=English
 Planned MSI transaction: '%1!ls!', planned: %2!hs!
 .
 
-
 MessageId=703
 Severity=Success
 SymbolicName=MSG_PLAN_CANCEL_MSI_TRANSACTION
 Language=English
 Canceling planned MSI transaction '%1!ls!' because it contains %2!lu! packages.
+.
+
+MessageId=704
+Severity=Success
+SymbolicName=MSG_PAYLOAD_HARD_LINK
+Language=English
+Created a hard link from '%1!ls!' to '%2!ls!'.
+.
+
+MessageId=705
+Severity=Warning
+SymbolicName=MSG_PAYLOAD_HARD_LINK_FAILED
+Language=English
+Creating a hard link to '%1!ls!' failed with error code %2!u!. Resorting to plain copy.
 .
