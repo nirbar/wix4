@@ -1073,9 +1073,10 @@ namespace WixToolsetTest.BurnE2E
             packageDv1.VerifyInstalled(false);
             packageDv2.VerifyInstalled(true);
 
-            Assert.True(LogVerifier.MessageInLogFileRegex(bundleHv2InstallLogFilePath, @"Skipping cross-scope dependency registration on package: PackageA, bundle scope: PerUser, package scope: PerMachine"));
-            Assert.True(LogVerifier.MessageInLogFileRegex(bundleHv2InstallLogFilePath, @"Detected related bundle: \{[0-9A-Za-z\-]{36}\}, type: Upgrade, scope: PerUser, version: 1\.0\.0\.0, cached: Yes"));
-            Assert.True(LogVerifier.MessageInLogFileRegex(bundleHv2InstallLogFilePath, @"Detected related package: \{[0-9A-Za-z\-]{36}\}, scope: PerUser, version: 1.0.0.0, language: 0 operation: MajorUpgrade"));
+            var log = new LogVerifier(bundleHv2InstallLogFilePath);
+            log.AssertTextInLog(@"Skipping cross-scope dependency registration on package: PackageA, bundle scope: PerUser, package scope: PerMachine");
+            log.AssertTextInLog(@"Detected related bundle: \{[0-9A-Za-z\-]{36}\}, type: Upgrade, scope: PerUser, version: 1\.0\.0\.0, cached: Yes", "Detected related bundle");
+            log.AssertTextInLog(@"Detected related package for PackageD: \{[0-9A-Za-z\-]{36}\}, scope: PerUser, version: 1\.0\.0\.0, language: 0 operation: MajorUpgrade", "Detected related package");
 
             bundleHv2.Uninstall();
             bundleHv2.VerifyUnregisteredAndRemovedFromPackageCache();
