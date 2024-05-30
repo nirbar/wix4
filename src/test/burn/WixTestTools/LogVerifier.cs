@@ -3,8 +3,9 @@
 namespace WixTestTools
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
-    using System.Text;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using Xunit;
 
@@ -145,8 +146,30 @@ namespace WixTestTools
         /// Search through the log and Assert.Fail() if a specified string is not found.
         /// </summary>
         /// <param name="match">Search expression</param>
+        /// <param name="candidates">An expression used to log candidates if the search failed</param>
+        public void AssertTextInLog(string match, string candidatesMatch)
+        {
+            var found = this.EntireFileAtOnce(match);
+            if (found == 0)
+            {
+                var options = this.Candidates(new Regex(candidatesMatch));
+                if ((options != null) && options.Any())
+                {
+                    Assert.Fail($"The log does not contain a match for regex \"{match}\". Optional matches are:\n\t{options.Aggregate((a, c) => $"{a}\n\t{c}")}");
+                }
+                else
+                {
+                    Assert.Fail($"The log does not contain a match for regex \"{match}\". No optional matches found for the regex \"{candidatesMatch}\"");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Search through the log and Assert.Fail() if a specified string is not found.
+        /// </summary>
+        /// <param name="match">Search expression</param>
         /// <param name="ignoreCase">Perform case insensitive match</param>
-        public void AssertTextInLog(string match, bool ignoreCase)
+        public void AssertTextInLog(string match, bool ignoreCase = false)
         {
             Assert.True(this.EntireFileAtOncestr(match),
                 String.Format("The log does not contain a match for the {1}string \"{0}\" ", match, ignoreCase ? "case insensitive " : ""));
@@ -228,6 +251,33 @@ namespace WixTestTools
         {
             LogVerifier logVerifier = new LogVerifier(logFileName);
             return logVerifier.EntireFileAtOnce(regexMessage) > 0;
+        }
+
+        /// <summary>
+        /// Scans a log file for matches to the regex.
+        /// </summary>
+        /// <param name="regex">A regular expression</param>
+        /// <returns>Matches</returns>
+        public static IEnumerable<string> Candidates(string logFileName, Regex regex)
+        {
+            LogVerifier logVerifier = new LogVerifier(logFileName);
+            return logVerifier.Candidates(regex);
+        }
+
+        /// <summary>
+        /// Scans a log file for matches to the regex.
+        /// </summary>
+        /// <param name="regex">A regular expression</param>
+        /// <returns>Matches</returns>
+        public IEnumerable<string> Candidates(Regex regex)
+        {
+            var lines = File.ReadAllLines(this.logFile);
+            if (lines == null)
+            {
+                return Enumerable.Empty<string>();
+            }
+            var matches = lines.Where(l => regex.IsMatch(l));
+            return matches ?? Enumerable.Empty<string>();
         }
 
         /// <summary>
