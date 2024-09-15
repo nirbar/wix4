@@ -117,6 +117,11 @@
           <xs:documentation>Whether Packages and Payloads not assigned to a container should be added to the default attached container or if they should be external. The default is yes.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="RunAsAdmin" type="YesNoTypeUnion">
+        <xs:annotation>
+          <xs:documentation>If set to yes, creates a bootstrapper that requires elevation when launched. The default is no.</xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:attribute name="Condition" type="xs:string">
         <xs:annotation>
           <xs:documentation>
