@@ -228,6 +228,12 @@ namespace WixToolset.Mba.Core
         int SendEmbeddedCustomMessage(int code, string message);
 
         /// <summary>
+        /// Re-extracts any UX payloads that are missing for any reason
+        /// </summary>
+        /// <param name="pnNumReextracted">On successful return, holds the number of files that have been re-extracted.</param>
+        void ReextractUxContainer(out int pnNumReextracted);
+
+        /// <summary>
         /// Shuts down the engine.
         /// </summary>
         /// <param name="exitCode">Exit code indicating reason for shut down.</param>

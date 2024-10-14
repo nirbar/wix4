@@ -75,6 +75,11 @@ HRESULT ExternalEngineSendEmbeddedCustomMessage(
     __out int* pnResult
     );
 
+HRESULT ExternalEngineReextractUxContainer(
+    __in BURN_ENGINE_STATE* pEngineState,
+    __out int* pnNumReextracted
+    );
+
 HRESULT ExternalEngineSendEmbeddedProgress(
     __in BURN_ENGINE_STATE* pEngineState,
     __in const DWORD dwProgressPercentage,

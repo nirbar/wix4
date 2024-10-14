@@ -1309,3 +1309,10 @@ SymbolicName=MSG_PAYLOAD_HARD_LINK_FAILED
 Language=English
 Creating a hard link to '%1!ls!' failed with error code %2!u!. Resorting to plain copy.
 .
+
+MessageId=706
+Severity=Warning
+SymbolicName=MSG_UX_PAYLOAD_MISSING
+Language=English
+Will extract a missing UX payload '%1!ls!'.
+.

@@ -487,3 +487,52 @@ extern "C" HRESULT ContainerFindById(
 LExit:
     return hr;
 }
+
+HRESULT ContainerReextractUX(
+    __in BURN_ENGINE_STATE* pEngineState,
+    __out int* pnNumReextracted
+    )
+{
+    HRESULT hr = S_OK;
+    BURN_CONTAINER_CONTEXT containerContext = { };
+    LPWSTR sczStreamName = NULL;
+    int nNumReextracted = 0;
+
+    // Open attached UX container.
+    hr = ContainerOpenUX(&pEngineState->section, &containerContext);
+    ExitOnFailure(hr, "Failed to open attached UX container.");
+
+    // Skip manifest.
+    hr = ContainerNextStream(&containerContext, &sczStreamName);
+    ExitOnFailure(hr, "Failed to open manifest stream.");
+
+    hr = ContainerSkipStream(&containerContext);
+    ExitOnFailure(hr, "Failed to skip manifest stream.");
+
+    // Check which payloads are missing
+    for (DWORD i = 0; i < pEngineState->userExperience.payloads.cPayloads; ++i)
+    {
+        BURN_PAYLOAD* pPayload = pEngineState->userExperience.payloads.rgPayloads + i;
+
+        if (pPayload->sczLocalFilePath && *pPayload->sczLocalFilePath && (BURN_PAYLOAD_STATE_ACQUIRED == pPayload->state) && !FileExistsEx(pPayload->sczLocalFilePath, NULL))
+        {
+            LogId(REPORT_WARNING, MSG_UX_PAYLOAD_MISSING, pPayload->sczFilePath);
+            pPayload->state = BURN_PAYLOAD_STATE_NONE;
+            ++nNumReextracted;
+        }
+    }
+
+    if (nNumReextracted)
+    {
+        hr = PayloadExtractUXContainer(&pEngineState->userExperience.payloads, &containerContext, pEngineState->userExperience.sczTempDirectory);
+        ExitOnFailure(hr, "Failed to extract bootstrapper application payloads.");
+    }
+
+    *pnNumReextracted = nNumReextracted;
+
+LExit:
+    ContainerClose(&containerContext);
+    ReleaseStr(sczStreamName);
+
+    return hr;
+}

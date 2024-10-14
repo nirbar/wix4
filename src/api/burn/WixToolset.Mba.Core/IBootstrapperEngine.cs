@@ -117,6 +117,13 @@ namespace WixToolset.Mba.Core
             );
 
         /// <summary>
+        /// See <see cref="IEngine.ReextractUxContainer(out int)"/>.
+        /// </summary>
+        void ReextractUxContainer(
+            [MarshalAs(UnmanagedType.I4)] out int pnNumReextracted
+            );
+
+        /// <summary>
         /// See <see cref="IEngine.SetUpdate(string, string, long, UpdateHashType, string)"/>.
         /// </summary>
         void SetUpdate(

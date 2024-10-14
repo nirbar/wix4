@@ -187,6 +187,22 @@ LExit:
     return hr;
 }
 
+static HRESULT BAEngineReextractUxContainer(
+    __in BOOTSTRAPPER_ENGINE_CONTEXT* pContext,
+    __inout LPVOID pvArgs,
+    __inout LPVOID pvResults
+    )
+{
+    HRESULT hr = S_OK;
+    ValidateMessageArgs(hr, pvArgs, BAENGINE_REEXTRACTUXCONTAINER_ARGS, pArgs);
+    ValidateMessageResults(hr, pvResults, BAENGINE_REEXTRACTUXCONTAINER_RESULTS, pResults);
+
+    hr = ExternalEngineReextractUxContainer(pContext->pEngineState, &pResults->nNumReextracted);
+
+LExit:
+    return hr;
+}
+
 static HRESULT BAEngineSendEmbeddedProgress(
     __in BOOTSTRAPPER_ENGINE_CONTEXT* pContext,
     __in const LPVOID pvArgs,
@@ -508,6 +524,9 @@ HRESULT WINAPI EngineForApplicationProc(
         break;
     case BOOTSTRAPPER_ENGINE_MESSAGE_SENDEMBEDDEDCUSTOMMESSAGE:
         hr = BAEngineSendEmbeddedCustomMessage(pContext, pvArgs, pvResults);
+        break;
+    case BOOTSTRAPPER_ENGINE_MESSAGE_REEXTRACTUXCONTAINER:
+        hr = BAEngineReextractUxContainer(pContext, pvArgs, pvResults);
         break;
     case BOOTSTRAPPER_ENGINE_MESSAGE_SETUPDATE:
         hr = BAEngineSetUpdate(pContext, pvArgs, pvResults);

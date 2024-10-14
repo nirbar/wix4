@@ -349,6 +349,12 @@ namespace WixToolset.Mba.Core
         }
 
         /// <inheritdoc/>
+        public void ReextractUxContainer(out int nNumReextracted)
+        {
+            this.engine.ReextractUxContainer(out nNumReextracted);
+        }
+
+        /// <inheritdoc/>
         public void Quit(int exitCode)
         {
             this.engine.Quit(exitCode);

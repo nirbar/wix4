@@ -272,6 +272,21 @@ LExit:
     return hr;
 }
 
+HRESULT ExternalEngineReextractUxContainer(
+    __in BURN_ENGINE_STATE* pEngineState,
+    __out int* pnNumReextracted
+    )
+{
+    HRESULT hr = S_OK;
+
+    hr = ContainerReextractUX(pEngineState, pnNumReextracted);
+    ExitOnFailure(hr, "Failed to reextract UX container.");
+
+LExit:
+
+    return hr;
+}
+
 HRESULT ExternalEngineSendEmbeddedProgress(
     __in BURN_ENGINE_STATE* pEngineState,
     __in const DWORD dwProgressPercentage,

@@ -361,6 +361,27 @@ public: // IBootstrapperEngine
         return hr;
     }
 
+    virtual STDMETHODIMP ReextractUxContainer(
+        __out int *pnNumReextracted
+        )
+    {
+        HRESULT hr = S_OK;
+        BAENGINE_REEXTRACTUXCONTAINER_ARGS args = { };
+        BAENGINE_REEXTRACTUXCONTAINER_RESULTS results = { };
+
+        ExitOnNull(pnNumReextracted, hr, E_INVALIDARG, "pnNumReextracted is required");
+
+        args.cbSize = sizeof(args);
+        results.cbSize = sizeof(results);
+
+        hr = m_pfnBAEngineProc(BOOTSTRAPPER_ENGINE_MESSAGE_REEXTRACTUXCONTAINER, &args, &results, m_pvBAEngineProcContext);
+
+        *pnNumReextracted = results.nNumReextracted;
+
+    LExit:
+        return hr;
+    }
+
     virtual STDMETHODIMP SetUpdate(
         __in_z_opt LPCWSTR wzLocalSource,
         __in_z_opt LPCWSTR wzDownloadSource,
