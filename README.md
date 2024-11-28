@@ -18,3 +18,4 @@ This repository contains the PanelSwWix4: A custom WiX Toolset codebase
 - Support sending custom messages on embedded pipe
 - Best effort to log premature termination of companion process
 - [Bundle/@RunAsAdmin](https://github.com/wixtoolset/issues/issues/5309) attribute creates a bootstrapper that requires elevation when launched
+- Reorder cache actions: moves non-executing package caching to the end of the plan. This optimizes run time as packages that are cached but not executed will not stand in the way of executing packages.

@@ -97,6 +97,7 @@
     <None Include="TestData\PlanTest\PmPuPmouBundle_manifest.xml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="TestData\PlanTest\PmPuPuomBundle_manifest.xml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="TestData\PlanTest\PuomBundlePackage_manifest.xml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="TestData\PlanTest\CacheReorder_BundleAv1_manifest.xml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\engine\engine.vcxproj">

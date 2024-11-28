@@ -146,6 +146,12 @@ static void FinalizePatchActions(
     __in BURN_EXECUTE_ACTION* rgActions,
     __in DWORD cActions
     );
+static void FinalizeCacheActions(
+    __in BURN_CACHE_ACTION* rgCacheActions,
+    __in DWORD cCacheActions,
+    __in BURN_EXECUTE_ACTION* rgActions,
+    __in DWORD cActions
+    );
 static void CalculateExpectedRegistrationStates(
     __in BURN_PACKAGE* rgPackages,
     __in DWORD cPackages
@@ -1176,8 +1182,26 @@ static HRESULT ProcessPackage(
         {
             if (ForceCache(pPlan, pPackage))
             {
+                BURN_CACHE_ACTION* pCacheAction = NULL;
+
+                hr = AppendCacheAction(pPlan, &pCacheAction);
+                ExitOnFailure(hr, "Failed to plan cache action.");
+                pCacheAction->type = BURN_CACHE_ACTION_TYPE_DELAYABLE_START;
+
+                hr = AppendRollbackCacheAction(pPlan, &pCacheAction);
+                ExitOnFailure(hr, "Failed to plan cache action.");
+                pCacheAction->type = BURN_CACHE_ACTION_TYPE_DELAYABLE_START;
+
                 hr = AddCachePackage(pPlan, pPackage, TRUE);
                 ExitOnFailure(hr, "Failed to plan cache package.");
+
+                hr = AppendCacheAction(pPlan, &pCacheAction);
+                ExitOnFailure(hr, "Failed to plan cache action.");
+                pCacheAction->type = BURN_CACHE_ACTION_TYPE_DELAYABLE_END;
+
+                hr = AppendRollbackCacheAction(pPlan, &pCacheAction);
+                ExitOnFailure(hr, "Failed to plan cache action.");
+                pCacheAction->type = BURN_CACHE_ACTION_TYPE_DELAYABLE_END;
 
                 if (pPackage->fPerMachine)
                 {
@@ -1403,8 +1427,34 @@ extern "C" HRESULT PlanExecutePackage(
 
     if (BURN_CACHE_PACKAGE_TYPE_NONE != pPackage->executeCacheType || BURN_CACHE_PACKAGE_TYPE_NONE != pPackage->rollbackCacheType)
     {
+        if ((pPackage->execute == BOOTSTRAPPER_ACTION_STATE_NONE) && (pPackage->rollback == BOOTSTRAPPER_ACTION_STATE_NONE))
+        {
+            BURN_CACHE_ACTION* pCacheAction = NULL;
+
+            hr = AppendCacheAction(pPlan, &pCacheAction);
+            ExitOnFailure(hr, "Failed to plan cache action.");
+            pCacheAction->type = BURN_CACHE_ACTION_TYPE_DELAYABLE_START;
+
+            hr = AppendRollbackCacheAction(pPlan, &pCacheAction);
+            ExitOnFailure(hr, "Failed to plan cache action.");
+            pCacheAction->type = BURN_CACHE_ACTION_TYPE_DELAYABLE_START;
+        }
+
         hr = AddCachePackage(pPlan, pPackage, BURN_CACHE_PACKAGE_TYPE_REQUIRED == pPackage->executeCacheType);
         ExitOnFailure(hr, "Failed to plan cache package.");
+
+        if ((pPackage->execute == BOOTSTRAPPER_ACTION_STATE_NONE) && (pPackage->rollback == BOOTSTRAPPER_ACTION_STATE_NONE))
+        {
+            BURN_CACHE_ACTION* pCacheAction = NULL;
+
+            hr = AppendCacheAction(pPlan, &pCacheAction);
+            ExitOnFailure(hr, "Failed to plan cache action.");
+            pCacheAction->type = BURN_CACHE_ACTION_TYPE_DELAYABLE_END;
+
+            hr = AppendRollbackCacheAction(pPlan, &pCacheAction);
+            ExitOnFailure(hr, "Failed to plan cache action.");
+            pCacheAction->type = BURN_CACHE_ACTION_TYPE_DELAYABLE_END;
+        }
     }
 
     // Add execute actions.
@@ -1957,6 +2007,10 @@ extern "C" HRESULT PlanFinalizeActions(
     RemoveUnnecessaryActions(TRUE, pPlan->rgExecuteActions, pPlan->cExecuteActions);
 
     RemoveUnnecessaryActions(FALSE, pPlan->rgRollbackActions, pPlan->cRollbackActions);
+
+    FinalizeCacheActions(pPlan->rgCacheActions, pPlan->cCacheActions, pPlan->rgExecuteActions, pPlan->cExecuteActions);
+
+    FinalizeCacheActions(pPlan->rgRollbackCacheActions, pPlan->cRollbackCacheActions, pPlan->rgRollbackActions, pPlan->cRollbackActions);
 
     return hr;
 }
@@ -2912,6 +2966,164 @@ static void FinalizePatchActions(
     }
 }
 
+static void FinalizeCacheActions(
+    __in BURN_CACHE_ACTION* rgCacheActions,
+    __in DWORD cCacheActions,
+    __in BURN_EXECUTE_ACTION* rgActions,
+    __in DWORD cActions
+    )
+{
+    HRESULT hr = S_OK;
+    DWORD cDelayableCacheActions = 0;
+    DWORD cDelayableExecuteActions = 0;
+    DWORD iNextAction = 0;
+    DWORD iNextDelayableAction = 0;
+    DWORD iFirstDelayedCacheAction = 0;
+    DWORD iFirstDelayedExecuteAction = 0;
+    BURN_CACHE_ACTION* rgReorderedCacheActions = NULL;
+    BURN_EXECUTE_ACTION* rgReorderedActions = NULL;
+    BOOL fDelayable = FALSE;
+
+    for (DWORD i = 0; i < cCacheActions; ++i)
+    {
+        BURN_CACHE_ACTION* pCacheAction = rgCacheActions + i;
+
+        if (pCacheAction->type == BURN_CACHE_ACTION_TYPE_DELAYABLE_START)
+        {
+            ExitOnNull(!fDelayable, hr, E_UNEXPECTED, "Unexpected start delayable cache action");
+            fDelayable = TRUE;
+        }
+
+        if (fDelayable)
+        {
+            ++cDelayableCacheActions;
+
+            if (pCacheAction->type == BURN_CACHE_ACTION_TYPE_SIGNAL_SYNCPOINT)
+            {
+                cDelayableExecuteActions += 2; // Checkpoint + syncpoint
+            }
+        }
+
+        if (pCacheAction->type == BURN_CACHE_ACTION_TYPE_DELAYABLE_END)
+        {
+            ExitOnNull(fDelayable, hr, E_UNEXPECTED, "Unexpected end delayable cache action");
+            fDelayable = FALSE;
+        }
+    }
+
+    if ((cDelayableCacheActions == 0) || (cDelayableCacheActions == cCacheActions))
+    {
+        ExitFunction();
+    }
+
+    iFirstDelayedCacheAction = cCacheActions - cDelayableCacheActions;
+    iFirstDelayedExecuteAction = cActions - cDelayableExecuteActions;
+
+    rgReorderedCacheActions = (BURN_CACHE_ACTION*)MemAlloc(sizeof(BURN_CACHE_ACTION) * cCacheActions, FALSE);
+    ExitOnNull(rgReorderedCacheActions, hr, E_OUTOFMEMORY, "Failed to allocate memory");
+
+    rgReorderedActions = (BURN_EXECUTE_ACTION*)MemAlloc(sizeof(BURN_EXECUTE_ACTION) * cActions, FALSE);
+    ExitOnNull(rgReorderedActions, hr, E_OUTOFMEMORY, "Failed to allocate memory");
+
+    fDelayable = FALSE;
+    iNextAction = 0;
+    iNextDelayableAction = iFirstDelayedCacheAction;
+    for (DWORD i = 0; i < cCacheActions; ++i)
+    {
+        BURN_CACHE_ACTION* pSourceAction = rgCacheActions + i;
+        BURN_CACHE_ACTION* pDestAction = NULL;
+
+        if (pSourceAction->type == BURN_CACHE_ACTION_TYPE_DELAYABLE_START)
+        {
+            fDelayable = TRUE;
+        }
+
+        if (fDelayable)
+        {
+            if (pSourceAction->type == BURN_CACHE_ACTION_TYPE_PACKAGE)
+            {
+                LogId(REPORT_STANDARD, MSG_REORDERING_PACKAGE, pSourceAction->package.pPackage->sczId);
+            }
+
+            pDestAction = rgReorderedCacheActions + iNextDelayableAction;
+            ++iNextDelayableAction;
+        }
+        else
+        {
+            pDestAction = rgReorderedCacheActions + iNextAction;
+            ++iNextAction;
+        }
+
+        if (pSourceAction->type == BURN_CACHE_ACTION_TYPE_DELAYABLE_END)
+        {
+            fDelayable = FALSE;
+        }
+
+        memcpy_s(pDestAction, sizeof(BURN_CACHE_ACTION), pSourceAction, sizeof(BURN_CACHE_ACTION));
+    }
+    ExitOnNull((iNextDelayableAction == cCacheActions), hr, E_UNEXPECTED, "Unexpected last delayable cache location: %u instead of %u", iNextDelayableAction, cCacheActions);
+
+    // Delay cache sync actions in the execute sequence
+    iNextAction = 0;
+    iNextDelayableAction = iFirstDelayedExecuteAction;
+    for (DWORD i = 0; i < cActions; ++i)
+    {
+        BURN_EXECUTE_ACTION* pSourceAction = rgActions + i;
+        BURN_EXECUTE_ACTION* pDestAction = NULL;
+        fDelayable = FALSE;
+
+        if ((i < (cActions - 1)) && (pSourceAction->type == BURN_EXECUTE_ACTION_TYPE_CHECKPOINT) && (rgActions[i + 1].type == BURN_EXECUTE_ACTION_TYPE_WAIT_CACHE_PACKAGE))
+        {
+            for (DWORD j = iFirstDelayedCacheAction; j < cCacheActions; ++j)
+            {
+                BURN_CACHE_ACTION* pCacheAction = rgReorderedCacheActions + j;
+                if ((pCacheAction->type == BURN_CACHE_ACTION_TYPE_SIGNAL_SYNCPOINT) && (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, pCacheAction->syncpoint.pPackage->sczId, -1, rgActions[i + 1].waitCachePackage.pPackage->sczId, -1)))
+                {
+                    fDelayable = TRUE;
+                    break;
+                }
+            }
+        }
+
+        if (fDelayable)
+        {
+            // When we're delaying, we move both actions to the back
+            pDestAction = rgReorderedActions + iNextDelayableAction;
+            memcpy_s(pDestAction, 2 * sizeof(BURN_EXECUTE_ACTION), pSourceAction, 2 * sizeof(BURN_EXECUTE_ACTION));
+
+            iNextDelayableAction += 2;
+            ++i;
+        }
+        else
+        {
+            pDestAction = rgReorderedActions + iNextAction;
+            memcpy_s(pDestAction, sizeof(BURN_EXECUTE_ACTION), pSourceAction, sizeof(BURN_EXECUTE_ACTION));
+
+            ++iNextAction;
+        }
+    }
+    ExitOnNull((iNextDelayableAction == cActions), hr, E_UNEXPECTED, "Unexpected last delayable execute location: %u instead of %u", iNextDelayableAction, cActions);
+
+    // Nullify rollback boundaries in delayed execute checkpoints. Otherwise we might rollback past boudaries
+    for (DWORD i = 0; i < cActions; ++i)
+    {
+        BURN_EXECUTE_ACTION* pAction = rgActions + i;
+
+        if (pAction->type == BURN_EXECUTE_ACTION_TYPE_CHECKPOINT)
+        {
+            //TODO: Need to set new checkpoint numbers?
+            pAction->checkpoint.pActiveRollbackBoundary = NULL;
+        }
+    }
+
+    memcpy_s(rgCacheActions, cCacheActions * sizeof(BURN_CACHE_ACTION), rgReorderedCacheActions, cCacheActions * sizeof(BURN_CACHE_ACTION));
+    memcpy_s(rgActions, cActions * sizeof(BURN_EXECUTE_ACTION), rgReorderedActions, cActions * sizeof(BURN_EXECUTE_ACTION));
+
+LExit:
+    ReleaseMem(rgReorderedCacheActions);
+    ReleaseMem(rgReorderedActions);
+}
+
 static void CalculateExpectedRegistrationStates(
     __in BURN_PACKAGE* rgPackages,
     __in DWORD cPackages
@@ -3164,6 +3376,14 @@ static void CacheActionLog(
 
     case BURN_CACHE_ACTION_TYPE_SIGNAL_SYNCPOINT:
         LogStringLine(PlanDumpLevel, "%ls action[%u]: SIGNAL_SYNCPOINT package id: %ls, event handle: 0x%p", wzBase, iAction, pAction->syncpoint.pPackage->sczId, pAction->syncpoint.pPackage->hCacheEvent);
+        break;
+
+    case BURN_CACHE_ACTION_TYPE_DELAYABLE_START:
+        LogStringLine(PlanDumpLevel, "%ls action[%u]: delayable start", wzBase, iAction);
+        break;
+
+    case BURN_CACHE_ACTION_TYPE_DELAYABLE_END:
+        LogStringLine(PlanDumpLevel, "%ls action[%u]: delayable end", wzBase, iAction);
         break;
 
     default:
