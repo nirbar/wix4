@@ -101,7 +101,7 @@ namespace WixToolset.Core.WindowsInstaller.Bind
                 if (this.RegistrySymbolsById.TryGetValue(componentSymbol.KeyPath, out var registrySymbol))
                 {
                     var bitness = componentSymbol.Win64 ? "64" : String.Empty;
-                    var regkey = this.BackwardCompatibleGuidGeneration ?
+                    var regkey = this.BackwardCompatibleGuidGeneration || componentSymbol.WiX3CompatibleGuid ?
                         String.Concat(bitness, (int)registrySymbol.Root, "\\", registrySymbol.Key, "\\", registrySymbol.Name) :
                         String.Concat(bitness, registrySymbol.Root, "\\", registrySymbol.Key, "\\", registrySymbol.Name);
                     componentSymbol.ComponentId = this.BackendHelper.CreateGuid(BindDatabaseCommand.WixComponentGuidNamespace, regkey.ToLowerInvariant());

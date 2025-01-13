@@ -2125,6 +2125,7 @@ namespace WixToolset.Core
             var location = ComponentLocation.LocalOnly;
             var disableRegistryReflection = false;
 
+            var wiX3CompatibleGuid = false;
             var neverOverwrite = false;
             var permanent = false;
             var shared = false;
@@ -2172,6 +2173,9 @@ namespace WixToolset.Core
                             break;
                         case "Condition":
                             condition = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
+                            break;
+                        case "WiX3CompatibleGuid":
+                            wiX3CompatibleGuid = YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             break;
                         case "Directory":
                             directoryId = this.Core.GetAttributeIdentifierValue(sourceLineNumbers, attrib);
@@ -2523,6 +2527,15 @@ namespace WixToolset.Core
                 }
             }
 
+            if (wiX3CompatibleGuid && (guid != "*"))
+            {
+                this.Core.Write(ErrorMessages.IllegalAttributeValueWithoutOtherAttribute(sourceLineNumbers, node.Name.LocalName, "WiX3CompatibleGuid", "yes", "Guid", "*"));
+            }
+            if (wiX3CompatibleGuid && (ComponentKeyPathType.Registry != keyPathType))
+            {
+                this.Core.Write(WarningMessages.AlreadyWiX3CompatibleGuid(sourceLineNumbers, keyPathType));
+            }
+
             // finally add the Component table row
             if (!this.Core.EncounteredError)
             {
@@ -2542,6 +2555,7 @@ namespace WixToolset.Core
                     Transitive = transitive,
                     UninstallWhenSuperseded = uninstallWhenSuperseded,
                     Win64 = win64,
+                    WiX3CompatibleGuid = wiX3CompatibleGuid,
                 });
 
                 if (multiInstance)
