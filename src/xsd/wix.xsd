@@ -8414,6 +8414,13 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="WiX3CompatibleGuid" type="YesNoTypeUnion">
+        <xs:annotation>
+          <xs:documentation>
+            Generate WiX3-compatible GUID. Allowed only if auto-GUID is used (Id="*"), and when the key path is a registry key or value. Defaults to no.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:anyAttribute namespace="##other" processContents="lax">
         <xs:annotation>
           <xs:documentation>
