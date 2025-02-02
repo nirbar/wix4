@@ -315,7 +315,7 @@ static HRESULT LoadRelatedBundleFromKey(
     )
 {
     HRESULT hr = S_OK;
-    DWORD64 qwEngineVersion = 0;
+    LPWSTR sczEngineVersion = NULL;
     DWORD dwEngineProtocolVersion = 0;
     BOOL fSupportsBurnProtocol = FALSE;
     LPWSTR sczBundleVersion = NULL;
@@ -336,12 +336,15 @@ static HRESULT LoadRelatedBundleFromKey(
     else
     {
         // Rely on version checking (aka: version greater than or equal to last protocol breaking change *and* versions that are older or the same as this engine)
-        hr = RegReadVersion(hkBundleCode, BURN_REGISTRATION_REGISTRY_ENGINE_VERSION, &qwEngineVersion);
+        hr = RegReadString(hkBundleCode, BURN_REGISTRATION_REGISTRY_ENGINE_VERSION, &sczEngineVersion);
         if (SUCCEEDED(hr))
         {
-            fSupportsBurnProtocol = (FILEMAKEVERSION(3, 6, 2221, 0) <= qwEngineVersion && qwEngineVersion <= FILEMAKEVERSION(rmj, rmm, rup, rpr));
+            hr = VerParseVersion(sczEngineVersion, 0, FALSE, &pRelatedBundle->package.Bundle.pEngineVersion);
+            if (SUCCEEDED(hr))
+            {
+                VerCompareIsInRange(pRelatedBundle->package.Bundle.pEngineVersion, L"3.6.2221.0", wzVerMajorMinorBuild , TRUE, TRUE, TRUE, &fSupportsBurnProtocol);
+            }
         }
-
         hr = S_OK;
     }
 
@@ -422,6 +425,7 @@ LExit:
     DependencyUninitializeProvider(&dependencyProvider);
     ReleaseStr(sczCachePath);
     ReleaseStr(sczBundleVersion);
+    ReleaseStr(sczEngineVersion);
 
     return hr;
 }
