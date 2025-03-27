@@ -51,7 +51,7 @@ jobs:
 
       - name: 'Az CLI login'
         if: (github.ref == 'refs/heads/master')
-        uses: azure/login@v1
+        uses: azure/login@v2.2.0
         with:
           allow-no-subscriptions: true
           client-id: ${{ secrets.WIX_SIGNING_CLIENTID }}
@@ -87,7 +87,7 @@ jobs:
 
       - name: Save build
         if: always()
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: artifacts
           path: build/artifacts/
@@ -110,7 +110,7 @@ jobs:
       # Do NOT publish logs on `master` branch as they may contain secrets in them.
       - name: Save logs
         if: github.ref != 'refs/heads/master' && always()
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: logs_${{ github.run_id }}
           path: build/logs/
