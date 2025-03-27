@@ -1744,7 +1744,7 @@ static HRESULT VerifyThenTransferContainer(
     HANDLE hFile = INVALID_HANDLE_VALUE;
 
     // Get the container on disk actual hash.
-    hFile = ::CreateFileW(wzUnverifiedContainerPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    hFile = ::CreateFileW(wzUnverifiedContainerPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (INVALID_HANDLE_VALUE == hFile)
     {
         ExitWithLastError(hr, "Failed to open container in working path: %ls", wzUnverifiedContainerPath);
@@ -1764,6 +1764,10 @@ static HRESULT VerifyThenTransferContainer(
 
     LogStringLine(REPORT_STANDARD, "%ls container from working path '%ls' to path '%ls'", fMove ? L"Moving" : L"Copying", wzUnverifiedContainerPath, wzCachedPath);
 
+    if (fMove)
+    {
+        ReleaseFileHandle(hFile);
+    }
     hr = CacheTransferFileWithRetry(wzUnverifiedContainerPath, wzCachedPath, fMove, BURN_CACHE_STEP_FINALIZE, pContainer->qwFileSize, pfnCacheMessageHandler, pfnProgress, pContext);
 
 LExit:
@@ -1786,7 +1790,7 @@ static HRESULT VerifyThenTransferPayload(
     HANDLE hFile = INVALID_HANDLE_VALUE;
 
     // Get the payload on disk actual hash.
-    hFile = ::CreateFileW(wzUnverifiedPayloadPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    hFile = ::CreateFileW(wzUnverifiedPayloadPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (INVALID_HANDLE_VALUE == hFile)
     {
         ExitWithLastError(hr, "Failed to open payload in working path: %ls", wzUnverifiedPayloadPath);
@@ -1810,6 +1814,10 @@ static HRESULT VerifyThenTransferPayload(
 
     LogStringLine(REPORT_STANDARD, "%ls payload from working path '%ls' to path '%ls'", fMove ? L"Moving" : L"Copying", wzUnverifiedPayloadPath, wzCachedPath);
 
+    if (fMove)
+    {
+        ReleaseFileHandle(hFile);
+    }
     hr = CacheTransferFileWithRetry(wzUnverifiedPayloadPath, wzCachedPath, fMove, BURN_CACHE_STEP_FINALIZE, pPayload->qwFileSize, pfnCacheMessageHandler, pfnProgress, pContext);
 
 LExit:
@@ -1868,7 +1876,7 @@ static HRESULT VerifyFileAgainstContainer(
     HANDLE hFile = INVALID_HANDLE_VALUE;
 
     // Get the container on disk actual hash.
-    hFile = ::CreateFileW(wzVerifyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    hFile = ::CreateFileW(wzVerifyPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (INVALID_HANDLE_VALUE == hFile)
     {
         hr = HRESULT_FROM_WIN32(::GetLastError());
@@ -1890,6 +1898,7 @@ static HRESULT VerifyFileAgainstContainer(
         break;
     }
 
+    ReleaseFileHandle(hFile);
     if (fAlreadyCached)
     {
         LogId(REPORT_STANDARD, MSG_VERIFIED_EXISTING_CONTAINER, pContainer->sczId, wzVerifyPath);
@@ -1927,7 +1936,7 @@ static HRESULT VerifyFileAgainstPayload(
     BOOL fVerifyFileSize = FALSE;
 
     // Get the payload on disk actual hash.
-    hFile = ::CreateFileW(wzVerifyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    hFile = ::CreateFileW(wzVerifyPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (INVALID_HANDLE_VALUE == hFile)
     {
         hr = HRESULT_FROM_WIN32(::GetLastError());
@@ -1971,6 +1980,7 @@ static HRESULT VerifyFileAgainstPayload(
         break;
     }
 
+    ReleaseFileHandle(hFile);
     if (fAlreadyCached)
     {
         LogId(REPORT_STANDARD, MSG_VERIFIED_EXISTING_PAYLOAD, pPayload->sczKey, wzVerifyPath);
