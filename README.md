@@ -21,3 +21,5 @@ This repository contains the PanelSwWix4: A custom WiX Toolset codebase
 - Reorder cache actions: moves non-executing package caching to the end of the plan. This optimizes run time as packages that are cached but not executed will not stand in the way of executing packages.
 - [8896](https://github.com/wixtoolset/issues/issues/8896): Component/@WiX3CompatibleGuid- Support WiX3-compatible auto-guids for registry key path
 - [8962](https://github.com/wixtoolset/issues/issues/8962): ForceAbsent means a package can be removed even if it has other dependants
+- [9025](https://github.com/wixtoolset/issues/issues/9025): ArpEntry supports UninstallString that uses rundll32.exe
+
