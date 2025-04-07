@@ -16,7 +16,7 @@ namespace Bootstrapper
     using namespace System::IO;
     using namespace Xunit;
 
-    public ref class ApprovedExeText : BurnUnitTest, IClassFixture<TestRegistryFixture^>
+    public ref class ApprovedExeText : BurnUnitTest
     {
     public:
         ApprovedExeText(BurnTestFixture^ fixture) : BurnUnitTest(fixture)
@@ -50,6 +50,47 @@ namespace Bootstrapper
                 hr = ApprovedExesVerifySecureLocation(&cache, &variables, scz2, 0, NULL);
                 NativeAssert::Succeeded(hr, "Failed to test secure location under ProgramFilesFolder");
                 Assert::True((hr == S_OK), "Path under ProgramFilesFolder was expected to be safe");
+            }
+            finally
+            {
+                ReleaseStr(internalCommand.sczEngineWorkingDirectory);
+                ReleaseStr(scz);
+                ReleaseStr(scz2);
+
+                CacheUninitialize(&cache);
+                VariablesUninitialize(&variables);
+            }
+        }
+
+        [Fact]
+        void ApprovedExesVerifyPFilesWithRelativeTest()
+        {
+            HRESULT hr = S_OK;
+            BURN_CACHE cache = { };
+            BURN_ENGINE_COMMAND internalCommand = { };
+            BURN_VARIABLES variables = { };
+            LPWSTR scz = NULL;
+            LPWSTR scz2 = NULL;
+
+            try
+            {
+                hr = VariableInitialize(&variables);
+                NativeAssert::Succeeded(hr, L"Failed to initialize variables.");
+
+                hr = CacheInitialize(&cache, &internalCommand);
+                NativeAssert::Succeeded(hr, "Failed to initialize cache.");
+                cache.fPerMachineCacheRootVerified = TRUE;
+                cache.fOriginalPerMachineCacheRootVerified = TRUE;
+
+                hr = VariableGetString(&variables, L"ProgramFilesFolder", &scz);
+                NativeAssert::Succeeded(hr, "Failed to get variable ProgramFilesFolder.");
+
+                hr = PathConcat(scz, L"..\\a.exe", &scz2);
+                NativeAssert::Succeeded(hr, "Failed to combine paths");
+
+                hr = ApprovedExesVerifySecureLocation(&cache, &variables, scz2, 0, NULL);
+                NativeAssert::Succeeded(hr, "Failed to test secure location under ProgramFilesFolder");
+                Assert::True((hr == S_FALSE), "Path pretending to be under ProgramFilesFolder was expected to be unsafe");
             }
             finally
             {
