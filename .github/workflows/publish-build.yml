@@ -51,5 +51,5 @@ jobs:
           dotnet nuget add source --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
           dotnet nuget push "PanelSwWix4.*.${{ env.WIX_VERSION }}.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source github
           dotnet nuget push "PanelSwWix4.*.${{ env.WIX_VERSION }}.nupkg" --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json
-          git tag v${{ env.WIX_VERSION }}
+          git tag ${{ env.WIX_VERSION }}
           git push --tags
