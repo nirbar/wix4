@@ -62,6 +62,7 @@ if exist "%_NUGET_CACHE%\panelswwix4.ui.wixext" rd /s/q "%_NUGET_CACHE%\panelsww
 if exist "%_NUGET_CACHE%\panelswwix4.versioning" rd /s/q "%_NUGET_CACHE%\panelswwix4.versioning"
 if exist "%_NUGET_CACHE%\panelswwix4.visualstudio.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.visualstudio.wixext"
 if exist "%_NUGET_CACHE%\panelswwix4.wcautil" rd /s/q "%_NUGET_CACHE%\panelswwix4.wcautil"
+if exist "%_NUGET_CACHE%\panelswwix4.wixstandardbootstrapperapplicationfunctionapi" rd /s/q "%_NUGET_CACHE%\panelswwix4.wixstandardbootstrapperapplicationfunctionapi"
 if exist "%_NUGET_CACHE%\wix" rd /s/q "%_NUGET_CACHE%\wix"
 
 popd
