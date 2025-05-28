@@ -40,8 +40,6 @@
     <PackageVersion Include="WixInternal.Core.TestPackage" Version="{packageversion}" />
     <PackageVersion Include="WixInternal.Core.MSTestPackage" Version="{packageversion}" />
 
-    <PackageVersion Include="PanelSwWix4.Heat" Version="{packageversion}" />
-
     <PackageVersion Include="PanelSwWix4.Bal.wixext" Version="{packageversion}" />
     <PackageVersion Include="PanelSwWix4.BootstrapperApplications.wixext" Version="{packageversion}" />
     <PackageVersion Include="PanelSwWix4.ComPlus.wixext" Version="{packageversion}" />
@@ -79,13 +77,7 @@
     <PackageVersion Include="NuGet.Versioning" Version="6.12.1" />
   </ItemGroup>
 
-  <!--
-    These MSBuild versions are trapped in antiquity for heat.exe.
-  -->
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="14.3.0" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'">
+  <ItemGroup>
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="15.7.179" />
   </ItemGroup>
 

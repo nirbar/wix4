@@ -48,7 +48,6 @@ if exist "%_NUGET_CACHE%\panelswwix4.dtf.windowsinstaller.package" rd /s/q "%_NU
 if exist "%_NUGET_CACHE%\panelswwix4.dutil" rd /s/q "%_NUGET_CACHE%\panelswwix4.dutil"
 if exist "%_NUGET_CACHE%\panelswwix4.extensibility" rd /s/q "%_NUGET_CACHE%\panelswwix4.extensibility"
 if exist "%_NUGET_CACHE%\panelswwix4.firewall.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.firewall.wixext"
-if exist "%_NUGET_CACHE%\panelswwix4.heat" rd /s/q "%_NUGET_CACHE%\panelswwix4.heat"
 if exist "%_NUGET_CACHE%\panelswwix4.http.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.http.wixext"
 if exist "%_NUGET_CACHE%\panelswwix4.iis.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.iis.wixext"
 if exist "%_NUGET_CACHE%\panelswwix4.bootstrapperapplicationapi" rd /s/q "%_NUGET_CACHE%\panelswwix4.bootstrapperapplicationapi"
