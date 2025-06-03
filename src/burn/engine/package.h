@@ -352,6 +352,9 @@ typedef struct _BURN_PACKAGE
             LPWSTR* rgsczPatchCodes;
             DWORD cPatchCodes;
 
+            LPWSTR* rgsczUninstallCodes;
+            DWORD cUninstallCodes;
+
             BOOL fHideARP;
             BOOL fWin64;
             BOOL fSupportsBurnProtocol;
@@ -362,6 +365,7 @@ typedef struct _BURN_PACKAGE
             BURN_EXE_COMMAND_LINE_ARGUMENT* rgCommandLineArguments;
             DWORD cCommandLineArguments;
 
+            LPWSTR sczIgnoreRelatedBundleCodes;
             LPWSTR sczIgnoreDependencies;
             LPCWSTR wzAncestors; // points directly into engine state.
             LPCWSTR wzEngineWorkingDirectory; // points directly into engine state.

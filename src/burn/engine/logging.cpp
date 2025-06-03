@@ -929,10 +929,14 @@ extern "C" LPCSTR LoggingPlanRelationTypeToString(
         return "Addon";
     case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_PATCH:
         return "Patch";
+    case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_UNINSTALL:
+        return "Uninstall";
     case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_ADDON:
         return "DependentAddon";
     case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_PATCH:
         return "DependentPatch";
+    case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_UNINSTALL:
+        return "DependentUninstall";
     default:
         return "Invalid";
     }
@@ -981,10 +985,14 @@ extern "C" LPCSTR LoggingRelationTypeToString(
         return "Addon";
     case BOOTSTRAPPER_RELATION_PATCH:
         return "Patch";
+    case BOOTSTRAPPER_RELATION_UNINSTALL:
+        return "Uninstall";
     case BOOTSTRAPPER_RELATION_DEPENDENT_ADDON:
         return "DependentAddon";
     case BOOTSTRAPPER_RELATION_DEPENDENT_PATCH:
         return "DependentPatch";
+    case BOOTSTRAPPER_RELATION_DEPENDENT_UNINSTALL:
+        return "DependentUninstall";
     case BOOTSTRAPPER_RELATION_UPDATE:
         return "Update";
     case BOOTSTRAPPER_RELATION_CHAIN_PACKAGE:

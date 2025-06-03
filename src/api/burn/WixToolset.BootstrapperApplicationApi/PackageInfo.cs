@@ -53,6 +53,11 @@ namespace WixToolset.BootstrapperApplicationApi
         PatchBundle,
 
         /// <summary>
+        /// Related bundle of type Uninstall
+        /// </summary>
+        UninstallBundle,
+
+        /// <summary>
         /// Related bundle of type Update
         /// </summary>
         UpdateBundle,
@@ -318,6 +323,9 @@ namespace WixToolset.BootstrapperApplicationApi
                     break;
                 case RelationType.Patch:
                     package.Type = PackageType.PatchBundle;
+                    break;
+                case RelationType.Uninstall:
+                    package.Type = PackageType.UninstallBundle;
                     break;
                 case RelationType.Upgrade:
                     package.Type = PackageType.UpgradeBundle;

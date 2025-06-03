@@ -101,7 +101,7 @@ extern "C" HRESULT BundlePackageEngineParsePackageFromXml(
     hr = XmlGetYesNoAttribute(pixnBundlePackage, L"Win64", &pPackage->Bundle.fWin64);
     ExitOnRequiredXmlQueryFailure(hr, "Failed to get @Win64.");
 
-    hr = BundlePackageEngineParseRelatedCodes(pixnBundlePackage, &pPackage->Bundle.rgsczDetectCodes, &pPackage->Bundle.cDetectCodes, &pPackage->Bundle.rgsczUpgradeCodes, &pPackage->Bundle.cUpgradeCodes, &pPackage->Bundle.rgsczAddonCodes, &pPackage->Bundle.cAddonCodes, &pPackage->Bundle.rgsczPatchCodes, &pPackage->Bundle.cPatchCodes);
+    hr = BundlePackageEngineParseRelatedCodes(pixnBundlePackage, &pPackage->Bundle.rgsczDetectCodes, &pPackage->Bundle.cDetectCodes, &pPackage->Bundle.rgsczUpgradeCodes, &pPackage->Bundle.cUpgradeCodes, &pPackage->Bundle.rgsczAddonCodes, &pPackage->Bundle.cAddonCodes, &pPackage->Bundle.rgsczPatchCodes, &pPackage->Bundle.cPatchCodes, &pPackage->Bundle.rgsczUninstallCodes, &pPackage->Bundle.cUninstallCodes);
     ExitOnFailure(hr, "Failed to parse related codes.");
 
     hr = ExeEngineParseExitCodesFromXml(pixnBundlePackage, &pPackage->Bundle.rgExitCodes, &pPackage->Bundle.cExitCodes);
@@ -129,7 +129,9 @@ extern "C" HRESULT BundlePackageEngineParseRelatedCodes(
     __in LPWSTR** prgsczAddonCodes,
     __in DWORD* pcAddonCodes,
     __in LPWSTR** prgsczPatchCodes,
-    __in DWORD* pcPatchCodes
+    __in DWORD* pcPatchCodes,
+    __in LPWSTR** prgsczUninstallCodes,
+    __in DWORD* pcUninstallCodes
     )
 {
     HRESULT hr = S_OK;
@@ -192,6 +194,15 @@ extern "C" HRESULT BundlePackageEngineParseRelatedCodes(
             sczCode = NULL;
             *pcPatchCodes += 1;
         }
+        else if (CSTR_EQUAL == ::CompareStringW(LOCALE_INVARIANT, 0, sczAction, -1, L"Uninstall", -1))
+        {
+            hr = MemEnsureArraySizeForNewItems(reinterpret_cast<LPVOID*>(prgsczUninstallCodes), *pcUninstallCodes, 1, sizeof(LPWSTR), 5);
+            ExitOnFailure(hr, "Failed to resize Uninstall code array");
+
+            (*prgsczUninstallCodes)[*pcUninstallCodes] = sczCode;
+            sczCode = NULL;
+            *pcUninstallCodes += 1;
+        }
         else
         {
             hr = E_INVALIDARG;
@@ -221,6 +232,7 @@ extern "C" void BundlePackageEnginePackageUninitialize(
     ReleaseStr(pPackage->Bundle.sczRepairArguments);
     ReleaseStr(pPackage->Bundle.sczUninstallArguments);
     ReleaseStr(pPackage->Bundle.sczIgnoreDependencies);
+    ReleaseStr(pPackage->Bundle.sczIgnoreRelatedBundleCodes);
     ReleaseMem(pPackage->Bundle.rgExitCodes);
 
     // free command-line arguments
@@ -257,6 +269,12 @@ extern "C" void BundlePackageEnginePackageUninitialize(
     }
     ReleaseMem(pPackage->Bundle.rgsczPatchCodes);
 
+    for (DWORD i = 0; i < pPackage->Bundle.cUninstallCodes; ++i)
+    {
+        ReleaseStr(pPackage->Bundle.rgsczUninstallCodes[i]);
+    }
+    ReleaseMem(pPackage->Bundle.rgsczUninstallCodes);
+
     // clear struct
     memset(&pPackage->Bundle, 0, sizeof(pPackage->Bundle));
 }
@@ -283,6 +301,8 @@ extern "C" HRESULT BundlePackageEngineDetectPackage(
         pPackage->Bundle.cAddonCodes,
         const_cast<LPCWSTR*>(pPackage->Bundle.rgsczPatchCodes),
         pPackage->Bundle.cPatchCodes,
+        const_cast<LPCWSTR*>(pPackage->Bundle.rgsczUninstallCodes),
+        pPackage->Bundle.cUninstallCodes,
         QueryRelatedBundlesCallback,
         &queryContext);
     ExitOnFailure(hr, "Failed to query per-machine related bundle packages.");
@@ -297,6 +317,8 @@ extern "C" HRESULT BundlePackageEngineDetectPackage(
         pPackage->Bundle.cAddonCodes,
         const_cast<LPCWSTR*>(pPackage->Bundle.rgsczPatchCodes),
         pPackage->Bundle.cPatchCodes,
+        const_cast<LPCWSTR*>(pPackage->Bundle.rgsczUninstallCodes),
+        pPackage->Bundle.cUninstallCodes,
         QueryRelatedBundlesCallback,
         &queryContext);
     ExitOnFailure(hr, "Failed to query per-user related bundle packages.");
@@ -653,8 +675,29 @@ extern "C" HRESULT BundlePackageEngineExecuteRelatedBundle(
     BURN_RELATED_BUNDLE* pRelatedBundle = pExecuteAction->relatedBundle.pRelatedBundle;
     BOOTSTRAPPER_RELATION_TYPE relationType = ConvertRelationType(pRelatedBundle->planRelationType);
     BURN_PACKAGE* pPackage = &pRelatedBundle->package;
+    BOOL fRegsitered = FALSE;
+    LPWSTR szQuietUninstallString = NULL;
+    HRESULT hr = S_OK;
 
-    return ExecuteBundle(pCache, pVariables, fRollback, TRUE, pfnGenericMessageHandler, pvContext, action, relationType, pPackage, TRUE, wzParent, wzIgnoreDependencies, wzAncestors, wzEngineWorkingDirectory, pRestart);
+    // Check if an uninstall related bundle was already uninstalled by one of the chain packages. If so, we don't need to uninstall it, and can't install it on rollback.
+    if (BOOTSTRAPPER_RELATION_UNINSTALL == pRelatedBundle->detectRelationType)
+    {
+        hr = DetectArpEntry(pPackage, &fRegsitered, &szQuietUninstallString);
+        ExitOnFailure(hr, "Failed to read ARP data for related bundle: %ls", pPackage->sczId);
+
+        if (!fRegsitered)
+        {
+            LogId(REPORT_STANDARD, MSG_SKIP_RELATED_BUNDLE_UNINSTALL, pPackage->sczId, LoggingActionStateToString(action));
+            ExitFunction();
+        }
+    }
+
+    hr = ExecuteBundle(pCache, pVariables, fRollback, TRUE, pfnGenericMessageHandler, pvContext, action, relationType, pPackage, TRUE, wzParent, wzIgnoreDependencies, wzAncestors, wzEngineWorkingDirectory, pRestart);
+
+LExit:
+    ReleaseStr(szQuietUninstallString);
+
+    return hr;
 }
 
 extern "C" void BundlePackageEngineUpdateInstallRegistrationState(
@@ -1088,7 +1131,9 @@ static HRESULT DetectArpEntry(
 
     if (!pPackage->Bundle.sczArpKeyPath)
     {
-        hr = PathConcatRelativeToBase(L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", pPackage->Bundle.sczBundleCode, &pPackage->Bundle.sczArpKeyPath);
+        LPCWSTR szCode = pPackage->Bundle.sczBundleCode && *pPackage->Bundle.sczBundleCode ? pPackage->Bundle.sczBundleCode : pPackage->sczId;
+
+        hr = PathConcatRelativeToBase(L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", szCode, &pPackage->Bundle.sczArpKeyPath);
         ExitOnFailure(hr, "Failed to build full key path.");
     }
 
@@ -1124,10 +1169,14 @@ static BOOTSTRAPPER_RELATION_TYPE ConvertRelationType(
         return BOOTSTRAPPER_RELATION_ADDON;
     case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_PATCH:
         return BOOTSTRAPPER_RELATION_PATCH;
+    case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_UNINSTALL:
+        return BOOTSTRAPPER_RELATION_UNINSTALL;
     case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_ADDON:
         return BOOTSTRAPPER_RELATION_DEPENDENT_ADDON;
     case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_PATCH:
         return BOOTSTRAPPER_RELATION_DEPENDENT_PATCH;
+    case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_UNINSTALL:
+        return BOOTSTRAPPER_RELATION_DEPENDENT_UNINSTALL;
     default:
         AssertSz(BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_NONE == relationType, "Unknown BUNDLE_RELATION_TYPE");
         return BOOTSTRAPPER_RELATION_NONE;

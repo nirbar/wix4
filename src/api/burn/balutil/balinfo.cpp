@@ -179,6 +179,10 @@ DAPI_(HRESULT) BalInfoAddRelatedBundleAsPackage(
         type = BAL_INFO_PACKAGE_TYPE_BUNDLE_PATCH;
         break;
 
+    case BOOTSTRAPPER_RELATION_UNINSTALL:
+        type = BAL_INFO_PACKAGE_TYPE_BUNDLE_UNINSTALL;
+        break;
+
     case BOOTSTRAPPER_RELATION_UPGRADE:
         type = BAL_INFO_PACKAGE_TYPE_BUNDLE_UPGRADE;
         break;

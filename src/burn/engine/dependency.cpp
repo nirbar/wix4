@@ -393,6 +393,11 @@ extern "C" HRESULT DependencyAddIgnoreDependencies(
     // Parse through the semicolon-delimited tokens and add to the array.
     for (LPCWSTR wzToken = ::wcstok_s(const_cast<LPWSTR>(wzAddIgnoreDependencies), vcszIgnoreDependenciesDelim, &wzContext); wzToken; wzToken = ::wcstok_s(NULL, vcszIgnoreDependenciesDelim, &wzContext))
     {
+        if (!*wzToken)
+        {
+            continue;
+        }
+
         hr = DictKeyExists(sdIgnoreDependencies, wzToken);
         if (E_NOTFOUND != hr)
         {
@@ -1150,6 +1155,12 @@ static HRESULT GetIgnoredDependents(
 
         hr = DictAddKey(*psdIgnoredDependents, pDependency->sczKey);
         ExitOnFailure(hr, "Failed to add the package provider key \"%ls\" to the list of ignored dependencies.", pDependency->sczKey);
+    }
+
+    if (BURN_PACKAGE_TYPE_BUNDLE == pPackage->type && pPackage->Bundle.sczIgnoreRelatedBundleCodes && *pPackage->Bundle.sczIgnoreRelatedBundleCodes)
+    {
+        hr = DependencyAddIgnoreDependencies(*psdIgnoredDependents, pPackage->Bundle.sczIgnoreRelatedBundleCodes);
+        ExitOnFailure(hr, "Failed to add related bundles to the cumulative list of ignored dependencies.");
     }
 
     // Get the IGNOREDEPENDENCIES property if defined.

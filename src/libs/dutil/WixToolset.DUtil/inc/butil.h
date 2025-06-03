@@ -25,8 +25,10 @@ typedef enum _BUNDLE_RELATION_TYPE
     BUNDLE_RELATION_UPGRADE,
     BUNDLE_RELATION_ADDON,
     BUNDLE_RELATION_PATCH,
+    BUNDLE_RELATION_UNINSTALL,
     BUNDLE_RELATION_DEPENDENT_ADDON,
     BUNDLE_RELATION_DEPENDENT_PATCH,
+    BUNDLE_RELATION_DEPENDENT_UNINSTALL,
 } BUNDLE_RELATION_TYPE;
 
 typedef struct _BUNDLE_QUERY_RELATED_BUNDLE_RESULT
@@ -201,6 +203,8 @@ HRESULT BundleQueryRelatedBundles(
     __in DWORD cAddonCodes,
     __in_z_opt LPCWSTR* rgwzPatchCodes,
     __in DWORD cPatchCodes,
+    __in_z_opt LPCWSTR* rgwzUninstallCodes,
+    __in DWORD cUninstallCodes,
     __in PFNBUNDLE_QUERY_RELATED_BUNDLE_CALLBACK pfnCallback,
     __in_opt LPVOID pvContext
     );

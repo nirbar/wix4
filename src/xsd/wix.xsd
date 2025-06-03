@@ -2358,6 +2358,7 @@
             <xs:enumeration value="upgrade" />
             <xs:enumeration value="addon" />
             <xs:enumeration value="patch" />
+            <xs:enumeration value="uninstall" />
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>
@@ -2408,6 +2409,7 @@
             <xs:enumeration value="upgrade" />
             <xs:enumeration value="addon" />
             <xs:enumeration value="patch" />
+            <xs:enumeration value="uninstall" />
           </xs:restriction>
         </xs:simpleType>
       </xs:attribute>

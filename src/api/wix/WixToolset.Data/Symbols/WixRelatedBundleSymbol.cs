@@ -34,7 +34,8 @@ namespace WixToolset.Data.Symbols
         Detect,
         Upgrade,
         Addon,
-        Patch
+        Patch,
+        Uninstall,
     }
 
     public class WixRelatedBundleSymbol : IntermediateSymbol

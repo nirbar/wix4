@@ -1330,3 +1330,17 @@ SymbolicName=MSG_DEPENDENCY_PACKAGE_DEPENDENTS_OVERRIDDEN
 Language=English
 BA requested to uninstall package: %1!ls!, despite dependents:
 .
+
+MessageId=709
+Severity=Warning
+SymbolicName=MSG_PLAN_SKIPPED_RELATED_UNINSTALL_AS_BUNDLE_PACKAGE
+Language=English
+Plan skipped related bundle: %1!ls!, because it is also a bundle package.
+.
+
+MessageId=710
+Severity=Warning
+SymbolicName=MSG_SKIP_RELATED_BUNDLE_UNINSTALL
+Language=English
+Skipped related uninstall bundle: %1!ls! since it is already absent, action: %2!hs!.
+.
