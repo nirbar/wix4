@@ -24,6 +24,7 @@ const LPCWSTR BUNDLE_REGISTRATION_REGISTRY_BUNDLE_ADDON_CODE = L"BundleAddonCode
 const LPCWSTR BUNDLE_REGISTRATION_REGISTRY_BUNDLE_DETECT_CODE = L"BundleDetectCode";
 const LPCWSTR BUNDLE_REGISTRATION_REGISTRY_BUNDLE_PATCH_CODE = L"BundlePatchCode";
 const LPCWSTR BUNDLE_REGISTRATION_REGISTRY_BUNDLE_UPGRADE_CODE = L"BundleUpgradeCode";
+const LPCWSTR BUNDLE_REGISTRATION_REGISTRY_BUNDLE_UNINSTALL_CODE = L"BundleUninstallCode";
 const LPCWSTR BUNDLE_REGISTRATION_REGISTRY_BUNDLE_PROVIDER_KEY = L"BundleProviderKey";
 const LPCWSTR BUNDLE_REGISTRATION_REGISTRY_BUNDLE_VARIABLE_KEY = L"variables";
 
@@ -52,6 +53,9 @@ typedef struct _BUNDLE_QUERY_CONTEXT
 
     LPCWSTR* rgwzPatchCodes;
     DWORD cPatchCodes;
+
+    LPCWSTR* rgwzUninstallCodes;
+    DWORD cUninstallCodes;
 } BUNDLE_QUERY_CONTEXT;
 
 // Forward declarations.
@@ -355,6 +359,8 @@ DAPI_(HRESULT) BundleQueryRelatedBundles(
     __in DWORD cAddonCodes,
     __in_z_opt LPCWSTR* rgwzPatchCodes,
     __in DWORD cPatchCodes,
+    __in_z_opt LPCWSTR* rgwzUninstallCodes,
+    __in DWORD cUninstallCodes,
     __in PFNBUNDLE_QUERY_RELATED_BUNDLE_CALLBACK pfnCallback,
     __in_opt LPVOID pvContext
     )
@@ -377,6 +383,8 @@ DAPI_(HRESULT) BundleQueryRelatedBundles(
     queryContext.cAddonCodes = cAddonCodes;
     queryContext.rgwzPatchCodes = rgwzPatchCodes;
     queryContext.cPatchCodes = cPatchCodes;
+    queryContext.rgwzUninstallCodes = rgwzUninstallCodes;
+    queryContext.cUninstallCodes = cUninstallCodes;
     queryContext.pfnCallback = pfnCallback;
     queryContext.pvContext = pvContext;
 
@@ -496,6 +504,9 @@ static HRESULT DetermineRelationType(
     LPWSTR* rgsczPatchCodes = NULL;
     DWORD cPatchCodes = 0;
     STRINGDICT_HANDLE sdPatchCodes = NULL;
+    LPWSTR* rgsczUninstallCodes = NULL;
+    DWORD cUninstallCodes = 0;
+    STRINGDICT_HANDLE sdUninstallCodes = NULL;
 
     *pRelationType = BUNDLE_RELATION_NONE;
 
@@ -573,6 +584,20 @@ static HRESULT DetermineRelationType(
             ButilExitOnFailure(hr, "Failed to do array search for patch code match.");
 
             *pRelationType = BUNDLE_RELATION_DEPENDENT_PATCH;
+            ExitFunction();
+        }
+
+        // Uninstall relationship: when their upgrade codes match our uninstall codes.
+        hr = DictCompareStringListToArray(sdUpgradeCodes, const_cast<LPCWSTR*>(pQueryContext->rgwzUninstallCodes), pQueryContext->cUninstallCodes);
+        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
+        {
+            hr = S_OK;
+        }
+        else
+        {
+            ButilExitOnFailure(hr, "Failed to do array search for patch code match.");
+
+            *pRelationType = BUNDLE_RELATION_UNINSTALL;
             ExitFunction();
         }
 
@@ -658,6 +683,45 @@ static HRESULT DetermineRelationType(
         ReleaseNullStrArray(rgsczPatchCodes, cPatchCodes);
     }
 
+    // Compare uninstall codes.
+    hr = RegReadStringArray(hkBundleCode, BUNDLE_REGISTRATION_REGISTRY_BUNDLE_UNINSTALL_CODE, &rgsczUninstallCodes, &cUninstallCodes);
+    if (SUCCEEDED(hr))
+    {
+        hr = DictCreateStringListFromArray(&sdUninstallCodes, rgsczUninstallCodes, cUninstallCodes, DICT_FLAG_CASEINSENSITIVE);
+        ButilExitOnFailure(hr, "Failed to create string dictionary for %hs.", "uninstall codes");
+
+        // Uninstall relationship: when their uninstall codes match our detect codes.
+        hr = DictCompareStringListToArray(sdUninstallCodes, const_cast<LPCWSTR*>(pQueryContext->rgwzDetectCodes), pQueryContext->cDetectCodes);
+        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
+        {
+            hr = S_OK;
+        }
+        else
+        {
+            ButilExitOnFailure(hr, "Failed to do array search for uninstall code match.");
+
+            *pRelationType = BUNDLE_RELATION_DEPENDENT_UNINSTALL;
+            ExitFunction();
+        }
+
+        // Uninstall relationship: when their uninstall codes match our upgrade codes.
+        hr = DictCompareStringListToArray(sdUninstallCodes, const_cast<LPCWSTR*>(pQueryContext->rgwzUpgradeCodes), pQueryContext->cUpgradeCodes);
+        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
+        {
+            hr = S_OK;
+        }
+        else
+        {
+            ButilExitOnFailure(hr, "Failed to do array search for uninstall code match.");
+
+            *pRelationType = BUNDLE_RELATION_DEPENDENT_UNINSTALL;
+            ExitFunction();
+        }
+
+        ReleaseNullDict(sdUninstallCodes);
+        ReleaseNullStrArray(rgsczUninstallCodes, cUninstallCodes);
+    }
+
     // Compare detect codes.
     hr = RegReadStringArray(hkBundleCode, BUNDLE_REGISTRATION_REGISTRY_BUNDLE_DETECT_CODE, &rgsczDetectCodes, &cDetectCodes);
     if (SUCCEEDED(hr))
@@ -707,6 +771,20 @@ static HRESULT DetermineRelationType(
             ExitFunction();
         }
 
+        // Dependent relationship: when their detect codes match our uninstall codes.
+        hr = DictCompareStringListToArray(sdDetectCodes, const_cast<LPCWSTR*>(pQueryContext->rgwzUninstallCodes), pQueryContext->cUninstallCodes);
+        if (HRESULT_FROM_WIN32(ERROR_NO_MATCH) == hr)
+        {
+            hr = S_OK;
+        }
+        else
+        {
+            ButilExitOnFailure(hr, "Failed to do array search for uninstall code match.");
+
+            *pRelationType = BUNDLE_RELATION_DEPENDENT_UNINSTALL;
+            ExitFunction();
+        }
+
         ReleaseNullDict(sdDetectCodes);
         ReleaseNullStrArray(rgsczDetectCodes, cDetectCodes);
     }
@@ -725,6 +803,8 @@ LExit:
     ReleaseStrArray(rgsczDetectCodes, cDetectCodes);
     ReleaseDict(sdPatchCodes);
     ReleaseStrArray(rgsczPatchCodes, cPatchCodes);
+    ReleaseDict(sdUninstallCodes);
+    ReleaseStrArray(rgsczUninstallCodes, cUninstallCodes);
 
     return hr;
 }

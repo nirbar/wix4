@@ -1,0 +1,16 @@
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+<Project Sdk="PanelSwWix4.Sdk">
+  <Import Project="BundleE.props" />
+  <PropertyGroup>
+    <TestVersion>2.0.0.0</TestVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PackageB\PackageB.wixproj" />
+    <ProjectReference Include="..\BundleAv2\BundleAv2.wixproj" />
+    <ProjectReference Include="..\..\TestBA\TestBAWixlib\testbawixlib.wixproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PanelSwWix4.BootstrapperApplications.wixext" />
+    <PackageReference Include="PanelSwWix4.NetFx.wixext" />
+  </ItemGroup>
+</Project>

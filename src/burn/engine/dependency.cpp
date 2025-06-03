@@ -1310,6 +1310,12 @@ static HRESULT GetIgnoredDependents(
         ExitOnFailure(hr, "Failed to add the package provider key \"%ls\" to the list of ignored dependencies.", pDependency->sczKey);
     }
 
+    if (BURN_PACKAGE_TYPE_BUNDLE == pPackage->type && pPackage->Bundle.sczIgnoreRelatedBundleCodes && *pPackage->Bundle.sczIgnoreRelatedBundleCodes)
+    {
+        hr = DependencyAddIgnoreDependencies(*psdIgnoredDependents, pPackage->Bundle.sczIgnoreRelatedBundleCodes);
+        ExitOnFailure(hr, "Failed to add related bundles to the cumulative list of ignored dependencies.");
+    }
+
     // Get the IGNOREDEPENDENCIES property if defined.
     hr = PackageGetProperty(pPackage, DEPENDENCY_IGNOREDEPENDENCIES, &sczIgnoreDependencies);
     if (E_NOTFOUND != hr)

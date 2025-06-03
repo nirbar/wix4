@@ -151,7 +151,7 @@ extern "C" HRESULT RegistrationParseFromXml(
     hr = XmlGetAttributeEx(pixnRegistrationNode, L"PrimaryUpgradeCode", &pRegistration->sczPrimaryUpgradeCode);
     ExitOnOptionalXmlQueryFailure(hr, fFoundXml, "Failed to get @PrimaryUpgradeCode.");
 
-    hr = BundlePackageEngineParseRelatedCodes(pixnBundle, &pRegistration->rgsczDetectCodes, &pRegistration->cDetectCodes, &pRegistration->rgsczUpgradeCodes, &pRegistration->cUpgradeCodes, &pRegistration->rgsczAddonCodes, &pRegistration->cAddonCodes, &pRegistration->rgsczPatchCodes, &pRegistration->cPatchCodes);
+    hr = BundlePackageEngineParseRelatedCodes(pixnBundle, &pRegistration->rgsczDetectCodes, &pRegistration->cDetectCodes, &pRegistration->rgsczUpgradeCodes, &pRegistration->cUpgradeCodes, &pRegistration->rgsczAddonCodes, &pRegistration->cAddonCodes, &pRegistration->rgsczPatchCodes, &pRegistration->cPatchCodes, &pRegistration->rgsczUninstallCodes, &pRegistration->cUninstallCodes);
     ExitOnFailure(hr, "Failed to parse related bundles");
 
     // @Version
@@ -357,6 +357,12 @@ extern "C" void RegistrationUninitialize(
         ReleaseStr(pRegistration->rgsczPatchCodes[i]);
     }
     ReleaseMem(pRegistration->rgsczPatchCodes);
+
+    for (DWORD i = 0; i < pRegistration->cUninstallCodes; ++i)
+    {
+        ReleaseStr(pRegistration->rgsczUninstallCodes[i]);
+    }
+    ReleaseMem(pRegistration->rgsczUninstallCodes);
 
     ReleaseStr(pRegistration->sczProviderKey);
     ReleaseStr(pRegistration->sczExecutableName);
@@ -652,6 +658,9 @@ extern "C" HRESULT RegistrationSessionBegin(
 
     hr = RegWriteStringArray(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_PATCH_CODE, pRegistration->rgsczPatchCodes, pRegistration->cPatchCodes);
     ExitOnFailure(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_PATCH_CODE);
+
+    hr = RegWriteStringArray(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_UNINSTALL_CODE, pRegistration->rgsczUninstallCodes, pRegistration->cUninstallCodes);
+    ExitOnFailure(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_UNINSTALL_CODE);
 
     hr = RegWriteString(hkRegistration, BURN_REGISTRATION_REGISTRY_BUNDLE_VERSION, pRegistration->pVersion->sczVersion);
     ExitOnFailure(hr, "Failed to write %ls value.", BURN_REGISTRATION_REGISTRY_BUNDLE_VERSION);

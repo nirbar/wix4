@@ -14,6 +14,7 @@ const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_CACHE_PATH = L"BundleCachePath";
 const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_ADDON_CODE = L"BundleAddonCode";
 const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_DETECT_CODE = L"BundleDetectCode";
 const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_PATCH_CODE = L"BundlePatchCode";
+const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_UNINSTALL_CODE = L"BundleUninstallCode";
 const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_UPGRADE_CODE = L"BundleUpgradeCode";
 const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_DISPLAY_NAME = L"DisplayName";
 const LPCWSTR BURN_REGISTRATION_REGISTRY_BUNDLE_VERSION = L"BundleVersion";
@@ -60,6 +61,7 @@ typedef struct _BURN_RELATED_BUNDLE
     BOOL fForwardCompatible;
 
     VERUTIL_VERSION* pVersion;
+    LPWSTR sczProviderKey;
     LPWSTR sczTag;
     BOOL fPlannable;
 
@@ -119,6 +121,9 @@ typedef struct _BURN_REGISTRATION
 
     LPWSTR *rgsczPatchCodes;
     DWORD cPatchCodes;
+
+    LPWSTR *rgsczUninstallCodes;
+    DWORD cUninstallCodes;
 
     VERUTIL_VERSION* pVersion;
     LPWSTR sczProviderKey;

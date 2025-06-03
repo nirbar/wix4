@@ -1,0 +1,9 @@
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+<Project>
+  <PropertyGroup>
+    <UpgradeCode>{A8FA90A3-9848-4E38-AA08-3866D9BBF60A}</UpgradeCode>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Templates\Package.wxs" Link="Package.wxs" />
+  </ItemGroup>
+</Project>

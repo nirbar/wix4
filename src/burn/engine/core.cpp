@@ -557,7 +557,7 @@ extern "C" HRESULT CorePlan(
                 DWORD dwExecuteActionEarlyIndex = pEngineState->plan.cExecuteActions;
 
                 // Plan the related bundles first to support downgrades with ref-counting.
-                hr = PlanRelatedBundlesBegin(&pEngineState->userExperience, &pEngineState->registration, pEngineState->command.relationType, &pEngineState->plan);
+                hr = PlanRelatedBundlesBegin(&pEngineState->userExperience, &pEngineState->registration, pEngineState->command.relationType, &pEngineState->packages, &pEngineState->plan);
                 ExitOnFailure(hr, "Failed to plan related bundles.");
 
                 hr = PlanPackages(&pEngineState->userExperience, &pEngineState->packages, &pEngineState->plan, &pEngineState->log, &pEngineState->variables);
@@ -1013,6 +1013,9 @@ extern "C" LPCWSTR CoreRelationTypeToCommandLineString(
     case BOOTSTRAPPER_RELATION_PATCH:
         wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_PATCH;
         break;
+    case BOOTSTRAPPER_RELATION_UNINSTALL:
+        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_UNINSTALL;
+        break;
     case BOOTSTRAPPER_RELATION_UPDATE:
         wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_UPDATE;
         break;
@@ -1021,6 +1024,9 @@ extern "C" LPCWSTR CoreRelationTypeToCommandLineString(
         break;
     case BOOTSTRAPPER_RELATION_DEPENDENT_PATCH:
         wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_DEPENDENT_PATCH;
+        break;
+    case BOOTSTRAPPER_RELATION_DEPENDENT_UNINSTALL:
+        wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_DEPENDENT_UNINSTALL;
         break;
     case BOOTSTRAPPER_RELATION_CHAIN_PACKAGE:
         wzRelationTypeCommandLine = BURN_COMMANDLINE_SWITCH_RELATED_CHAIN_PACKAGE;
@@ -1758,6 +1764,18 @@ extern "C" HRESULT CoreParseCommandLine(
             else if (CSTR_EQUAL == ::CompareStringOrdinal(&argv[i][1], -1, BURN_COMMANDLINE_SWITCH_RELATED_DEPENDENT_PATCH, -1, TRUE))
             {
                 pCommand->relationType = BOOTSTRAPPER_RELATION_DEPENDENT_PATCH;
+
+                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, LoggingRelationTypeToString(pCommand->relationType));
+            }
+            else if (CSTR_EQUAL == ::CompareStringOrdinal(&argv[i][1], -1, BURN_COMMANDLINE_SWITCH_RELATED_UNINSTALL, -1, TRUE))
+            {
+                pCommand->relationType = BOOTSTRAPPER_RELATION_UNINSTALL;
+
+                LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, LoggingRelationTypeToString(pCommand->relationType));
+            }
+            else if (CSTR_EQUAL == ::CompareStringOrdinal(&argv[i][1], -1, BURN_COMMANDLINE_SWITCH_RELATED_DEPENDENT_UNINSTALL, -1, TRUE))
+            {
+                pCommand->relationType = BOOTSTRAPPER_RELATION_DEPENDENT_UNINSTALL;
 
                 LogId(REPORT_STANDARD, MSG_BURN_RUN_BY_RELATED_BUNDLE, LoggingRelationTypeToString(pCommand->relationType));
             }

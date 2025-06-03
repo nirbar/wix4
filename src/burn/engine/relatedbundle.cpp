@@ -63,6 +63,8 @@ extern "C" HRESULT RelatedBundlesInitializeForScope(
         pRegistration->cAddonCodes,
         const_cast<LPCWSTR*>(pRegistration->rgsczPatchCodes),
         pRegistration->cPatchCodes,
+        const_cast<LPCWSTR*>(pRegistration->rgsczUninstallCodes),
+        pRegistration->cUninstallCodes,
         QueryRelatedBundlesCallback,
         &queryContext);
     ExitOnFailure(hr, "Failed to initialize related bundles for scope.");
@@ -88,6 +90,7 @@ extern "C" void RelatedBundlesUninitialize(
 
             PackageUninitialize(pPackage);
             ReleaseStr(pRelatedBundles->rgRelatedBundles[i].sczTag);
+            ReleaseStr(pRelatedBundles->rgRelatedBundles[i].sczProviderKey);
         }
 
         MemFree(pRelatedBundles->rgRelatedBundles);
@@ -157,10 +160,14 @@ extern "C" BOOTSTRAPPER_RELATION_TYPE RelatedBundleConvertRelationType(
         return BOOTSTRAPPER_RELATION_ADDON;
     case BUNDLE_RELATION_PATCH:
         return BOOTSTRAPPER_RELATION_PATCH;
+    case BUNDLE_RELATION_UNINSTALL:
+        return BOOTSTRAPPER_RELATION_UNINSTALL;
     case BUNDLE_RELATION_DEPENDENT_ADDON:
         return BOOTSTRAPPER_RELATION_DEPENDENT_ADDON;
     case BUNDLE_RELATION_DEPENDENT_PATCH:
         return BOOTSTRAPPER_RELATION_DEPENDENT_PATCH;
+    case BUNDLE_RELATION_DEPENDENT_UNINSTALL:
+        return BOOTSTRAPPER_RELATION_DEPENDENT_UNINSTALL;
     default:
         AssertSz(BUNDLE_RELATION_NONE == relationType, "Unknown BUNDLE_RELATION_TYPE");
         return BOOTSTRAPPER_RELATION_NONE;
@@ -217,7 +224,7 @@ static __callback int __cdecl CompareRelatedBundlesPlan(
     __in void* /*pvContext*/,
     __in const void* pvLeft,
     __in const void* pvRight
-    )
+)
 {
     int ret = 0;
     const BURN_RELATED_BUNDLE* pBundleLeft = *reinterpret_cast<BURN_RELATED_BUNDLE**>(const_cast<void*>(pvLeft));
@@ -226,8 +233,17 @@ static __callback int __cdecl CompareRelatedBundlesPlan(
     // Sort by relation type, then version, then bundle code.
     if (pBundleLeft->planRelationType != pBundleRight->planRelationType)
     {
-        // Upgrade bundles last, everything else according to the enum.
-        if (BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_UPGRADE == pBundleLeft->planRelationType)
+        // Uninstall bundles last, because they may be uninstalled by our older version on upgrade.
+        // Upgrade bundles before them, everything else according to the enum.
+        if (BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_UNINSTALL == pBundleLeft->planRelationType)
+        {
+            ret = 1;
+        }
+        else if (BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_UNINSTALL == pBundleRight->planRelationType)
+        {
+            ret = -1;
+        }
+        else if (BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_UPGRADE == pBundleLeft->planRelationType)
         {
             ret = 1;
         }
@@ -387,11 +403,15 @@ static HRESULT LoadRelatedBundleFromKey(
 
     pRelatedBundle->fPlannable = fCached;
 
-    hr = RegReadString(hkBundleCode, BURN_REGISTRATION_REGISTRY_BUNDLE_PROVIDER_KEY, &dependencyProvider.sczKey);
+    hr = RegReadString(hkBundleCode, BURN_REGISTRATION_REGISTRY_BUNDLE_PROVIDER_KEY, &pRelatedBundle->sczProviderKey);
     ExitOnPathFailure(hr, fExists, "Failed to read provider key from registry for bundle: %ls", wzRelatedBundleCode);
 
-    if (dependencyProvider.sczKey && *dependencyProvider.sczKey)
+    // Related bundles with type "Uninstall" are not providers
+    if (BOOTSTRAPPER_RELATION_UNINSTALL != relationType && pRelatedBundle->sczProviderKey && *pRelatedBundle->sczProviderKey)
     {
+        hr = StrAllocString(&dependencyProvider.sczKey, pRelatedBundle->sczProviderKey, 0);
+        ExitOnFailure(hr, "Failed to allocate string");
+
         pBundleDependencyProvider = &dependencyProvider;
 
         dependencyProvider.fImported = TRUE;

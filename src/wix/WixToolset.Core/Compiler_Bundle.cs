@@ -3313,6 +3313,10 @@ namespace WixToolset.Core
                                 case "patch":
                                     actionType = RelatedBundleActionType.Patch;
                                     break;
+                                case "Uninstall":
+                                case "uninstall":
+                                    actionType = RelatedBundleActionType.Uninstall;
+                                    break;
                                 case "":
                                     break;
                                 default:
@@ -3890,6 +3894,10 @@ namespace WixToolset.Core
                                 case "Patch":
                                 case "patch":
                                     actionType = RelatedBundleActionType.Patch;
+                                    break;
+                                case "Uninstall":
+                                case "uninstall":
+                                    actionType = RelatedBundleActionType.Uninstall;
                                     break;
                                 case "":
                                     break;

@@ -1379,3 +1379,18 @@ SymbolicName=MSG_NON_VITAL_PAYLOAD_SKIPPED
 Language=English
 Skipped non-vital payload. Package: %1!ls!. Payload: %2!ls!. Path: %3!ls!.
 .
+
+MessageId=712
+Severity=Warning
+SymbolicName=MSG_PLAN_SKIPPED_RELATED_UNINSTALL_AS_BUNDLE_PACKAGE
+Language=English
+Plan skipped related bundle: %1!ls!, because it is also a bundle package.
+.
+
+MessageId=713
+Severity=Warning
+SymbolicName=MSG_SKIP_RELATED_BUNDLE_UNINSTALL
+Language=English
+Skipped related uninstall bundle: %1!ls! since it is already absent, action: %2!hs!.
+.
+

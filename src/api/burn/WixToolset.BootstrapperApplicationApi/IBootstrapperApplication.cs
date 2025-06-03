@@ -1577,6 +1577,12 @@ namespace WixToolset.BootstrapperApplicationApi
         Patch,
 
         /// <summary>
+        /// The related bundle is an uninstall for the running bundle.
+        /// This relationship is reversed for <see cref="IBootstrapperCommand.Relation" />
+        /// </summary>
+        Uninstall,
+
+        /// <summary>
         /// The running bundle is an add-on for the related bundle.
         /// This relationship is reversed for <see cref="IBootstrapperCommand.Relation" />
         /// </summary>
@@ -1587,6 +1593,12 @@ namespace WixToolset.BootstrapperApplicationApi
         /// This relationship is reversed for <see cref="IBootstrapperCommand.Relation" />
         /// </summary>
         DependentPatch,
+
+        /// <summary>
+        /// The running bundle is an uninstall for the related bundle.
+        /// This relationship is reversed for <see cref="IBootstrapperCommand.Relation" />
+        /// </summary>
+        DependentUninstall,
 
         /// <summary>
         /// The related bundle is a newer version of the running bundle.
@@ -1630,6 +1642,11 @@ namespace WixToolset.BootstrapperApplicationApi
         /// The related bundle is a patch for the running bundle.
         /// </summary>
         Patch,
+
+        /// <summary>
+        /// The related bundle is an uninstall for the running bundle.
+        /// </summary>
+        Uninstall,
 
         /// <summary>
         /// The running bundle is an add-on for the related bundle.

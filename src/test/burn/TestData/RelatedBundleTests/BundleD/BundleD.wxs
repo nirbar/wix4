@@ -1,0 +1,11 @@
+﻿<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <RelatedBundle Action="Uninstall" Code="{8C01FD92-87BE-419B-88EC-36754E93CA67}"/>
+    <PackageGroup Id="BundlePackages">
+      <MsiPackage Id="PackageA" SourceFile="$(var.PackageA.TargetPath)" />
+    </PackageGroup>
+  </Fragment>
+</Wix>

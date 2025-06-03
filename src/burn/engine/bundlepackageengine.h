@@ -22,7 +22,9 @@ HRESULT BundlePackageEngineParseRelatedCodes(
     __in LPWSTR** prgsczAddonCodes,
     __in DWORD* pcAddonCodes,
     __in LPWSTR** prgsczPatchCodes,
-    __in DWORD* pcPatchCodes
+    __in DWORD* pcPatchCodes,
+    __in LPWSTR** prgsczUninstallCodes,
+    __in DWORD* pcUninstallCodes
     );
 void BundlePackageEnginePackageUninitialize(
     __in BURN_PACKAGE* pPackage

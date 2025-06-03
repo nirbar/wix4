@@ -1543,11 +1543,17 @@ extern "C" HRESULT PlanDefaultRelatedBundlePlanType(
     case BOOTSTRAPPER_RELATION_PATCH:
         *pPlanRelationType = BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_PATCH;
         break;
+    case BOOTSTRAPPER_RELATION_UNINSTALL:
+        *pPlanRelationType = BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_UNINSTALL;
+        break;
     case BOOTSTRAPPER_RELATION_DEPENDENT_ADDON:
         *pPlanRelationType = BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_ADDON;
         break;
     case BOOTSTRAPPER_RELATION_DEPENDENT_PATCH:
         *pPlanRelationType = BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_PATCH;
+        break;
+    case BOOTSTRAPPER_RELATION_DEPENDENT_UNINSTALL:
+        *pPlanRelationType = BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_UNINSTALL;
         break;
     case BOOTSTRAPPER_RELATION_DETECT:
         break;
@@ -1610,6 +1616,10 @@ extern "C" HRESULT PlanDefaultRelatedBundleRequestState(
             *pRequestState = BOOTSTRAPPER_REQUEST_STATE_REPAIR;
         }
         break;
+    case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_UNINSTALL:
+        *pRequestState = BOOTSTRAPPER_REQUEST_STATE_ABSENT;
+        break;
+    case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DEPENDENT_UNINSTALL: __fallthrough;
     case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_DOWNGRADE: __fallthrough;
     case BOOTSTRAPPER_RELATED_BUNDLE_PLAN_TYPE_NONE:
         break;
@@ -1682,6 +1692,7 @@ extern "C" HRESULT PlanRelatedBundlesBegin(
     __in BURN_USER_EXPERIENCE* pUserExperience,
     __in BURN_REGISTRATION* pRegistration,
     __in BOOTSTRAPPER_RELATION_TYPE relationType,
+    __in BURN_PACKAGES* pPackages,
     __in BURN_PLAN* pPlan
     )
 {
@@ -1690,6 +1701,22 @@ extern "C" HRESULT PlanRelatedBundlesBegin(
     UINT cAncestors = 0;
     STRINGDICT_HANDLE sdAncestors = NULL;
     BOOL fUninstalling = BOOTSTRAPPER_ACTION_UNINSTALL == pPlan->action || BOOTSTRAPPER_ACTION_UNSAFE_UNINSTALL == pPlan->action;
+    STRINGDICT_HANDLE sdBundlePackageCodes = NULL;
+
+    hr = DictCreateWithEmbeddedKey(&sdBundlePackageCodes, pPackages->cPackages, (void**)&pPackages->rgPackages, offsetof(BURN_PACKAGE, Bundle.sczBundleCode), DICT_FLAG_CASEINSENSITIVE);
+    ExitOnFailure(hr, "Failed to create dictionary for planned packages.");
+
+    // Index chain bundle codes
+    for (DWORD i = 0; i < pPackages->cPackages; ++i)
+    {
+        BURN_PACKAGE* pPackage = pPackages->rgPackages + i;
+
+        if (BURN_PACKAGE_TYPE_BUNDLE == pPackage->type)
+        {
+            hr = DictAddValue(sdBundlePackageCodes, pPackage);
+            ExitOnFailure(hr, "Failed to add bundle to dictionary for planned packages.");
+        }
+    }
 
     if (pPlan->pInternalCommand->sczAncestors)
     {
@@ -1703,6 +1730,31 @@ extern "C" HRESULT PlanRelatedBundlesBegin(
     for (DWORD i = 0; i < pRegistration->relatedBundles.cRelatedBundles; ++i)
     {
         BURN_RELATED_BUNDLE* pRelatedBundle = pRegistration->relatedBundles.rgpPlanSortedRelatedBundles[i];
+
+        // For an uninstall related bundle that is also a BundlePackage, or our bundle, plan only the BundlePackage.
+        if (BOOTSTRAPPER_RELATION_UNINSTALL == pRelatedBundle->detectRelationType)
+        {
+            BURN_PACKAGE* pBundlePackage = NULL;
+
+            hr = DictGetValue(sdBundlePackageCodes, pRelatedBundle->package.sczId, (void**)&pBundlePackage);
+            if (E_NOTFOUND != hr)
+            {
+                ExitOnFailure(hr, "Failed to check the dictionary for a related bundle code: \"%ls\".", pRelatedBundle->package.sczId);
+
+                hr = StrAllocConcatFormatted(&pBundlePackage->Bundle.sczIgnoreRelatedBundleCodes, L";%ls", pRelatedBundle->package.sczId);
+                ExitOnFailure(hr, "Failed to add the related bundle code \"%ls\" to the bundle package ignore list.", pRelatedBundle->package.sczId);
+
+                if (pRelatedBundle->sczProviderKey && *pRelatedBundle->sczProviderKey)
+                {
+                    hr = StrAllocConcatFormatted(&pBundlePackage->Bundle.sczIgnoreRelatedBundleCodes, L";%ls", pRelatedBundle->sczProviderKey);
+                    ExitOnFailure(hr, "Failed to add the related bundle provider key \"%ls\" to the bundle package ignore list.", pRelatedBundle->sczProviderKey);
+                }
+
+                LogId(REPORT_STANDARD, MSG_PLAN_SKIPPED_RELATED_UNINSTALL_AS_BUNDLE_PACKAGE, pRelatedBundle->package.sczId);
+                pRelatedBundle->fPlannable = FALSE;
+            }
+            hr = S_OK;
+        }
 
         if (!pRelatedBundle->fPlannable)
         {
@@ -1761,6 +1813,7 @@ extern "C" HRESULT PlanRelatedBundlesBegin(
 
 LExit:
     ReleaseDict(sdAncestors);
+    ReleaseDict(sdBundlePackageCodes);
     ReleaseStrArray(rgsczAncestors, cAncestors);
 
     return hr;
