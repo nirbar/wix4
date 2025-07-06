@@ -1106,5 +1106,175 @@ namespace WixToolsetTest.BurnE2E
             var bundleBInstallLogFilePath = bundleB.Install((int)MSIExec.MSIExecReturnCode.ERROR_INSTALL_FAILURE);
             Assert.True(LogVerifier.MessageInLogFileRegex(bundleBInstallLogFilePath, @"Applied execute package: PackageB, result: 0x80070643, restart: None"));
         }
+
+        [RuntimeFact]
+        public void CanKeepMsiPackageAndDetachDependencyOnUninstall()
+        {
+            var packageAv1 = this.CreatePackageInstaller("PackageAv1");
+            var bundleK = this.CreateBundleInstaller("BundleKv1");
+            var bundlePackageBundle = this.CreateBundleInstaller("BundlePackageBundle");
+            var testBAController = this.CreateTestBAController();
+            var testRegistryValueExe = "ExeA";
+
+            packageAv1.VerifyInstalled(false);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundlePackageBundle.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            bundlePackageBundle.Install();
+            packageAv1.VerifyInstalled(true);
+            bundleK.VerifyRegisteredAndInPackageCache(1);
+            bundlePackageBundle.VerifyExeTestRegistryValue(testRegistryValueExe, "1.0.0.0");
+            bundlePackageBundle.VerifyRegisteredAndInPackageCache();
+
+            // Uninstall, but keep MSI package
+            testBAController.SetPackageRequestedState("PackageA", RequestState.DetachDependency);
+
+            bundlePackageBundle.Uninstall();
+            packageAv1.VerifyInstalled(true);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundlePackageBundle.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            packageAv1.UninstallProduct();
+            packageAv1.VerifyInstalled(false);
+        }
+
+        [RuntimeFact]
+        public void CanRollbackDetachDependencyOnUninstall()
+        {
+            var packageAv1 = this.CreatePackageInstaller("PackageAv1");
+            var bundleK = this.CreateBundleInstaller("BundleKv1");
+            var bundlePackageBundle = this.CreateBundleInstaller("BundlePackageBundle");
+            var testBAController = this.CreateTestBAController();
+            var testRegistryValueExe = "ExeA";
+
+            packageAv1.VerifyInstalled(false);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundlePackageBundle.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            bundlePackageBundle.Install();
+            packageAv1.VerifyInstalled(true);
+            bundleK.VerifyRegisteredAndInPackageCache(1);
+            bundlePackageBundle.VerifyExeTestRegistryValue(testRegistryValueExe, "1.0.0.0");
+            bundlePackageBundle.VerifyRegisteredAndInPackageCache();
+            bundlePackageBundle.VerifyDependencyExists("BundleK");
+
+            // Uninstall, but keep bundle package, and rollback
+            testBAController.SetPackageRequestedState("BundleK", RequestState.DetachDependency);
+            bundlePackageBundle.Uninstall((int)MSIExec.MSIExecReturnCode.ERROR_INSTALL_FAILURE, "FAILWHENDEFERRED=1");
+            packageAv1.VerifyInstalled(true);
+            bundleK.VerifyRegisteredAndInPackageCache(1);
+            bundlePackageBundle.VerifyExeTestRegistryValue(testRegistryValueExe, "1.0.0.0");
+            bundlePackageBundle.VerifyRegisteredAndInPackageCache();
+            bundlePackageBundle.VerifyDependencyExists("BundleK");
+
+            // Uninstall, but keep bundle package
+            bundlePackageBundle.Uninstall();
+            packageAv1.VerifyInstalled(false);
+            bundleK.VerifyRegisteredAndInPackageCache(1);
+            bundlePackageBundle.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundlePackageBundle.VerifyDependencyRemoved("BundleK");
+
+            bundleK.Uninstall();
+            bundleK.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+        }
+
+        [RuntimeFact]
+        public void FailDetachDependencyOnInstall()
+        {
+            var bundlePackageBundle = this.CreateBundleInstaller("BundlePackageBundle");
+            var testBAController = this.CreateTestBAController();
+
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            testBAController.SetPackageRequestedState("PackageA", RequestState.DetachDependency);
+            var logFile = bundlePackageBundle.Install(0x57);
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            var log = new LogVerifier(logFile);
+            log.AssertTextInLog("BA requested invalid state DetachDependency for package PackageA. This request state is only valid when planning Uninstall for packages detected Present");
+        }
+
+        [RuntimeFact]
+        public void CanKeepBundlePackageAndDetachDependencyOnUninstall()
+        {
+            var packageAv1 = this.CreatePackageInstaller("PackageAv1");
+            var bundleK = this.CreateBundleInstaller("BundleKv1");
+            var bundlePackageBundle = this.CreateBundleInstaller("BundlePackageBundle");
+            var testBAController = this.CreateTestBAController();
+            var testRegistryValueExe = "ExeA";
+
+            packageAv1.VerifyInstalled(false);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundlePackageBundle.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            bundlePackageBundle.Install();
+            packageAv1.VerifyInstalled(true);
+            bundleK.VerifyRegisteredAndInPackageCache(1);
+            bundlePackageBundle.VerifyExeTestRegistryValue(testRegistryValueExe, "1.0.0.0");
+            bundlePackageBundle.VerifyRegisteredAndInPackageCache();
+            bundlePackageBundle.VerifyDependencyExists("BundleK");
+
+            // Uninstall, but keep bundle package
+            testBAController.SetPackageRequestedState("BundleK", RequestState.DetachDependency);
+
+            bundlePackageBundle.Uninstall();
+            packageAv1.VerifyInstalled(false);
+            bundleK.VerifyRegisteredAndInPackageCache(1);
+            bundlePackageBundle.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundlePackageBundle.VerifyDependencyRemoved("BundleK");
+
+            bundleK.Uninstall();
+            bundleK.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+        }
+
+        [RuntimeFact]
+        public void CanKeepExePackageAndDetachDependencyOnUninstall()
+        {
+            var packageAv1 = this.CreatePackageInstaller("PackageAv1");
+            var bundleK = this.CreateBundleInstaller("BundleKv1");
+            var bundlePackageBundle = this.CreateBundleInstaller("BundlePackageBundle");
+            var testBAController = this.CreateTestBAController();
+            var testRegistryValueExe = "ExeA";
+
+            packageAv1.VerifyInstalled(false);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundlePackageBundle.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            bundlePackageBundle.Install();
+            packageAv1.VerifyInstalled(true);
+            bundleK.VerifyRegisteredAndInPackageCache(1);
+            bundlePackageBundle.VerifyExeTestRegistryValue(testRegistryValueExe, "1.0.0.0");
+            bundlePackageBundle.VerifyRegisteredAndInPackageCache();
+
+            // Uninstall, but keep exe package
+            testBAController.SetPackageRequestedState("ExeA", RequestState.DetachDependency);
+
+            bundlePackageBundle.Uninstall();
+            packageAv1.VerifyInstalled(false);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundlePackageBundle.VerifyExeTestRegistryValue(testRegistryValueExe, "1.0.0.0");
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            testBAController.ResetPackageStates("ExeA");
+
+            bundlePackageBundle.Install();
+            packageAv1.VerifyInstalled(true);
+            bundleK.VerifyRegisteredAndInPackageCache(1);
+            bundlePackageBundle.VerifyExeTestRegistryValue(testRegistryValueExe, "1.0.0.0");
+            bundlePackageBundle.VerifyRegisteredAndInPackageCache();
+
+            bundlePackageBundle.Uninstall();
+            packageAv1.VerifyInstalled(false);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundlePackageBundle.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
+            bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+        }
     }
 }

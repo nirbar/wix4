@@ -1039,6 +1039,8 @@ extern "C" LPCSTR LoggingRequestStateToString(
         return "ForceAbsent";
     case BOOTSTRAPPER_REQUEST_STATE_ABSENT:
         return "Absent";
+    case BOOTSTRAPPER_REQUEST_STATE_DETACH_DEPENDENCY:
+        return "DetachDependency";
     case BOOTSTRAPPER_REQUEST_STATE_CACHE:
         return "Cache";
     case BOOTSTRAPPER_REQUEST_STATE_PRESENT:
