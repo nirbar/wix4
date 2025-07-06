@@ -482,6 +482,11 @@ namespace WixToolset.BootstrapperApplicationApi
         Absent,
 
         /// <summary>
+        /// Request the package to stay installed on the machine but unregister our dependency on it. Applicable during uninstall only. This is the runtime equivalent of permanent packages.
+        /// </summary>
+        DetachDependency,
+
+        /// <summary>
         /// Request the package to be cached and not be installed on the machine.
         /// </summary>
         Cache,

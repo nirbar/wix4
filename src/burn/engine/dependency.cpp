@@ -1249,8 +1249,8 @@ static void CalculateDependencyActionStates(
     case BOOTSTRAPPER_ACTION_STATE_NONE:
         switch (pPackage->requested)
         {
-        case BOOTSTRAPPER_REQUEST_STATE_ABSENT:
-            // Unregister if the package is not requested but already not installed.
+        case BOOTSTRAPPER_REQUEST_STATE_DETACH_DEPENDENCY: __fallthrough; // The package will stay after the bundle is uninstalled.
+        case BOOTSTRAPPER_REQUEST_STATE_ABSENT: // Unregister if the package is not requested but already not installed.
             *pDependencyExecuteAction = BURN_DEPENDENCY_ACTION_UNREGISTER;
             break;
         case BOOTSTRAPPER_REQUEST_STATE_NONE:

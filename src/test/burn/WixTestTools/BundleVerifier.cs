@@ -269,6 +269,40 @@ namespace WixTestTools
             }
         }
 
+        public void VerifyDependencyRemoved(string bundlePackageId, bool? plannedPerMachine = null)
+        {
+            using var wixOutput = WixOutput.Read(this.BundlePdb);
+            var intermediate = Intermediate.Load(wixOutput);
+            var section = intermediate.Sections.Single();
+            var bundleSymbol = section.Symbols.OfType<WixBundleSymbol>().Single();
+            var packageSymbol = section.Symbols.OfType<WixBundlePackageSymbol>().Single(p => p.Id.Id == bundlePackageId);
+            var providerSymbol = section.Symbols.OfType<WixDependencyProviderSymbol>().Single(p => p.ParentRef == bundlePackageId);
+            var registryRoot = plannedPerMachine.HasValue ? (plannedPerMachine.Value ? Registry.LocalMachine : Registry.CurrentUser) : packageSymbol.Scope == WixBundleScopeType.PerMachine ? Registry.LocalMachine : Registry.CurrentUser;
+            var subkeyPath = Path.Combine(DependencyRegistryRoot, providerSymbol.ProviderKey, "Dependents", bundleSymbol.BundleCode);
+            using var registryKey = registryRoot.OpenSubKey(subkeyPath);
+            if (registryKey != null)
+            {
+                WixAssert.StringEqual(null, subkeyPath);
+            }
+        }
+
+        public void VerifyDependencyExists(string bundlePackageId, bool? plannedPerMachine = null)
+        {
+            using var wixOutput = WixOutput.Read(this.BundlePdb);
+            var intermediate = Intermediate.Load(wixOutput);
+            var section = intermediate.Sections.Single();
+            var bundleSymbol = section.Symbols.OfType<WixBundleSymbol>().Single();
+            var packageSymbol = section.Symbols.OfType<WixBundlePackageSymbol>().Single(p => p.Id.Id == bundlePackageId);
+            var providerSymbol = section.Symbols.OfType<WixDependencyProviderSymbol>().Single(p => p.ParentRef == bundlePackageId);
+            var registryRoot = plannedPerMachine.HasValue ? (plannedPerMachine.Value ? Registry.LocalMachine : Registry.CurrentUser) : packageSymbol.Scope == WixBundleScopeType.PerMachine ? Registry.LocalMachine : Registry.CurrentUser;
+            var subkeyPath = Path.Combine(DependencyRegistryRoot, providerSymbol.ProviderKey, "Dependents", bundleSymbol.BundleCode);
+            using var registryKey = registryRoot.OpenSubKey(subkeyPath);
+            if (registryKey == null)
+            {
+                WixAssert.NotNull(subkeyPath);
+            }
+        }
+
         public void VerifyExeTestRegistryRootDeleted(string name, bool x64 = false)
         {
             using var testRegistryRoot = this.TestContext.GetTestRegistryRoot(x64, name);

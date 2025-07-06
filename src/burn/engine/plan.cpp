@@ -1124,6 +1124,12 @@ static HRESULT InitializePackage(
     hr = BACallbackOnPlanPackageBegin(pUX, pPackage->sczId, pPackage->currentState, pPackage->fCached, installCondition, repairCondition, &pPackage->requested, &pPackage->cacheType);
     ExitOnRootFailure(hr, "BA aborted plan package begin.");
 
+    if (BOOTSTRAPPER_REQUEST_STATE_DETACH_DEPENDENCY == pPackage->requested && (BOOTSTRAPPER_PACKAGE_STATE_PRESENT != pPackage->currentState || BOOTSTRAPPER_ACTION_UNINSTALL != pPlan->action))
+    {
+        hr = E_INVALIDARG;
+        ExitOnRootFailure(hr, "BA requested invalid state %hs for package %ls. This request state is only valid when planning %hs for packages detected %hs", LoggingRequestStateToString(pPackage->requested), pPackage->sczId, LoggingBurnActionToString(BOOTSTRAPPER_ACTION_UNINSTALL), LoggingPackageStateToString(BOOTSTRAPPER_PACKAGE_STATE_PRESENT));
+    }
+
     if (BURN_PACKAGE_TYPE_MSI == pPackage->type)
     {
         hr = MsiEnginePlanInitializePackage(pPackage, pPlan->action, pVariables, pUX);
