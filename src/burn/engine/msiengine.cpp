@@ -496,15 +496,20 @@ extern "C" HRESULT MsiEngineDetectPackage(
         {
             pPackage->Msi.operation = BOOTSTRAPPER_RELATED_OPERATION_DOWNGRADE;
             pPackage->currentState = BOOTSTRAPPER_PACKAGE_STATE_SUPERSEDED;
+            // When our package is superseded, we want to (un)register our dependency on the newer version
+            DependencyDiscoverAlternativeProviders(pPackage, pPackage->fPerMachine, pPackage->Msi.sczProductCode, pVersion);
         }
         else if (nCompareResult > 0)
         {
             pPackage->Msi.operation = BOOTSTRAPPER_RELATED_OPERATION_MINOR_UPDATE;
             pPackage->currentState = BOOTSTRAPPER_PACKAGE_STATE_ABSENT;
+            //TODO If we're upgrading this version then ideally we would copy the dependants of this version to our provider.
         }
         else
         {
             pPackage->currentState = BOOTSTRAPPER_PACKAGE_STATE_PRESENT;
+            // When our package is present, we want to (un)register our dependency on alternative providers (i.e. WiX3)
+            DependencyDiscoverAlternativeProviders(pPackage, pPackage->fPerMachine, pPackage->Msi.sczProductCode, pVersion);
         }
 
         // Report related MSI package to BA.
@@ -659,6 +664,9 @@ extern "C" HRESULT MsiEngineDetectPackage(
                     relatedMsiOperation = BOOTSTRAPPER_RELATED_OPERATION_DOWNGRADE;
                     pPackage->Msi.operation = BOOTSTRAPPER_RELATED_OPERATION_DOWNGRADE;
                     pPackage->currentState = BOOTSTRAPPER_PACKAGE_STATE_OBSOLETE;
+
+                    // When our package is superseded, we want to (un)register our dependency on the newer version
+                    DependencyDiscoverAlternativeProviders(pPackage, fPerMachine, wzProductCode, pVersion);
                 }
                 else // we're already on the machine so the detect-only *must* be for detection purposes only.
                 {
@@ -669,6 +677,7 @@ extern "C" HRESULT MsiEngineDetectPackage(
             {
                 relatedMsiOperation = BOOTSTRAPPER_RELATED_OPERATION_MAJOR_UPGRADE;
                 pPackage->Msi.operation = BOOTSTRAPPER_RELATED_OPERATION_MAJOR_UPGRADE;
+                //TODO If we're upgrading this version then ideally we would copy the dependants of this version to our provider.
             }
 
             LogId(REPORT_STANDARD, MSG_DETECTED_RELATED_PACKAGE, pPackage->sczId, wzProductCode, LoggingPerMachineToString(fPerMachine), pVersion->sczVersion, uLcid, LoggingRelatedOperationToString(relatedMsiOperation));

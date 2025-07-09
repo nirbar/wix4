@@ -3427,6 +3427,12 @@ static void ExecuteActionLog(
             const BURN_DEPENDENCY_PROVIDER* pProvider = pAction->packageDependency.pPackage->rgDependencyProviders + j;
             LogStringLine(PlanDumpLevel, "      Provider[%u]: key: %ls, action: %hs", j, pProvider->sczKey, LoggingDependencyActionToString(fRollback ? pProvider->dependentRollback : pProvider->dependentExecute));
         }
+
+        for (DWORD j = 0; j < pAction->packageProvider.pPackage->cAlternativeDependencyProviders; ++j)
+        {
+            const BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = pAction->packageProvider.pPackage->rgAlternativeDependencyProviders + j;
+            LogStringLine(PlanDumpLevel, "      Provider[%u]: key: %ls, action: %hs", j, pAlternativeProvider->sczKey, LoggingDependencyActionToString(fRollback ? pAlternativeProvider->dependentRollback : pAlternativeProvider->dependentExecute));
+        }
         break;
 
     case BURN_EXECUTE_ACTION_TYPE_RELATED_BUNDLE:

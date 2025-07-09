@@ -326,6 +326,9 @@ typedef struct _BURN_PACKAGE
     BURN_DEPENDENCY_PROVIDER* rgDependencyProviders;
     DWORD cDependencyProviders;
 
+    BURN_DEPENDENCY_PROVIDER* rgAlternativeDependencyProviders;
+    DWORD cAlternativeDependencyProviders;
+
     BURN_COMPATIBLE_PACKAGE compatiblePackage;
 
     BURN_PACKAGE_TYPE type;

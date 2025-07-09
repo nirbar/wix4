@@ -1366,3 +1366,10 @@ Language=English
 Moving package '%1!ls!' caching to the end of the queue since it is not planned to execute.
 .
 
+MessageId=710
+Severity=Warning
+SymbolicName=MSG_DETECTED_ALTERNATIVE_PROVIDER
+Language=English
+Detected an existing dependency provider. Package: %1!ls!. Existing provider key: %2!ls!.
+.
+

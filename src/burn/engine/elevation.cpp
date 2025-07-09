@@ -1471,6 +1471,22 @@ extern "C" HRESULT ElevationExecutePackageDependencyAction(
         ExitOnFailure(hr, "Failed to write dependent action to message buffer.");
     }
 
+    // Alternative dependent actions.
+    hr = BuffWriteNumber(&pbData, &cbData, (DWORD)pExecuteAction->packageDependency.pPackage->cAlternativeDependencyProviders);
+    ExitOnFailure(hr, "Failed to write rollback flag to message buffer.");
+
+    for (DWORD i = 0; i < pExecuteAction->packageProvider.pPackage->cAlternativeDependencyProviders; ++i)
+    {
+        BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = pExecuteAction->packageProvider.pPackage->rgAlternativeDependencyProviders + i;
+        BURN_DEPENDENCY_ACTION* pAction = fRollback ? &pAlternativeProvider->dependentRollback : &pAlternativeProvider->dependentExecute;
+
+        hr = BuffWriteString(&pbData, &cbData, pAlternativeProvider->sczKey);
+        ExitOnFailure(hr, "Failed to write dependent action to message buffer.");
+
+        hr = BuffWriteNumber(&pbData, &cbData, (DWORD)*pAction);
+        ExitOnFailure(hr, "Failed to write dependent action to message buffer.");
+    }
+
     // Send the message.
     hr = BurnPipeSendMessage(hPipe, BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_DEPENDENCY, pbData, cbData, NULL, NULL, &dwResult);
     ExitOnFailure(hr, "Failed to send BURN_ELEVATION_MESSAGE_TYPE_EXECUTE_PACKAGE_DEPENDENCY message to per-machine process.");
@@ -3509,6 +3525,7 @@ static HRESULT OnExecutePackageDependencyAction(
     LPWSTR sczPackage = NULL;
     BOOL fRollback = FALSE;
     BURN_EXECUTE_ACTION executeAction = { };
+    DWORD cAlternativeDependencyProviders = 0;
 
     executeAction.type = BURN_EXECUTE_ACTION_TYPE_PACKAGE_DEPENDENCY;
 
@@ -3539,6 +3556,29 @@ static HRESULT OnExecutePackageDependencyAction(
         BURN_DEPENDENCY_ACTION* pAction = fRollback ? &pProvider->dependentRollback : &pProvider->dependentExecute;
         hr = BuffReadNumber(pbData, cbData, &iData, (DWORD*)pAction);
         ExitOnFailure(hr, "Failed to read dependent action.");
+    }
+
+    hr = BuffReadNumber(pbData, cbData, &iData, (DWORD*)&cAlternativeDependencyProviders);
+    ExitOnFailure(hr, "Failed to read rollback flag.");
+
+    if (cAlternativeDependencyProviders)
+    {
+        hr = MemEnsureArraySize((LPVOID*)&executeAction.packageDependency.pPackage->rgAlternativeDependencyProviders, cAlternativeDependencyProviders + executeAction.packageDependency.pPackage->cAlternativeDependencyProviders, sizeof(BURN_DEPENDENCY_PROVIDER), cAlternativeDependencyProviders);
+        ExitOnFailure(hr, "Failed to allocate memory");
+
+        // Read alternative dependent actions.
+        for (DWORD i = 0; i < cAlternativeDependencyProviders; ++i)
+        {
+            BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = executeAction.packageProvider.pPackage->rgAlternativeDependencyProviders + executeAction.packageDependency.pPackage->cAlternativeDependencyProviders;
+            BURN_DEPENDENCY_ACTION *pAction = fRollback ? &pAlternativeProvider->dependentRollback : &pAlternativeProvider->dependentExecute;
+            ++executeAction.packageDependency.pPackage->cAlternativeDependencyProviders;
+
+            hr = BuffReadString(pbData, cbData, &iData, &pAlternativeProvider->sczKey);
+            ExitOnFailure(hr, "Failed to read alternative dependency provider key.");
+
+            hr = BuffReadNumber(pbData, cbData, &iData, (DWORD*)pAction);
+            ExitOnFailure(hr, "Failed to read dependent action.");
+        }
     }
 
     // Execute the package dependency action.

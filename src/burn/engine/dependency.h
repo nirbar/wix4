@@ -198,6 +198,17 @@ HRESULT DependencyDetectCompatibleEntry(
     __in BURN_REGISTRATION* pRegistration
     );
 
+/********************************************************************
+ DependencyDiscoverAlternativeProviders - Attempt to discover dependency providers of an existing MSI.
+
+*********************************************************************/
+HRESULT DependencyDiscoverAlternativeProviders(
+    __in BURN_PACKAGE* pPackage,
+    __in BOOL fPerMachine,
+    __in LPCWSTR wzProductCode,
+    __in_opt VERUTIL_VERSION* pVersion
+    );
+
 #if defined(__cplusplus)
 }
 #endif

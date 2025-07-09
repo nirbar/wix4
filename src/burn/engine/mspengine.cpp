@@ -283,16 +283,21 @@ extern "C" HRESULT MspEngineDetectPackage(
                 switch (*sczState)
                 {
                 case '1':
+                    DependencyDiscoverAlternativeProviders(pPackage, pTargetProduct->context == MSIINSTALLCONTEXT_MACHINE, pPackage->Msp.sczPatchCode, NULL);
                     pTargetProduct->fInstalled = TRUE;
                     pTargetProduct->patchPackageState = BOOTSTRAPPER_PACKAGE_STATE_PRESENT;
                     break;
 
                 case '2':
+                    //TODO Ideally we would (un)register our dependency on newer patches. Or would we?
+                    DependencyDiscoverAlternativeProviders(pPackage, pTargetProduct->context == MSIINSTALLCONTEXT_MACHINE, pPackage->Msp.sczPatchCode, NULL);
                     pTargetProduct->fInstalled = TRUE;
                     pTargetProduct->patchPackageState = BOOTSTRAPPER_PACKAGE_STATE_SUPERSEDED;
                     break;
 
                 case '4':
+                    //TODO Ideally we would (un)register our dependency on newer patches. Or would we?
+                    DependencyDiscoverAlternativeProviders(pPackage, pTargetProduct->context == MSIINSTALLCONTEXT_MACHINE, pPackage->Msp.sczPatchCode, NULL);
                     pTargetProduct->fInstalled = TRUE;
                     pTargetProduct->patchPackageState = BOOTSTRAPPER_PACKAGE_STATE_OBSOLETE;
                     break;

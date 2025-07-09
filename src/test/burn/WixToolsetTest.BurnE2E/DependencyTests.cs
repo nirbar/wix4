@@ -2,7 +2,7 @@
 
 namespace WixToolsetTest.BurnE2E
 {
-    using System;
+    using System.Text.RegularExpressions;
     using WixTestTools;
     using WixToolset.BootstrapperApplicationApi;
     using Xunit;
@@ -1275,6 +1275,44 @@ namespace WixToolsetTest.BurnE2E
             bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
             bundlePackageBundle.VerifyExeTestRegistryRootDeleted(testRegistryValueExe);
             bundlePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+        }
+
+        [RuntimeFact]
+        public void CanDetectWix3Dependency()
+        {
+            var packageFv1 = this.CreatePackageInstaller("PackageFv1");
+            var bundleK = this.CreateBundleInstaller("BundleKv1");
+            var bundleG = this.CreateBundleInstaller("BundleG");
+
+            packageFv1.VerifyInstalled(false);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundleG.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            bundleK.Install();
+            packageFv1.VerifyInstalled(true);
+            bundleK.VerifyRegisteredAndInPackageCache();
+            bundleG.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            var logFile = bundleG.Install();
+            packageFv1.VerifyInstalled(true);
+            bundleK.VerifyRegisteredAndInPackageCache();
+            bundleG.VerifyRegisteredAndInPackageCache();
+
+            var log = new LogVerifier(logFile);
+            log.AssertTextInLog(new Regex(@"Detected an existing dependency provider\. Package: PackageF\. Existing provider key: \{.*\}_v1\.0\.0\.0\."));
+
+            logFile = bundleK.Uninstall();
+            packageFv1.VerifyInstalled(true);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundleG.VerifyRegisteredAndInPackageCache();
+
+            log = new LogVerifier(logFile);
+            log.AssertTextInLog(new Regex(@"Detected an existing dependency provider\. Package: PackageF\. Existing provider key: \{.*\}\."));
+
+            bundleG.Uninstall();
+            packageFv1.VerifyInstalled(false);
+            bundleK.VerifyUnregisteredAndRemovedFromPackageCache();
+            bundleG.VerifyUnregisteredAndRemovedFromPackageCache();
         }
     }
 }
