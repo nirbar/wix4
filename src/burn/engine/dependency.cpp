@@ -94,6 +94,11 @@ static void UnregisterPackageProviderDependent(
 static void UnregisterOrphanPackageProviders(
     __in const BURN_PACKAGE* pPackage
     );
+static HRESULT AddAlternativeProvider(
+    __in BURN_PACKAGE* pPackage,
+    __in LPCWSTR wzKey,
+    __in HKEY hkHive
+    );
 
 
 // functions
@@ -493,6 +498,43 @@ extern "C" HRESULT DependencyPlanPackageBegin(
                 ExitOnFailure(hr, "Failed to check the dictionary of ignored dependents.");
             }
         }
+
+        if (BOOTSTRAPPER_PACKAGE_STATE_PRESENT == pPackage->currentState)
+        {
+            for (DWORD i = 0; i < pPackage->cAlternativeDependencyProviders; ++i)
+            {
+                const BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = pPackage->rgAlternativeDependencyProviders + i;
+
+                for (DWORD j = 0; j < pAlternativeProvider->cDependents; ++j)
+                {
+                    const DEPENDENCY* pDependency = pAlternativeProvider->rgDependents + j;
+
+                    hr = DictKeyExists(sdIgnoredDependents, pDependency->sczKey);
+                    if (E_NOTFOUND == hr)
+                    {
+                        hr = S_OK;
+
+                        if (pPackage->requested == BOOTSTRAPPER_REQUEST_STATE_FORCE_ABSENT)
+                        {
+                            if (!fDependenciesWarned)
+                            {
+                                fDependenciesWarned = TRUE;
+                                LogId(REPORT_STANDARD, MSG_DEPENDENCY_PACKAGE_DEPENDENTS_OVERRIDDEN, pPackage->sczId);
+                            }
+                        }
+                        else if (!fDependentBlocksUninstall)
+                        {
+                            fDependentBlocksUninstall = TRUE;
+
+                            LogId(REPORT_STANDARD, MSG_DEPENDENCY_PACKAGE_HASDEPENDENTS, pPackage->sczId);
+                        }
+
+                        LogId(REPORT_VERBOSE, MSG_DEPENDENCY_PACKAGE_DEPENDENT, pDependency->sczKey, LoggingStringOrUnknownIfNull(pDependency->sczName));
+                    }
+                    ExitOnFailure(hr, "Failed to check the dictionary of ignored dependents.");
+                }
+            }
+        }
     }
 
     if (BOOTSTRAPPER_ACTION_STATE_UNINSTALL == pPackage->execute)
@@ -620,6 +662,26 @@ extern "C" HRESULT DependencyPlanPackageBegin(
         if (pPackage->dependencyRollback < pProvider->dependentRollback)
         {
             pPackage->dependencyRollback = pProvider->dependentRollback;
+        }
+    }
+
+    // Apply the same dependency plan to alternative providers, so all bundles will be aligned about which other bundles are using this package.
+    for (DWORD i = 0; i < pPackage->cAlternativeDependencyProviders; ++i)
+    {
+        BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = &pPackage->rgAlternativeDependencyProviders[i];
+
+        pAlternativeProvider->dependentExecute = dependencyExecuteAction;
+        pAlternativeProvider->dependentRollback = dependencyRollbackAction;
+
+        if (BURN_DEPENDENCY_ACTION_UNREGISTER == pAlternativeProvider->dependentExecute && !pAlternativeProvider->fBundleRegisteredAsDependent)
+        {
+            pAlternativeProvider->dependentExecute = BURN_DEPENDENCY_ACTION_NONE;
+        }
+
+        if (BURN_DEPENDENCY_ACTION_UNREGISTER == pAlternativeProvider->dependentRollback && pAlternativeProvider->fBundleRegisteredAsDependent ||
+            BURN_DEPENDENCY_ACTION_REGISTER == pAlternativeProvider->dependentRollback && !pAlternativeProvider->fBundleRegisteredAsDependent)
+        {
+            pAlternativeProvider->dependentRollback = BURN_DEPENDENCY_ACTION_NONE;
         }
     }
 
@@ -786,6 +848,29 @@ extern "C" HRESULT DependencyExecutePackageDependencyAction(
             break;
         case BURN_DEPENDENCY_ACTION_UNREGISTER:
             UnregisterPackageProviderDependent(pProvider, hkRoot, pPackage->sczId, pAction->packageDependency.sczBundleProviderKey);
+            break;
+        }
+    }
+
+    // Apply the same dependency plan to alternative providers, so all bundles will be aligned about which other bundles are using this package.
+    for (DWORD i = 0; i < pPackage->cAlternativeDependencyProviders; ++i)
+    {
+        const BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = pPackage->rgAlternativeDependencyProviders + i;
+        BURN_DEPENDENCY_ACTION action = fRollback ? pAlternativeProvider->dependentRollback : pAlternativeProvider->dependentExecute;
+        HRESULT hrProvider = S_OK;
+
+        // Register or unregister the bundle as a dependent of the package dependency provider.
+        switch (action)
+        {
+        case BURN_DEPENDENCY_ACTION_REGISTER:
+            hrProvider = RegisterPackageProviderDependent(pAlternativeProvider, pPackage->fVital, hkRoot, pPackage->sczId, pAction->packageDependency.sczBundleProviderKey);
+            if (SUCCEEDED(hr) && FAILED(hrProvider))
+            {
+                hr = hrProvider;
+            }
+            break;
+        case BURN_DEPENDENCY_ACTION_UNREGISTER:
+            UnregisterPackageProviderDependent(pAlternativeProvider, hkRoot, pPackage->sczId, pAction->packageDependency.sczBundleProviderKey);
             break;
         }
     }
@@ -987,6 +1072,26 @@ static HRESULT DetectPackageDependents(
             {
                 pProvider->fBundleRegisteredAsDependent = TRUE;
                 fBundleRegisteredAsDependent = TRUE;
+                break;
+            }
+        }
+    }
+
+    for (DWORD i = 0; i < pPackage->cAlternativeDependencyProviders; ++i)
+    {
+        BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = &pPackage->rgAlternativeDependencyProviders[i];
+        BOOL fExists = FALSE;
+
+        hr = DepCheckDependents(hkHive, pAlternativeProvider->sczKey, 0, NULL, &pAlternativeProvider->rgDependents, &pAlternativeProvider->cDependents);
+        ExitOnPathFailure(hr, fExists, "Failed dependents check on package alternative provider: %ls", pAlternativeProvider->sczKey);
+
+        for (DWORD iDependent = 0; iDependent < pAlternativeProvider->cDependents; ++iDependent)
+        {
+            DEPENDENCY* pDependent = pAlternativeProvider->rgDependents + iDependent;
+
+            if (CSTR_EQUAL == ::CompareStringW(LOCALE_NEUTRAL, NORM_IGNORECASE, pRegistration->sczCode, -1, pDependent->sczKey, -1))
+            {
+                pAlternativeProvider->fBundleRegisteredAsDependent = TRUE;
                 break;
             }
         }
@@ -1452,6 +1557,15 @@ static void UnregisterPackageDependency(
             UnregisterPackageProviderDependent(pProvider, hkRoot, pPackage->sczId, wzDependentProviderKey);
         }
     }
+    if (pPackage->rgAlternativeDependencyProviders)
+    {
+        for (DWORD i = 0; i < pPackage->cAlternativeDependencyProviders; ++i)
+        {
+            const BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = &pPackage->rgAlternativeDependencyProviders[i];
+
+            UnregisterPackageProviderDependent(pAlternativeProvider, hkRoot, pPackage->sczId, wzDependentProviderKey);
+        }
+    }
 }
 
 static void UnregisterPackageProviderDependent(
@@ -1503,4 +1617,208 @@ static void UnregisterOrphanPackageProviders(
         rgDependents = NULL;
         cDependents = 0;
     }
+}
+
+extern "C" HRESULT DependencyDiscoverAlternativeProviders(
+    __in BURN_PACKAGE* pPackage,
+    __in BOOL fPerMachine,
+    __in LPCWSTR wzProductCode,
+    __in_opt VERUTIL_VERSION* pVersion
+    )
+{
+    HRESULT hr = S_OK;
+    STRINGDICT_HANDLE sdProviders = NULL;
+    HKEY hkHive = fPerMachine ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+    BOOL fExists = FALSE;
+    LPWSTR szKey = NULL;
+
+    hr = DictCreateStringList(&sdProviders, INITIAL_STRINGDICT_SIZE, DICT_FLAG_CASEINSENSITIVE);
+    ExitOnFailure(hr, "Failed to create the string dictionary.");
+
+    for (DWORD i = 0; i < pPackage->cDependencyProviders; ++i)
+    {
+        BURN_DEPENDENCY_PROVIDER* pProvider = &pPackage->rgDependencyProviders[i];
+
+        hr = DictAddKey(sdProviders, pProvider->sczKey);
+        ExitOnFailure(hr, "Failed to add the provider key to the list of providers.");
+    }
+    for (DWORD i = 0; i < pPackage->cAlternativeDependencyProviders; ++i)
+    {
+        BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = &pPackage->rgAlternativeDependencyProviders[i];
+
+        hr = DictAddKey(sdProviders, pAlternativeProvider->sczKey);
+        ExitOnFailure(hr, "Failed to add the provider key to the list of providers.");
+    }
+
+    // Just the product code, as in WiX3
+    hr = DictKeyExists(sdProviders, wzProductCode);
+    if (E_NOTFOUND == hr)
+    {
+        hr = S_OK;
+
+        fExists = GetProviderExists(hkHive, wzProductCode);
+        if (fExists)
+        {
+            hr = AddAlternativeProvider(pPackage, wzProductCode, hkHive);
+            ExitOnFailure(hr, "Failed to add related provider.");
+
+            hr = DictAddKey(sdProviders, wzProductCode);
+            ExitOnFailure(hr, "Failed to add the provider key to the list of providers.");
+        }
+    }
+    ExitOnFailure(hr, "Failed to check whether the provider key exists in the list of providers.");
+
+    // Product code and full version, as in WiX4+
+    hr = StrAllocFormatted(&szKey, L"%ls_v%ls", wzProductCode, pVersion && pVersion->sczVersion ? pVersion->sczVersion : L"");
+    ExitOnFailure(hr, "Failed to allocate string.");
+
+    hr = DictKeyExists(sdProviders, szKey);
+    if (E_NOTFOUND == hr)
+    {
+        hr = S_OK;
+
+        fExists = GetProviderExists(hkHive, szKey);
+        if (fExists)
+        {
+            hr = AddAlternativeProvider(pPackage, szKey, hkHive);
+            ExitOnFailure(hr, "Failed to add related provider.");
+
+            hr = DictAddKey(sdProviders, szKey);
+            ExitOnFailure(hr, "Failed to add the provider key to the list of providers.");
+        }
+    }
+    ExitOnFailure(hr, "Failed to check whether the provider key exists in the list of providers.");
+
+    if (pVersion)
+    {
+        // Product code and 1-figure version
+        if (pVersion->fHasMajor)
+        {
+            hr = StrAllocFormatted(&szKey, L"%ls_v%u", wzProductCode, pVersion->dwMajor);
+            ExitOnFailure(hr, "Failed to allocate string.");
+
+            hr = DictKeyExists(sdProviders, szKey);
+            if (E_NOTFOUND == hr)
+            {
+                hr = S_OK;
+
+                fExists = GetProviderExists(hkHive, szKey);
+                if (fExists)
+                {
+                    hr = AddAlternativeProvider(pPackage, szKey, hkHive);
+                    ExitOnFailure(hr, "Failed to add related provider.");
+
+                    hr = DictAddKey(sdProviders, szKey);
+                    ExitOnFailure(hr, "Failed to add the provider key to the list of providers.");
+                }
+            }
+            ExitOnFailure(hr, "Failed to check whether the provider key exists in the list of providers.");
+
+            // Product code and 2-figure version
+            if (pVersion->fHasMinor)
+            {
+                hr = StrAllocConcatFormatted(&szKey, L".%u", pVersion->dwMinor);
+                ExitOnFailure(hr, "Failed to allocate string.");
+
+                hr = DictKeyExists(sdProviders, szKey);
+                if (E_NOTFOUND == hr)
+                {
+                    hr = S_OK;
+
+                    fExists = GetProviderExists(hkHive, szKey);
+                    if (fExists)
+                    {
+                        hr = AddAlternativeProvider(pPackage, szKey, hkHive);
+                        ExitOnFailure(hr, "Failed to add related provider.");
+
+                        hr = DictAddKey(sdProviders, szKey);
+                        ExitOnFailure(hr, "Failed to add the provider key to the list of providers.");
+                    }
+                }
+                ExitOnFailure(hr, "Failed to check whether the provider key exists in the list of providers.");
+
+                // Product code and 3-figure version
+                if (pVersion->fHasPatch)
+                {
+                    hr = StrAllocConcatFormatted(&szKey, L".%u", pVersion->dwPatch);
+                    ExitOnFailure(hr, "Failed to allocate string.");
+
+                    hr = DictKeyExists(sdProviders, szKey);
+                    if (E_NOTFOUND == hr)
+                    {
+                        hr = S_OK;
+
+                        fExists = GetProviderExists(hkHive, szKey);
+                        if (fExists)
+                        {
+                            hr = AddAlternativeProvider(pPackage, szKey, hkHive);
+                            ExitOnFailure(hr, "Failed to add related provider.");
+
+                            hr = DictAddKey(sdProviders, szKey);
+                            ExitOnFailure(hr, "Failed to add the provider key to the list of providers.");
+                        }
+                    }
+                    ExitOnFailure(hr, "Failed to check whether the provider key exists in the list of providers.");
+
+                    // Product code and 4-figure version
+                    if (pVersion->fHasRevision)
+                    {
+                        hr = StrAllocConcatFormatted(&szKey, L".%u", pVersion->dwRevision);
+                        ExitOnFailure(hr, "Failed to allocate string.");
+
+                        hr = DictKeyExists(sdProviders, szKey);
+                        if (E_NOTFOUND == hr)
+                        {
+                            hr = S_OK;
+
+                            fExists = GetProviderExists(hkHive, szKey);
+                            if (fExists)
+                            {
+                                hr = AddAlternativeProvider(pPackage, szKey, hkHive);
+                                ExitOnFailure(hr, "Failed to add related provider.");
+
+                                hr = DictAddKey(sdProviders, szKey);
+                                ExitOnFailure(hr, "Failed to add the provider key to the list of providers.");
+                            }
+                        }
+                        ExitOnFailure(hr, "Failed to check whether the provider key exists in the list of providers.");
+                    }
+                }
+            }
+        }
+    }
+
+LExit:
+    ReleaseDict(sdProviders);
+    ReleaseStr(szKey);
+
+    return hr;
+}
+
+static HRESULT AddAlternativeProvider(
+    __in BURN_PACKAGE* pPackage,
+    __in LPCWSTR wzKey,
+    __in HKEY hkHive
+    )
+{
+    HRESULT hr = S_OK;
+    BURN_DEPENDENCY_PROVIDER* pNewDependencyProvider = NULL;
+
+    LogId(REPORT_WARNING, MSG_DETECTED_ALTERNATIVE_PROVIDER, pPackage->sczId, wzKey);
+
+    hr = MemEnsureArraySize((LPVOID*)&pPackage->rgAlternativeDependencyProviders, 1 + pPackage->cAlternativeDependencyProviders, sizeof(BURN_DEPENDENCY_PROVIDER), 1);
+    ExitOnFailure(hr, "Failed to reallocate array for alternative dependency provider");
+    ++pPackage->cAlternativeDependencyProviders;
+
+    pNewDependencyProvider = &pPackage->rgAlternativeDependencyProviders[pPackage->cAlternativeDependencyProviders - 1];
+    pNewDependencyProvider->fExists = TRUE;
+
+    hr = StrAllocString(&pNewDependencyProvider->sczKey, wzKey, 0);
+    ExitOnFailure(hr, "Failed to allocate string.");
+
+    hr = DepGetProviderInformation(hkHive, wzKey, NULL, &pNewDependencyProvider->sczDisplayName, &pNewDependencyProvider->sczVersion);
+    ExitOnFailure(hr, "Failed to get provider information for '%ls'.", wzKey);
+
+LExit:
+    return hr;
 }

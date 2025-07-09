@@ -428,6 +428,15 @@ extern "C" void PackageUninitialize(
         MemFree(pPackage->rgDependencyProviders);
     }
 
+    if (pPackage->cAlternativeDependencyProviders)
+    {
+        for (DWORD i = 0; i < pPackage->cAlternativeDependencyProviders; ++i)
+        {
+            DependencyUninitializeProvider(pPackage->rgAlternativeDependencyProviders + i);
+        }
+        MemFree(pPackage->rgAlternativeDependencyProviders);
+    }
+
     ReleaseMem(pPackage->payloads.rgItems);
 
     switch (pPackage->type)

@@ -1344,3 +1344,10 @@ SymbolicName=MSG_SKIP_RELATED_BUNDLE_UNINSTALL
 Language=English
 Skipped related uninstall bundle: %1!ls! since it is already absent, action: %2!hs!.
 .
+
+MessageId=711
+Severity=Warning
+SymbolicName=MSG_DETECTED_ALTERNATIVE_PROVIDER
+Language=English
+Detected an existing dependency provider. Package: %1!ls!. Existing provider key: %2!ls!.
+.
