@@ -3538,21 +3538,24 @@ static HRESULT OnExecutePackageDependencyAction(
     hr = BuffReadNumber(pbData, cbData, &iData, (DWORD*)&cAlternativeDependencyProviders);
     ExitOnFailure(hr, "Failed to read rollback flag.");
 
-    hr = MemEnsureArraySize((LPVOID*)&executeAction.packageDependency.pPackage->rgAlternativeDependencyProviders, executeAction.packageDependency.pPackage->cAlternativeDependencyProviders, sizeof(BURN_DEPENDENCY_PROVIDER), cAlternativeDependencyProviders);
-    ExitOnFailure(hr, "Failed to allocate memory");
-    executeAction.packageDependency.pPackage->cAlternativeDependencyProviders += cAlternativeDependencyProviders;
-
-    // Read alternative dependent actions.
-    for (DWORD i = 0; i < executeAction.packageProvider.pPackage->cAlternativeDependencyProviders; ++i)
+    if (cAlternativeDependencyProviders)
     {
-        BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = executeAction.packageProvider.pPackage->rgAlternativeDependencyProviders + i;
-        BURN_DEPENDENCY_ACTION *pAction = fRollback ? &pAlternativeProvider->dependentRollback : &pAlternativeProvider->dependentExecute;
+        hr = MemEnsureArraySize((LPVOID*)&executeAction.packageDependency.pPackage->rgAlternativeDependencyProviders, cAlternativeDependencyProviders + executeAction.packageDependency.pPackage->cAlternativeDependencyProviders, sizeof(BURN_DEPENDENCY_PROVIDER), cAlternativeDependencyProviders);
+        ExitOnFailure(hr, "Failed to allocate memory");
 
-        hr = BuffReadString(pbData, cbData, &iData, &pAlternativeProvider->sczKey);
-        ExitOnFailure(hr, "Failed to read alternative dependency provider key.");
+        // Read alternative dependent actions.
+        for (DWORD i = 0; i < cAlternativeDependencyProviders; ++i)
+        {
+            BURN_DEPENDENCY_PROVIDER* pAlternativeProvider = executeAction.packageProvider.pPackage->rgAlternativeDependencyProviders + executeAction.packageDependency.pPackage->cAlternativeDependencyProviders;
+            BURN_DEPENDENCY_ACTION *pAction = fRollback ? &pAlternativeProvider->dependentRollback : &pAlternativeProvider->dependentExecute;
+            ++executeAction.packageDependency.pPackage->cAlternativeDependencyProviders;
 
-        hr = BuffReadNumber(pbData, cbData, &iData, (DWORD*)pAction);
-        ExitOnFailure(hr, "Failed to read dependent action.");
+            hr = BuffReadString(pbData, cbData, &iData, &pAlternativeProvider->sczKey);
+            ExitOnFailure(hr, "Failed to read alternative dependency provider key.");
+
+            hr = BuffReadNumber(pbData, cbData, &iData, (DWORD*)pAction);
+            ExitOnFailure(hr, "Failed to read dependent action.");
+        }
     }
 
     // Execute the package dependency action.
