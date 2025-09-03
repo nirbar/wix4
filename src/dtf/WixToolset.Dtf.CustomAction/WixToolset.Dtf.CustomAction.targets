@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -12,7 +12,8 @@
 
     <MakeSfxCAPath Condition=" '$(MakeSfxCAPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\</MakeSfxCAPath>
 
-    <MakeSfxCA Condition=" '$(MakeSfxCA)' == '' ">$(MakeSfxCAPath)WixToolset.Dtf.MakeSfxCA.exe</MakeSfxCA>
+    <MakeSfxCA Condition=" '$(MakeSfxCA)' == '' and '$(TargetFrameworkIdentifier)'=='.NETFramework' ">$(MakeSfxCAPath)net472\WixToolset.Dtf.MakeSfxCA.exe</MakeSfxCA>
+    <MakeSfxCA Condition=" '$(MakeSfxCA)' == '' ">$(MakeSfxCAPath)netstandard2.0\WixToolset.Dtf.MakeSfxCA.exe</MakeSfxCA>
     <SfxCADll Condition=" '$(SfxCADll)' == '' and '$(Platform)' == 'ARM64' ">$(MakeSfxCAPath)arm64\SfxCA.dll</SfxCADll>
     <SfxCADll Condition=" '$(SfxCADll)' == '' and '$(Platform)' == 'x64' ">$(MakeSfxCAPath)x64\SfxCA.dll</SfxCADll>
     <SfxCADll Condition=" '$(SfxCADll)' == '' ">$(MakeSfxCAPath)x86\SfxCA.dll</SfxCADll>
