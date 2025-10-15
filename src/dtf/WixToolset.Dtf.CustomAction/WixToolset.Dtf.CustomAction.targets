@@ -12,8 +12,8 @@
 
     <MakeSfxCAPath Condition=" '$(MakeSfxCAPath)' == '' ">$(MSBuildThisFileDirectory)..\tools\</MakeSfxCAPath>
 
-    <MakeSfxCA Condition=" '$(MakeSfxCA)' == '' and '$(TargetFrameworkIdentifier)'=='.NETFramework' ">$(MakeSfxCAPath)net472\WixToolset.Dtf.MakeSfxCA.exe</MakeSfxCA>
-    <MakeSfxCA Condition=" '$(MakeSfxCA)' == '' ">$(MakeSfxCAPath)netstandard2.0\WixToolset.Dtf.MakeSfxCA.exe</MakeSfxCA>
+    <MakeSfxCA Condition=" '$(MakeSfxCA)' == '' and '$(TargetFrameworkIdentifier)'=='.NETFramework' ">"$(MakeSfxCAPath)net472\WixToolset.Dtf.MakeSfxCA.exe"</MakeSfxCA>
+    <MakeSfxCA Condition=" '$(MakeSfxCA)' == '' ">dotnet "$(MakeSfxCAPath)netstandard2.0\WixToolset.Dtf.MakeSfxCA.dll"</MakeSfxCA>
     <SfxCADll Condition=" '$(SfxCADll)' == '' and '$(Platform)' == 'ARM64' ">$(MakeSfxCAPath)arm64\SfxCA.dll</SfxCADll>
     <SfxCADll Condition=" '$(SfxCADll)' == '' and '$(Platform)' == 'x64' ">$(MakeSfxCAPath)x64\SfxCA.dll</SfxCADll>
     <SfxCADll Condition=" '$(SfxCADll)' == '' ">$(MakeSfxCAPath)x86\SfxCA.dll</SfxCADll>
@@ -85,7 +85,7 @@
     </ItemGroup>
 
     <!-- Run the MakeSfxCA.exe CA packaging tool. -->
-    <Exec Command='"$(MakeSfxCA)" "@(IntermediateCAPackage)" "$(SfxCADll)" "@(IntermediateCAAssembly)" "@$(IntermediateCAResponseFile)"'
+    <Exec Command='$(MakeSfxCA) "@(IntermediateCAPackage)" "$(SfxCADll)" "@(IntermediateCAAssembly)" "@$(IntermediateCAResponseFile)"'
           WorkingDirectory="$(ProjectDir)" />
 
     <!-- Add modules to be copied to output dir. -->

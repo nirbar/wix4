@@ -29,7 +29,8 @@
     <file src="net472\WixToolset.Dtf.Compression.dll" target="tools\net472\" />
     <file src="net472\WixToolset.Dtf.Compression.Cab.dll" target="tools\net472\" />
     <file src="net472\WixToolset.Dtf.Resources.dll" target="tools\net472\" />
-    <file src="netstandard2.0\WixToolset.Dtf.MakeSfxCA.exe" target="tools\netstandard2.0\" />
+    <file src="netstandard2.0\WixToolset.Dtf.MakeSfxCA.dll" target="tools\netstandard2.0\" />
+    <file src="netstandard2.0\WixToolset.Dtf.MakeSfxCA.runtimeconfig.json" target="tools\netstandard2.0\" />
     <file src="netstandard2.0\WixToolset.Dtf.Compression.dll" target="tools\netstandard2.0\" />
     <file src="netstandard2.0\WixToolset.Dtf.Compression.Cab.dll" target="tools\netstandard2.0\" />
     <file src="netstandard2.0\WixToolset.Dtf.Resources.dll" target="tools\netstandard2.0\" />

@@ -413,7 +413,7 @@ namespace WixToolset.Dtf.MakeSfxCA
 
             var entryPoints = new Dictionary<string, string>();
 
-            var assembly = Assembly.ReflectionOnlyLoadFrom(module);
+            var assembly = Assembly.LoadFrom(module);
 
             foreach (var type in assembly.GetExportedTypes())
             {
