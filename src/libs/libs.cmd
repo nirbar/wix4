@@ -21,8 +21,10 @@
 
 msbuild -Restore libs_t.proj -p:Configuration=%_C% -tl -nologo -m -warnaserror -bl:%_L%\libs_build.binlog || exit /b
 
+@rem Optional blame switches for tracking down hangs: --blame-hang-timeout 1min --blame-hang-dump-type mini
 dotnet test ^
- %_B%\net6.0\WixToolsetTest.Versioning.dll ^
+ --results-directory %_L%\TestResults -l:"console;verbosity=detailed" ^
+ %_B%\net8.0\WixToolsetTest.Versioning.dll ^
  %_B%\x86\DUtilUnitTest.dll ^
  %_B%\x64\DUtilUnitTest.dll ^
  --nologo -l "trx;LogFileName=%_L%\TestResults\libs.trx" || exit /b
