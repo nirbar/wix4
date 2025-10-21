@@ -1111,14 +1111,14 @@ MessageId=385
 Severity=Success
 SymbolicName=MSG_MSI_TRANSACTION_COMMIT
 Language=English
-Committing MSI transaction, id: %1!ls!
+Commit MSI transaction, id: %1!ls!, result: 0x%2!x!, restart: %3!hs!
 .
 
 MessageId=386
 Severity=Warning
 SymbolicName=MSG_MSI_TRANSACTION_ROLLBACK
 Language=English
-Rolling back MSI transaction, id: %1!ls!
+Rollback MSI transaction, id: %1!ls!, result: 0x%2!x!, restart: %3!hs!
 .
 
 MessageId=387
