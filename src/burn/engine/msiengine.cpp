@@ -1225,8 +1225,6 @@ extern "C" HRESULT MsiEngineCommitTransaction(
     HRESULT hr = S_OK;
     WIU_RESTART restart = WIU_RESTART_NONE;
 
-    LogId(REPORT_STANDARD, MSG_MSI_TRANSACTION_COMMIT, pMsiTransaction->sczId);
-
     hr = WiuEndTransaction(MSITRANSACTIONSTATE_COMMIT, WIU_LOG_DEFAULT | INSTALLLOGMODE_VERBOSE, pMsiTransaction->sczLogPath, &restart);
     ExitOnFailure(hr, "Failed to commit the MSI transaction");
 
@@ -1245,6 +1243,7 @@ LExit:
             *pRestart = BOOTSTRAPPER_APPLY_RESTART_INITIATED;
             break;
     }
+    LogId(REPORT_STANDARD, MSG_MSI_TRANSACTION_COMMIT, pMsiTransaction->sczId, hr, LoggingRestartToString(*pRestart));
 
     return hr;
 }
@@ -1256,8 +1255,6 @@ extern "C" HRESULT MsiEngineRollbackTransaction(
 {
     HRESULT hr = S_OK;
     WIU_RESTART restart = WIU_RESTART_NONE;
-
-    LogId(REPORT_WARNING, MSG_MSI_TRANSACTION_ROLLBACK, pMsiTransaction->sczId);
 
     hr = WiuEndTransaction(MSITRANSACTIONSTATE_ROLLBACK, WIU_LOG_DEFAULT | INSTALLLOGMODE_VERBOSE, pMsiTransaction->sczLogPath, &restart);
     ExitOnFailure(hr, "Failed to rollback the MSI transaction");
@@ -1277,6 +1274,7 @@ LExit:
             *pRestart = BOOTSTRAPPER_APPLY_RESTART_INITIATED;
             break;
     }
+    LogId(REPORT_WARNING, MSG_MSI_TRANSACTION_ROLLBACK, pMsiTransaction->sczId, hr, LoggingRestartToString(*pRestart));
 
     return hr;
 }

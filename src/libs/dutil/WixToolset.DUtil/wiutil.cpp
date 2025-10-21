@@ -72,6 +72,7 @@ static DWORD vdwMsiDllBuildRevision = 0;
 
 // internal function declarations
 
+static BOOL DidDeferredActionRequireReboot();
 static DWORD CheckForRestartErrorCode(
     __in DWORD dwErrorCode,
     __out WIU_RESTART* pRestart
@@ -1012,12 +1013,26 @@ extern "C" HRESULT DAPI WiuEndTransaction(
 
     er = vpfnMsiEndTransaction(dwTransactionState);
     er = CheckForRestartErrorCode(er, pRestart);
+
+    if ((*pRestart == WIU_RESTART_NONE) && DidDeferredActionRequireReboot())
+    {
+        *pRestart = WIU_RESTART_REQUIRED;
+    }
+
     WiuExitOnWin32Error(er, hr, "Failed to end transaction.");
 
 LExit:
     return hr;
 }
 
+static BOOL DidDeferredActionRequireReboot()
+{
+    // NOTE: This function does not delete the global atom.  That is done
+    // purposefully so that any other installs that occur after this point also
+    // require a reboot.
+    ATOM atomReboot = ::GlobalFindAtomW(L"WcaDeferredActionRequiresReboot");
+    return 0 != atomReboot;
+}
 
 
 static DWORD CheckForRestartErrorCode(
