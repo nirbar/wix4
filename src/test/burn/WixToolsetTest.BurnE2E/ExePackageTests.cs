@@ -258,5 +258,17 @@ namespace WixToolsetTest.BurnE2E
             brokenPerUserArpEntryExePackageBundle.Uninstall();
             brokenPerUserArpEntryExePackageBundle.VerifyUnregisteredAndRemovedFromPackageCache();
         }
+
+        [RuntimeFact]
+        public void PackageAlreadyExists()
+        {
+            var packageAlreadyExistsBundle = this.CreateBundleInstaller("PackageAlreadyExists");
+
+            var installLogPath = packageAlreadyExistsBundle.Install((int)MSIExec.MSIExecReturnCode.ERROR_INSTALL_FAILURE);
+            packageAlreadyExistsBundle.VerifyUnregisteredAndRemovedFromPackageCache();
+
+            Assert.True(LogVerifier.MessageInLogFile(installLogPath, "Detected package: TestExe, state: Present, cached: No, install registration state: Absent, cache registration state: Absent"));
+            Assert.True(LogVerifier.MessageInLogFile(installLogPath, "package: TestExe, install registration state: Absent, cache registration state: Absent"));
+        }
     }
 }
