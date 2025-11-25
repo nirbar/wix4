@@ -1,0 +1,18 @@
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+<Project Sdk="PanelSwWix4.Sdk">
+  <PropertyGroup>
+    <OutputType>Bundle</OutputType>
+    <UpgradeCode>{7A371159-483B-4CC8-9FC6-7A5042A448FB}</UpgradeCode>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Templates\Bundle.wxs" Link="Bundle.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\TestBA\TestBAWixlib\testbawixlib.wixproj" />
+    <ProjectReference Include="..\PackageFail\PackageFail.wixproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="PanelSwWix4.BootstrapperApplications.wixext" />
+    <PackageReference Include="PanelSwWix4.NetFx.wixext" />
+  </ItemGroup>
+</Project>
