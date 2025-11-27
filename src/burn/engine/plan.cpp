@@ -3130,6 +3130,80 @@ LExit:
     ReleaseMem(rgReorderedActions);
 }
 
+HRESULT PlanCheckSpace(
+    __in BURN_CACHE_ACTION* rgCacheActions,
+    __in DWORD cCacheActions,
+    __in_z LPCWSTR szMachineCacheFolder,
+    __in_z LPCWSTR szUserCacheFolder
+    )
+{
+    DWORD64 qwMinNeededUser = 0ull;
+    DWORD64 qwMinNeededMachine = 0ull;
+    DWORD64 qwAvailable = 0ull;
+    ULARGE_INTEGER ullAvailable = {};
+    HRESULT hr = S_OK;
+    BOOL fRes = TRUE;
+
+    for (DWORD i = 0; i < cCacheActions; ++i)
+    {
+        BURN_CACHE_ACTION* pCacheAction = rgCacheActions + i;
+
+        switch (pCacheAction->type)
+        {
+        case BURN_CACHE_ACTION_TYPE_PACKAGE:
+            BURN_PACKAGE* pPackage = pCacheAction->package.pPackage;
+            if (!pPackage->fCached)
+            {
+                DWORD64* pqw = pPackage->fPerMachine ? &qwMinNeededMachine : &qwMinNeededUser;
+
+                for (DWORD j = 0; j < pPackage->payloads.cItems; ++j)
+                {
+                    if (!pPackage->payloads.rgItems[j].fCached)
+                    {
+                        BURN_PAYLOAD* pPayload = pPackage->payloads.rgItems[j].pPayload;
+
+                        hr = DWord64Add(*pqw, pPayload->qwFileSize, pqw);
+                        ExitOnFailure(hr, "Failed to calculate needed disk space");
+                    }
+                }
+            }
+            break;
+        }
+    }
+
+    if (qwMinNeededUser)
+    {
+        BOOL fSameRoot = ::PathIsSameRootW(szMachineCacheFolder, szUserCacheFolder);
+        if (fSameRoot)
+        {
+            hr = DWord64Add(qwMinNeededMachine, qwMinNeededUser, &qwMinNeededMachine);
+            ExitOnFailure(hr, "Failed to calculate needed disk space");
+        }
+        else
+        {
+            fRes = ::GetDiskFreeSpaceExW(szUserCacheFolder, NULL, NULL, &ullAvailable);
+            ExitOnNullWithLastError(fRes, hr, "Failed to get available disk space in '%ls'", szUserCacheFolder);
+
+            qwAvailable = ((DWORD64)ullAvailable.HighPart) << (8 * sizeof(ullAvailable.HighPart)) | ullAvailable.LowPart;
+            fRes = (qwAvailable > qwMinNeededUser);
+            ExitOnNull(fRes, hr, E_DISKFULL, "Not enough space on disk for user cache. Needed space is %I64u, available only %I64u", qwMinNeededUser, qwAvailable);
+        }
+    }
+
+    if (qwMinNeededMachine)
+    {
+        fRes = ::GetDiskFreeSpaceExW(szMachineCacheFolder, NULL, NULL, &ullAvailable);
+        ExitOnNullWithLastError(fRes, hr, "Failed to get available disk space in '%ls'", szMachineCacheFolder);
+
+        qwAvailable = ((DWORD64)ullAvailable.HighPart) << (8 * sizeof(ullAvailable.HighPart)) | ullAvailable.LowPart;
+        fRes = (qwAvailable > qwMinNeededMachine);
+        ExitOnNull(fRes, hr, E_DISKFULL, "Not enough space on disk for cache. Needed space is %I64u, available only %I64u", qwMinNeededMachine, qwAvailable);
+    }
+
+LExit:
+    return hr;
+}
+
 static void CalculateExpectedRegistrationStates(
     __in BURN_PACKAGE* rgPackages,
     __in DWORD cPackages

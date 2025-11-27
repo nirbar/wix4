@@ -10,6 +10,7 @@ extern "C" {
 // constants
 
 const DWORD BURN_PLAN_INVALID_ACTION_INDEX = 0x80000000;
+#define E_DISKFULL HRESULT_FROM_WIN32(ERROR_DISK_FULL)
 
 enum BURN_REGISTRATION_ACTION_OPERATIONS
 {
@@ -493,6 +494,12 @@ HRESULT PlanPackagesAndBundleScope(
     __out BOOTSTRAPPER_SCOPE* pResultingScope,
     __out BOOL* pfPerMachine
 );
+HRESULT PlanCheckSpace(
+    __in BURN_CACHE_ACTION* rgCacheActions,
+    __in DWORD cCacheActions,
+    __in_z LPCWSTR szMachineCacheFolder,
+    __in_z LPCWSTR szUserCacheFolder
+    );
 
 #if defined(__cplusplus)
 }
