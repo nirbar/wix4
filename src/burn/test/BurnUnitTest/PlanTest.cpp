@@ -19,6 +19,7 @@ static LPCWSTR wzSingleMsuManifestFileName = L"MsuPackageFixture_manifest.xml";
 static LPCWSTR wzSlipstreamManifestFileName = L"Slipstream_BundleA_manifest.xml";
 static LPCWSTR wzSlipstreamModifiedManifestFileName = L"Slipstream_BundleA_modified_manifest.xml";
 static LPCWSTR wzCacheReorderManifestFileName = L"CacheReorder_BundleAv1_manifest.xml";
+static LPCWSTR wzPlanCheckSpaceManifestFileName = L"CheckSpace_manifest.xml";
 
 static BOOL vfUsePackageRequestState = FALSE;
 static BOOTSTRAPPER_REQUEST_STATE vPackageRequestState = BOOTSTRAPPER_REQUEST_STATE_NONE;
@@ -3346,6 +3347,42 @@ namespace Bootstrapper
 
             Assert::EndsWith(gcnew String(L".exe"), VariableGetStringHelper(&pEngineState->variables, BURN_BUNDLE_SOURCE_PROCESS_PATH));
             Assert::EndsWith(gcnew String(L"\\"), VariableGetStringHelper(&pEngineState->variables, BURN_BUNDLE_SOURCE_PROCESS_FOLDER));
+        }
+
+        [Fact]
+        void PlanCheckSpaceTest()
+        {
+            HRESULT hr = S_OK;
+            BOOL fRes = TRUE;
+            BURN_ENGINE_STATE engineState = { };
+            BURN_ENGINE_STATE* pEngineState = &engineState;
+            ULARGE_INTEGER ullAvailable = {};
+            DWORD64 qwAvailable = 0;
+
+            InitializeEngineStateForCorePlan(wzPlanCheckSpaceManifestFileName, pEngineState);
+            DetectPackagesAsAbsent(pEngineState);
+
+            hr = CorePlan(pEngineState, BOOTSTRAPPER_ACTION_INSTALL);
+            NativeAssert::Succeeded(hr, "CorePlan failed");
+
+            fRes = ::GetDiskFreeSpaceExW(engineState.cache.sczBaseWorkingFolder, NULL, NULL, &ullAvailable);
+            NativeAssert::True(fRes, "GetDiskFreeSpaceExW failed");
+            qwAvailable = ((DWORD64)ullAvailable.HighPart) << (8 * sizeof(ullAvailable.HighPart)) | ullAvailable.LowPart;
+
+            for (DWORD i = 0; i < engineState.packages.cPackages; ++i)
+            {
+                BURN_PACKAGE* pPackage = engineState.packages.rgPackages + i;
+
+                for (DWORD j = 0; j < pPackage->payloads.cItems; ++j)
+                {
+                    BURN_PAYLOAD* pPayload = pPackage->payloads.rgItems[j].pPayload;
+
+                    pPayload->qwFileSize = qwAvailable;
+                }
+            }
+
+            hr = CorePlan(pEngineState, BOOTSTRAPPER_ACTION_INSTALL);
+            NativeAssert::SpecificReturnCode(HRESULT_FROM_WIN32(ERROR_DISK_FULL), hr, "CorePlan should have failed on missing disk space");
         }
 
     private:

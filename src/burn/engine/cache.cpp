@@ -37,7 +37,7 @@ static HRESULT CreateCompletedPath(
     __in BURN_CACHE* pCache,
     __in BOOL fPerMachine,
     __in LPCWSTR wzCacheId,
-    __in LPCWSTR wzFilePath,
+    __in_z_opt LPCWSTR wzFilePath,
     __out_z LPWSTR* psczCachePath
     );
 static HRESULT CreateUnverifiedPath(
@@ -219,7 +219,6 @@ extern "C" HRESULT CacheInitialize(
 
     pCache->fCustomMachinePackageCache = !fPathEqual;
 
-
     hr = ShelGetFolder(&sczAppData, CSIDL_LOCAL_APPDATA);
     ExitOnFailure(hr, "Failed to find local %hs appdata directory.", "per-user");
 
@@ -228,7 +227,6 @@ extern "C" HRESULT CacheInitialize(
 
     hr = PathBackslashTerminate(&pCache->sczDefaultUserPackageCache);
     ExitOnFailure(hr, "Failed to backslash terminate default %hs package cache directory name.", "per-user");
-
 
     hr = CalculateWorkingFolders(pCache, pInternalCommand);
 
@@ -1655,7 +1653,7 @@ static HRESULT CreateCompletedPath(
     __in BURN_CACHE* pCache,
     __in BOOL fPerMachine,
     __in LPCWSTR wzId,
-    __in LPCWSTR wzFilePath,
+    __in_z_opt LPCWSTR wzFilePath,
     __out_z LPWSTR* psczCachePath
     )
 {
