@@ -497,6 +497,7 @@ HRESULT PlanPackagesAndBundleScope(
 HRESULT PlanCheckSpace(
     __in BURN_CACHE_ACTION* rgCacheActions,
     __in DWORD cCacheActions,
+    __in_z LPCWSTR szCacheWorkingFolder,
     __in_z LPCWSTR szMachineCacheFolder,
     __in_z LPCWSTR szUserCacheFolder
     );

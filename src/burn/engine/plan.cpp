@@ -3133,10 +3133,13 @@ LExit:
 HRESULT PlanCheckSpace(
     __in BURN_CACHE_ACTION* rgCacheActions,
     __in DWORD cCacheActions,
+    __in_z LPCWSTR szCacheWorkingFolder,
     __in_z LPCWSTR szMachineCacheFolder,
     __in_z LPCWSTR szUserCacheFolder
     )
 {
+    DWORD64 qwMinContainer = 0ull;
+    DWORD64 qwMaxContainer = 0ull;
     DWORD64 qwMinNeededUser = 0ull;
     DWORD64 qwMinNeededMachine = 0ull;
     DWORD64 qwAvailable = 0ull;
@@ -3164,6 +3167,27 @@ HRESULT PlanCheckSpace(
 
                         hr = DWord64Add(*pqw, pPayload->qwFileSize, pqw);
                         ExitOnFailure(hr, "Failed to calculate needed disk space");
+
+                        if (pPayload->pContainer && !pPayload->pContainer->fAttached)
+                        {
+                            BOOL fCheckContainer = TRUE;
+                            if (pPayload->pContainer->sczSourcePath && *pPayload->pContainer->sczSourcePath)
+                            {
+                                // Local container may be hard-linked which will not consume additional disk space
+                                fCheckContainer = !::PathIsSameRootW(pPayload->pContainer->sczSourcePath, szCacheWorkingFolder);
+                            }
+                            if (fCheckContainer)
+                            {
+                                if (!qwMinContainer || (pPayload->pContainer->qwFileSize < qwMinContainer))
+                                {
+                                    qwMinContainer = pPayload->pContainer->qwFileSize;
+                                }
+                                if (!qwMaxContainer || (pPayload->pContainer->qwFileSize > qwMaxContainer))
+                                {
+                                    qwMaxContainer = pPayload->pContainer->qwFileSize;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3171,10 +3195,31 @@ HRESULT PlanCheckSpace(
         }
     }
 
+    if (qwMinContainer)
+    {
+        // If containers are handled on the same volume as package cache, then at some point both (at least) minimal container and packages will consume space
+        if (::PathIsSameRootW(szCacheWorkingFolder, szUserCacheFolder))
+        {
+            hr = DWord64Add(qwMinNeededUser, qwMinContainer, &qwMinNeededUser);
+            ExitOnFailure(hr, "Failed to calculate needed disk space");
+        }
+        else if (::PathIsSameRootW(szCacheWorkingFolder, szMachineCacheFolder))
+        {
+            hr = DWord64Add(qwMinNeededMachine, qwMinContainer, &qwMinNeededMachine);
+            ExitOnFailure(hr, "Failed to calculate needed disk space");
+        }
+
+        fRes = ::GetDiskFreeSpaceExW(szCacheWorkingFolder, NULL, NULL, &ullAvailable);
+        ExitOnNullWithLastError(fRes, hr, "Failed to get available disk space in '%ls'", szCacheWorkingFolder);
+
+        qwAvailable = ((DWORD64)ullAvailable.HighPart) << (8 * sizeof(ullAvailable.HighPart)) | ullAvailable.LowPart;
+        fRes = (qwAvailable > qwMaxContainer);
+        ExitOnNull(fRes, hr, E_DISKFULL, "Not enough space on disk for container. Needed space is %I64u, available only %I64u", qwMaxContainer, qwAvailable);
+    }
+
     if (qwMinNeededUser)
     {
-        BOOL fSameRoot = ::PathIsSameRootW(szMachineCacheFolder, szUserCacheFolder);
-        if (fSameRoot)
+        if (::PathIsSameRootW(szMachineCacheFolder, szUserCacheFolder))
         {
             hr = DWord64Add(qwMinNeededMachine, qwMinNeededUser, &qwMinNeededMachine);
             ExitOnFailure(hr, "Failed to calculate needed disk space");

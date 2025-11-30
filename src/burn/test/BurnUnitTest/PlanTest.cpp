@@ -3682,8 +3682,30 @@ namespace Bootstrapper
 
             fRes = ::GetDiskFreeSpaceExW(engineState.cache.sczBaseWorkingFolder, NULL, NULL, &ullAvailable);
             NativeAssert::True(fRes, "GetDiskFreeSpaceExW failed");
-            qwAvailable = ((DWORD64)ullAvailable.HighPart) << (8 * sizeof(ullAvailable.HighPart)) | ullAvailable.LowPart;
+            qwAvailable = (((DWORD64)ullAvailable.HighPart) << (8 * sizeof(ullAvailable.HighPart)) | ullAvailable.LowPart) + 1;
 
+            for (DWORD i = 0; i < engineState.containers.cContainers; ++i)
+            {
+                BURN_CONTAINER* pContainer = engineState.containers.rgContainers + i;
+                if (!pContainer->fAttached)
+                {
+                    LPCWSTR szContainerPath = pContainer->sczSourcePath;
+                    DWORD64 qwContainerSize = pContainer->qwFileSize;
+
+                    // Make the container too big
+                    pContainer->sczSourcePath = NULL;
+                    pContainer->qwFileSize = qwAvailable;
+
+                    hr = CorePlan(pEngineState, BOOTSTRAPPER_ACTION_INSTALL, BOOTSTRAPPER_SCOPE_DEFAULT);
+                    NativeAssert::SpecificReturnCode(HRESULT_FROM_WIN32(ERROR_DISK_FULL), hr, "CorePlan should have failed on missing disk space for the container");
+
+                    // Reset
+                    pContainer->sczSourcePath = const_cast<LPWSTR>(szContainerPath);
+                    pContainer->qwFileSize = qwContainerSize;
+                }
+            }
+
+            // Make the packages too big
             for (DWORD i = 0; i < engineState.packages.cPackages; ++i)
             {
                 BURN_PACKAGE* pPackage = engineState.packages.rgPackages + i;
