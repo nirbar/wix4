@@ -561,7 +561,7 @@ extern "C" HRESULT CorePlan(
 
     PlanDump(&pEngineState->plan);
 
-    hr = PlanCheckSpace(pEngineState->plan.rgCacheActions, pEngineState->plan.cCacheActions, pEngineState->cache.sczCurrentMachinePackageCache, pEngineState->cache.sczDefaultUserPackageCache);
+    hr = PlanCheckSpace(pEngineState->plan.rgCacheActions, pEngineState->plan.cCacheActions, pEngineState->cache.sczBaseWorkingFolder, pEngineState->cache.sczCurrentMachinePackageCache, pEngineState->cache.sczDefaultUserPackageCache);
     if (E_DISKFULL != hr)
     {
         hr = S_OK; // Ignore failures to check available space, hopefully it will work out
