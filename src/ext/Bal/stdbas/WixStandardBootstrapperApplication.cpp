@@ -2516,7 +2516,7 @@ private: // privates
         hr = BalFormatString(m_pFilesInUseTitleLoc->wzText, &sczTitle);
         BalExitOnFailure(hr, "Failed to format FilesInUseTitle loc string.");
 
-        hr = BalFormatString(m_pFilesInUseLabelLoc->wzText, &sczLabel);
+        hr = BalFormatString(m_pRmFilesInUseLabelLoc->wzText, &sczLabel);
         BalExitOnFailure(hr, "Failed to format FilesInUseLabel loc string.");
 
         hr = BalFormatString(m_pFilesInUseCloseRadioButtonLoc->wzText, &sczCloseRadioButton);
@@ -2578,7 +2578,7 @@ private: // privates
         hr = BalFormatString(m_pFilesInUseTitleLoc->wzText, &sczTitle);
         BalExitOnFailure(hr, "Failed to format FilesInUseTitle loc string.");
 
-        hr = BalFormatString(m_pFilesInUseLabelLoc->wzText, &sczLabel);
+        hr = BalFormatString(m_pMsiFilesInUseLabelLoc->wzText, &sczLabel);
         BalExitOnFailure(hr, "Failed to format FilesInUseLabel loc string.");
 
         hr = BalFormatString(m_pFilesInUseRetryButtonLoc->wzText, &sczRetryButton);
@@ -2692,7 +2692,7 @@ private: // privates
         hr = BalFormatString(m_pFilesInUseTitleLoc->wzText, &sczTitle);
         BalExitOnFailure(hr, "Failed to format FilesInUseTitle loc string.");
 
-        hr = BalFormatString(m_pFilesInUseLabelLoc->wzText, &sczLabel);
+        hr = BalFormatString(m_pRmFilesInUseLabelLoc->wzText, &sczLabel);
         BalExitOnFailure(hr, "Failed to format FilesInUseLabel loc string.");
 
         hr = BalFormatString(m_pFilesInUseNetfxCloseRadioButtonLoc->wzText, &sczNetfxCloseRadioButton);
@@ -3089,7 +3089,11 @@ private:
     {
         // Get the loc strings for the files-in-use dialogs.
         LoadIndividualLocString(L"#(loc.FilesInUseTitle)", &m_pFilesInUseTitleLoc);
-        LoadIndividualLocString(L"#(loc.FilesInUseLabel)", &m_pFilesInUseLabelLoc);
+        LoadIndividualLocString(L"#(loc.FilesInUseLabel)", &m_pRmFilesInUseLabelLoc);
+        if (E_NOTFOUND == LoadIndividualLocString(L"#(loc.MsiFilesInUseLabel)", &m_pMsiFilesInUseLabelLoc))
+        {
+            LoadIndividualLocString(L"#(loc.FilesInUseLabel)", &m_pMsiFilesInUseLabelLoc);
+        }
         LoadIndividualLocString(L"#(loc.FilesInUseCloseRadioButton)", &m_pFilesInUseCloseRadioButtonLoc);
         LoadIndividualLocString(L"#(loc.FilesInUseDontCloseRadioButton)", &m_pFilesInUseDontCloseRadioButtonLoc);
         LoadIndividualLocString(L"#(loc.FilesInUseRetryButton)", &m_pFilesInUseRetryButtonLoc);
@@ -3097,9 +3101,9 @@ private:
         LoadIndividualLocString(L"#(loc.FilesInUseExitButton)", &m_pFilesInUseExitButtonLoc);
         LoadIndividualLocString(L"#(loc.FilesInUseNetfxCloseRadioButton)", &m_pFilesInUseNetfxCloseRadioButtonLoc);
 
-        m_fShowRMFilesInUse = m_pFilesInUseTitleLoc && m_pFilesInUseLabelLoc && m_pFilesInUseCloseRadioButtonLoc && m_pFilesInUseDontCloseRadioButtonLoc;
-        m_fShowStandardFilesInUse = m_pFilesInUseTitleLoc && m_pFilesInUseLabelLoc && m_pFilesInUseRetryButtonLoc && m_pFilesInUseIgnoreButtonLoc && m_pFilesInUseExitButtonLoc;
-        m_fShowNetfxFilesInUse = m_pFilesInUseTitleLoc && m_pFilesInUseLabelLoc && m_pFilesInUseNetfxCloseRadioButtonLoc && m_pFilesInUseDontCloseRadioButtonLoc;
+        m_fShowRMFilesInUse = m_pFilesInUseTitleLoc && m_pRmFilesInUseLabelLoc && m_pFilesInUseCloseRadioButtonLoc && m_pFilesInUseDontCloseRadioButtonLoc;
+        m_fShowStandardFilesInUse = m_pFilesInUseTitleLoc && m_pMsiFilesInUseLabelLoc && m_pFilesInUseRetryButtonLoc && m_pFilesInUseIgnoreButtonLoc && m_pFilesInUseExitButtonLoc;
+        m_fShowNetfxFilesInUse = m_pFilesInUseTitleLoc && m_pRmFilesInUseLabelLoc && m_pFilesInUseNetfxCloseRadioButtonLoc && m_pFilesInUseDontCloseRadioButtonLoc;
     }
 
 
@@ -4925,7 +4929,8 @@ public:
         m_nLastMsiFilesInUseResult = IDNOACTION;
         m_nLastNetfxFilesInUseResult = IDNOACTION;
         m_pFilesInUseTitleLoc = NULL;
-        m_pFilesInUseLabelLoc = NULL;
+        m_pMsiFilesInUseLabelLoc = NULL;
+        m_pRmFilesInUseLabelLoc = NULL;
         m_pFilesInUseCloseRadioButtonLoc = NULL;
         m_pFilesInUseNetfxCloseRadioButtonLoc = NULL;
         m_pFilesInUseDontCloseRadioButtonLoc = NULL;
@@ -5261,7 +5266,8 @@ private:
     int m_nLastMsiFilesInUseResult;
     int m_nLastNetfxFilesInUseResult;
     LOC_STRING* m_pFilesInUseTitleLoc;
-    LOC_STRING* m_pFilesInUseLabelLoc;
+    LOC_STRING* m_pRmFilesInUseLabelLoc;
+    LOC_STRING* m_pMsiFilesInUseLabelLoc;
     LOC_STRING* m_pFilesInUseCloseRadioButtonLoc;
     LOC_STRING* m_pFilesInUseNetfxCloseRadioButtonLoc;
     LOC_STRING* m_pFilesInUseDontCloseRadioButtonLoc;
