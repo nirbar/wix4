@@ -1,4 +1,4 @@
-﻿<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
 
 
 <WixLocalization Culture="en-us" Language="1033" xmlns="http://wixtoolset.org/schemas/v4/wxl">
@@ -26,6 +26,7 @@
   <String Id="PREREQBAINFINITELOOPErrorMessage" Value="[WixBundleName] failed to load the .NET Core runtime even though all of the prerequisites are installed." />
   <String Id="FilesInUseTitle" Value="Files In Use" />
   <String Id="FilesInUseLabel" Value="The following applications are using files that need to be updated:" />
+  <String Id="MsiFilesInUseLabel" Value="The following applications are using files that need to be updated by this setup.&#xA;Close these applications and then click Retry to continue setup or Exit to exit it." />
   <String Id="FilesInUseNetfxCloseRadioButton" Value="Close the &amp;applications." />
   <String Id="FilesInUseCloseRadioButton" Value="Close the &amp;applications and attempt to restart them." />
   <String Id="FilesInUseDontCloseRadioButton" Value="&amp;Do not close applications. A reboot will be required." />
