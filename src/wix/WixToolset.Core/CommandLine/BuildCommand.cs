@@ -67,6 +67,7 @@ namespace WixToolset.Core.CommandLine
                 new CommandLineHelpSwitch("-outputtype", "Explicitly set the output type if it cannot be determined from the output."),
                 new CommandLineHelpSwitch("-pdb", "Optional path to output .wixpdb. Default will write .wixpdb beside output path."),
                 new CommandLineHelpSwitch("-pdbtype", "Switch to disable creation of .wixpdb. Types: full or none."),
+                new CommandLineHelpSwitch("-timer", "Print statistics of some time consuming build events."),
             })
             {
                 Notes = String.Join(Environment.NewLine,
@@ -81,81 +82,92 @@ namespace WixToolset.Core.CommandLine
 
         public override Task<int> ExecuteAsync(CancellationToken cancellationToken)
         {
-            this.IntermediateFolder = this.commandLine.CalculateIntermedateFolder();
-
-            this.Platform = this.commandLine.Platform;
-
-            this.TrackingFile = this.commandLine.TrackingFile;
-
-            this.DefaultCompressionLevel = this.commandLine.DefaultCompressionLevel;
-
-            var preprocessorVariables = this.commandLine.CalculatePreprocessorVariables();
-
-            var filterCultures = this.commandLine.CalculateFilterCultures();
-
-            var creator = this.ServiceProvider.GetService<ISymbolDefinitionCreator>();
-
-            var inputsOutputs = this.commandLine.CalculateInputsAndOutputs(creator);
-
-            this.OutputPath = inputsOutputs.OutputPath;
-
-            if (this.Messaging.EncounteredError)
+            try
             {
-                return Task.FromResult(this.Messaging.LastErrorNumber);
-            }
+                this.IntermediateFolder = this.commandLine.CalculateIntermedateFolder();
 
-            var wixobjs = this.CompilePhase(preprocessorVariables, inputsOutputs.SourcePaths, this.commandLine.IncludeSearchPaths, cancellationToken);
+                this.Platform = this.commandLine.Platform;
 
-            var wxls = this.LoadLocalizationFiles(inputsOutputs.LocalizationPaths, preprocessorVariables, this.commandLine.IncludeSearchPaths, cancellationToken);
+                this.TrackingFile = this.commandLine.TrackingFile;
 
-            if (this.Messaging.EncounteredError)
-            {
-                return Task.FromResult(this.Messaging.LastErrorNumber);
-            }
+                this.DefaultCompressionLevel = this.commandLine.DefaultCompressionLevel;
 
-            this.OptimizePhase(wixobjs, wxls, this.commandLine.BindPaths, this.commandLine.BindVariables, cancellationToken);
+                var preprocessorVariables = this.commandLine.CalculatePreprocessorVariables();
 
-            if (inputsOutputs.OutputType == OutputType.Library)
-            {
-                using (new IntermediateFieldContext("wix.lib"))
+                var filterCultures = this.commandLine.CalculateFilterCultures();
+
+                var creator = this.ServiceProvider.GetService<ISymbolDefinitionCreator>();
+
+                var inputsOutputs = this.commandLine.CalculateInputsAndOutputs(creator);
+
+                this.OutputPath = inputsOutputs.OutputPath;
+
+                if (this.Messaging.EncounteredError)
                 {
-                    this.LibraryPhase(wixobjs, wxls, inputsOutputs.LibraryPaths, creator, this.commandLine.BindFiles, this.commandLine.BindPaths, this.commandLine.BindVariables, inputsOutputs.OutputPath, cancellationToken);
+                    return Task.FromResult(this.Messaging.LastErrorNumber);
                 }
-            }
-            else
-            {
-                using (new IntermediateFieldContext("wix.link"))
+
+                var wixobjs = this.CompilePhase(preprocessorVariables, inputsOutputs.SourcePaths, this.commandLine.IncludeSearchPaths, cancellationToken);
+
+                var wxls = this.LoadLocalizationFiles(inputsOutputs.LocalizationPaths, preprocessorVariables, this.commandLine.IncludeSearchPaths, cancellationToken);
+
+                if (this.Messaging.EncounteredError)
                 {
-                    var wixipl = inputsOutputs.Wixipls.SingleOrDefault()
-                        ?? this.LinkPhase(wixobjs, inputsOutputs, creator, cancellationToken);
+                    return Task.FromResult(this.Messaging.LastErrorNumber);
+                }
 
-                    if (!this.Messaging.EncounteredError)
+                this.OptimizePhase(wixobjs, wxls, this.commandLine.BindPaths, this.commandLine.BindVariables, cancellationToken);
+
+                if (inputsOutputs.OutputType == OutputType.Library)
+                {
+                    using (new IntermediateFieldContext("wix.lib"))
                     {
-                        var outputExtension = Path.GetExtension(inputsOutputs.OutputPath);
-                        if (String.IsNullOrEmpty(outputExtension) || ".wix" == outputExtension)
-                        {
-                            var entrySectionType = wixipl.Sections.Single().Type;
+                        this.LibraryPhase(wixobjs, wxls, inputsOutputs.LibraryPaths, creator, this.commandLine.BindFiles, this.commandLine.BindPaths, this.commandLine.BindVariables, inputsOutputs.OutputPath, cancellationToken);
+                    }
+                }
+                else
+                {
+                    using (new IntermediateFieldContext("wix.link"))
+                    {
+                        var wixipl = inputsOutputs.Wixipls.SingleOrDefault()
+                            ?? this.LinkPhase(wixobjs, inputsOutputs, creator, cancellationToken);
 
-                            inputsOutputs.OutputPath = Path.ChangeExtension(inputsOutputs.OutputPath, DefaultExtensionForSectionType(entrySectionType));
-                            this.OutputPath = inputsOutputs.OutputPath;
-                        }
-
-                        if (inputsOutputs.OutputType == OutputType.IntermediatePostLink)
+                        if (!this.Messaging.EncounteredError)
                         {
-                            wixipl.Save(inputsOutputs.OutputPath);
-                        }
-                        else
-                        {
-                            using (new IntermediateFieldContext("wix.bind"))
+                            var outputExtension = Path.GetExtension(inputsOutputs.OutputPath);
+                            if (String.IsNullOrEmpty(outputExtension) || ".wix" == outputExtension)
                             {
-                                this.BindPhase(wixipl, wxls, filterCultures, this.commandLine.BackwardCompatibleGuidGeneration, this.commandLine.CabCachePath, this.commandLine.CabbingThreadCount, this.commandLine.BindPaths, this.commandLine.BindVariables, inputsOutputs, cancellationToken);
+                                var entrySectionType = wixipl.Sections.Single().Type;
+
+                                inputsOutputs.OutputPath = Path.ChangeExtension(inputsOutputs.OutputPath, DefaultExtensionForSectionType(entrySectionType));
+                                this.OutputPath = inputsOutputs.OutputPath;
+                            }
+
+                            if (inputsOutputs.OutputType == OutputType.IntermediatePostLink)
+                            {
+                                wixipl.Save(inputsOutputs.OutputPath);
+                            }
+                            else
+                            {
+                                using (new IntermediateFieldContext("wix.bind"))
+                                {
+                                    this.BindPhase(wixipl, wxls, filterCultures, this.commandLine.BackwardCompatibleGuidGeneration, this.commandLine.CabCachePath, this.commandLine.CabbingThreadCount, this.commandLine.BindPaths, this.commandLine.BindVariables, inputsOutputs, cancellationToken);
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            return Task.FromResult(this.Messaging.LastErrorNumber);
+                return Task.FromResult(this.Messaging.LastErrorNumber);
+            }
+            finally
+            {
+                if (this.commandLine.Timer)
+                {
+                    var timeTakerFactory = this.ServiceProvider.GetService<ITimeTakerFactory>();
+                    timeTakerFactory?.PrintMeasurements();
+                }
+            }
         }
 
         public override bool TryParseArgument(ICommandLineParser parser, string argument)
@@ -166,6 +178,9 @@ namespace WixToolset.Core.CommandLine
         private IReadOnlyList<Intermediate> CompilePhase(IDictionary<string, string> preprocessorVariables, IEnumerable<string> sourceFiles, IReadOnlyCollection<string> includeSearchPaths, CancellationToken cancellationToken)
         {
             var intermediates = new List<Intermediate>();
+            var timeTakerFactory = this.ServiceProvider.GetService<ITimeTakerFactory>();
+            var timeTaker = timeTakerFactory.GetTimeTaker("Compile");
+            timeTaker.Start();
 
             foreach (var sourceFile in sourceFiles)
             {
@@ -202,6 +217,7 @@ namespace WixToolset.Core.CommandLine
 
                 intermediates.Add(intermediate);
             }
+            timeTaker.Stop();
 
             return intermediates;
         }
@@ -224,95 +240,118 @@ namespace WixToolset.Core.CommandLine
 
         private void LibraryPhase(IReadOnlyCollection<Intermediate> intermediates, IReadOnlyCollection<Localization> localizations, IEnumerable<string> libraryFiles, ISymbolDefinitionCreator creator, bool bindFiles, IReadOnlyCollection<IBindPath> bindPaths, Dictionary<string, string> bindVariables, string outputPath, CancellationToken cancellationToken)
         {
-            var libraries = this.LoadLibraries(libraryFiles, creator);
-
-            if (this.Messaging.EncounteredError)
-            {
-                return;
-            }
-
-            var context = this.ServiceProvider.GetService<ILibraryContext>();
-            context.BindFiles = bindFiles;
-            context.BindPaths = bindPaths;
-            context.BindVariables = bindVariables;
-            context.Extensions = this.ExtensionManager.GetServices<ILibrarianExtension>();
-            context.Localizations = localizations;
-            context.IntermediateFolder = this.IntermediateFolder;
-            context.Intermediates = intermediates.Concat(libraries).ToList();
-            context.OutputPath = this.OutputPath;
-            context.CancellationToken = cancellationToken;
+            var timeTakerFactory = this.ServiceProvider.GetService<ITimeTakerFactory>();
+            var timeTaker = timeTakerFactory.GetTimeTaker("Library");
+            timeTaker.Start();
 
             try
             {
-                var librarian = this.ServiceProvider.GetService<ILibrarian>();
-                var result = librarian.Combine(context);
+                var libraries = this.LoadLibraries(libraryFiles, creator);
 
-                if (!this.Messaging.EncounteredError)
+                if (this.Messaging.EncounteredError)
                 {
-                    result.Library.SaveNew(outputPath);
+                    return;
+                }
 
-                    this.LayoutFiles(result.TrackedFiles, null, cancellationToken);
+                var context = this.ServiceProvider.GetService<ILibraryContext>();
+                context.BindFiles = bindFiles;
+                context.BindPaths = bindPaths;
+                context.BindVariables = bindVariables;
+                context.Extensions = this.ExtensionManager.GetServices<ILibrarianExtension>();
+                context.Localizations = localizations;
+                context.IntermediateFolder = this.IntermediateFolder;
+                context.Intermediates = intermediates.Concat(libraries).ToList();
+                context.OutputPath = this.OutputPath;
+                context.CancellationToken = cancellationToken;
+
+                try
+                {
+                    var librarian = this.ServiceProvider.GetService<ILibrarian>();
+                    var result = librarian.Combine(context);
+
+                    if (!this.Messaging.EncounteredError)
+                    {
+                        result.Library.SaveNew(outputPath);
+
+                        this.LayoutFiles(result.TrackedFiles, null, cancellationToken);
+                    }
+                }
+                catch (WixException e)
+                {
+                    this.Messaging.Write(e.Error);
                 }
             }
-            catch (WixException e)
+            finally
             {
-                this.Messaging.Write(e.Error);
+                timeTaker.Stop();
             }
         }
 
         private Intermediate LinkPhase(IEnumerable<Intermediate> intermediates, InputsAndOutputs inputsOutputs, ISymbolDefinitionCreator creator, CancellationToken cancellationToken)
         {
-            var libraries = this.LoadLibraries(inputsOutputs.LibraryPaths, creator);
-
-            if (this.Messaging.EncounteredError)
+            var timeTakerFactory = this.ServiceProvider.GetService<ITimeTakerFactory>();
+            var timeTaker = timeTakerFactory.GetTimeTaker("Link");
+            timeTaker.Start();
+            try
             {
-                return null;
+                var libraries = this.LoadLibraries(inputsOutputs.LibraryPaths, creator);
+
+                if (this.Messaging.EncounteredError)
+                {
+                    return null;
+                }
+
+                var context = this.ServiceProvider.GetService<ILinkContext>();
+                context.Extensions = this.ExtensionManager.GetServices<ILinkerExtension>();
+                context.ExtensionData = this.ExtensionManager.GetServices<IExtensionData>();
+                context.ExpectedOutputType = inputsOutputs.OutputType;
+                context.IntermediateFolder = this.IntermediateFolder;
+                context.Intermediates = intermediates.Concat(libraries).ToList();
+                context.OutputPath = this.OutputPath;
+                context.Platform = this.Platform;
+                context.SkipStdWixlib = this.commandLine.SkipStdWixlib;
+                context.SymbolDefinitionCreator = creator;
+                context.CancellationToken = cancellationToken;
+
+                var linker = this.ServiceProvider.GetService<ILinker>();
+                return linker.Link(context);
             }
-
-            var context = this.ServiceProvider.GetService<ILinkContext>();
-            context.Extensions = this.ExtensionManager.GetServices<ILinkerExtension>();
-            context.ExtensionData = this.ExtensionManager.GetServices<IExtensionData>();
-            context.ExpectedOutputType = inputsOutputs.OutputType;
-            context.IntermediateFolder = this.IntermediateFolder;
-            context.Intermediates = intermediates.Concat(libraries).ToList();
-            context.OutputPath = this.OutputPath;
-            context.Platform = this.Platform;
-            context.SkipStdWixlib = this.commandLine.SkipStdWixlib;
-            context.SymbolDefinitionCreator = creator;
-            context.CancellationToken = cancellationToken;
-
-            var linker = this.ServiceProvider.GetService<ILinker>();
-            return linker.Link(context);
+            finally
+            {
+                timeTaker.Stop();
+            }
         }
 
         private void BindPhase(Intermediate output, IReadOnlyCollection<Localization> localizations, IReadOnlyCollection<string> filterCultures, bool backwardCompatibleGuidGeneration, string cabCachePath, int cabbingThreadCount, IReadOnlyCollection<IBindPath> bindPaths, Dictionary<string, string> bindVariables, InputsAndOutputs inputsOutputs, CancellationToken cancellationToken)
         {
-            IResolveResult resolveResult;
-            {
-                var context = this.ServiceProvider.GetService<IResolveContext>();
-                context.BindPaths = bindPaths;
-                context.BindVariables = bindVariables;
-                context.Extensions = this.ExtensionManager.GetServices<IResolverExtension>();
-                context.ExtensionData = this.ExtensionManager.GetServices<IExtensionData>();
-                context.FilterCultures = filterCultures;
-                context.IntermediateFolder = this.IntermediateFolder;
-                context.IntermediateRepresentation = output;
-                context.Localizations = localizations;
-                context.OutputPath = inputsOutputs.OutputPath;
-                context.CancellationToken = cancellationToken;
-
-                var resolver = this.ServiceProvider.GetService<IResolver>();
-                resolveResult = resolver.Resolve(context);
-            }
-
-            if (this.Messaging.EncounteredError)
-            {
-                return;
-            }
-
+            var timeTakerFactory = this.ServiceProvider.GetService<ITimeTakerFactory>();
+            var timeTaker = timeTakerFactory.GetTimeTaker("Bind");
+            timeTaker.Start();
             IBindResult bindResult = null;
             try
             {
+                IResolveResult resolveResult;
+                {
+                    var context = this.ServiceProvider.GetService<IResolveContext>();
+                    context.BindPaths = bindPaths;
+                    context.BindVariables = bindVariables;
+                    context.Extensions = this.ExtensionManager.GetServices<IResolverExtension>();
+                    context.ExtensionData = this.ExtensionManager.GetServices<IExtensionData>();
+                    context.FilterCultures = filterCultures;
+                    context.IntermediateFolder = this.IntermediateFolder;
+                    context.IntermediateRepresentation = output;
+                    context.Localizations = localizations;
+                    context.OutputPath = inputsOutputs.OutputPath;
+                    context.CancellationToken = cancellationToken;
+
+                    var resolver = this.ServiceProvider.GetService<IResolver>();
+                    resolveResult = resolver.Resolve(context);
+                }
+
+                if (this.Messaging.EncounteredError)
+                {
+                    return;
+                }
                 {
                     var context = this.ServiceProvider.GetService<IBindContext>();
                     context.BackwardCompatibleGuidGeneration = backwardCompatibleGuidGeneration;
@@ -356,6 +395,7 @@ namespace WixToolset.Core.CommandLine
             finally
             {
                 bindResult?.Dispose();
+                timeTaker.Stop();
             }
         }
 
@@ -536,6 +576,8 @@ namespace WixToolset.Core.CommandLine
             public bool SkipStdWixlib { get; set; }
 
             public bool ResetAcls { get; set; }
+
+            public bool Timer { get; private set; } = false;
 
             public CommandLine(IServiceProvider serviceProvider, IMessaging messaging)
             {
@@ -737,6 +779,10 @@ namespace WixToolset.Core.CommandLine
 
                         case "resetacls":
                             this.ResetAcls = true;
+                            return true;
+
+                        case "timer":
+                            this.Timer = true;
                             return true;
                     }
 

@@ -604,6 +604,7 @@
         InstallerPlatform="$(InstallerPlatform)"
         NoLogo="true"
         Pedantic="$(Pedantic)"
+        Timer="$(BuildTimer)"
 
         BindPaths="@(BindPath)"
         BindVariables="@(BindVariable)"

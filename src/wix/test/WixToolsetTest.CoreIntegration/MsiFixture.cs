@@ -31,7 +31,8 @@ namespace WixToolsetTest.CoreIntegration
                     "-loc", Path.Combine(folder, "Package.en-us.wxl"),
                     "-bindpath", Path.Combine(folder, "data"),
                     "-intermediateFolder", intermediateFolder,
-                    "-o", Path.Combine(baseFolder, @"bin\test.msi")
+                    "-o", Path.Combine(baseFolder, @"bin\test.msi"),
+                    "-timer"
                 });
 
                 result.AssertSuccess();
@@ -52,6 +53,9 @@ namespace WixToolsetTest.CoreIntegration
                 var fileSymbol = section.Symbols.OfType<FileSymbol>().First();
                 WixAssert.StringEqual(Path.Combine(folder, @"data\test.txt"), fileSymbol[FileSymbolFields.Source].AsPath().Path);
                 WixAssert.StringEqual(@"test.txt", fileSymbol[FileSymbolFields.Source].PreviousValue.AsPath().Path);
+
+                Assert.Contains(result.Messages, m => (m.Level == MessageLevel.Information && m.Id == (int)InformationMessages.Ids.TimeMeasurementTitle));
+                Assert.Contains(result.Messages, m => (m.Level == MessageLevel.Information && m.Id == (int)InformationMessages.Ids.TimeMeasurement));
             }
         }
 

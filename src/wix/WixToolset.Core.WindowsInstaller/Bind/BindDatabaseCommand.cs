@@ -27,6 +27,7 @@ namespace WixToolset.Core.WindowsInstaller.Bind
             this.ServiceProvider = context.ServiceProvider;
 
             this.Messaging = context.ServiceProvider.GetService<IMessaging>();
+            this.TimeTakerFactory = context.ServiceProvider.GetService<ITimeTakerFactory>();
 
             this.WindowsInstallerBackendHelper = context.ServiceProvider.GetService<IWindowsInstallerBackendHelper>();
             this.FileSystem = context.ServiceProvider.GetService<IFileSystem>();
@@ -57,6 +58,8 @@ namespace WixToolset.Core.WindowsInstaller.Bind
         }
 
         private IServiceProvider ServiceProvider { get; }
+
+        private ITimeTakerFactory TimeTakerFactory { get; }
 
         private IMessaging Messaging { get; }
 
@@ -308,7 +311,7 @@ namespace WixToolset.Core.WindowsInstaller.Bind
 
             // Gather information about files that do not come from merge modules.
             {
-                var command = new UpdateFileFacadesCommand(this.Messaging, this.FileSystem, section, allFileFacades, fileFacadesFromIntermediate, variableCache, overwriteHash: true, this.CancellationToken, calculatedCabbingThreadCount);
+                var command = new UpdateFileFacadesCommand(this.Messaging, this.FileSystem, section, allFileFacades, fileFacadesFromIntermediate, variableCache, overwriteHash: true, this.CancellationToken, calculatedCabbingThreadCount, this.TimeTakerFactory);
                 command.Execute();
             }
 
@@ -352,7 +355,7 @@ namespace WixToolset.Core.WindowsInstaller.Bind
                     {
                         var updatedFacades = reresolvedFiles.Select(f => allFileFacades.First(ff => ff.Id == f.Id?.Id));
 
-                        var command = new UpdateFileFacadesCommand(this.Messaging, this.FileSystem, section, allFileFacades, updatedFacades, variableCache, overwriteHash: false, this.CancellationToken, calculatedCabbingThreadCount);
+                        var command = new UpdateFileFacadesCommand(this.Messaging, this.FileSystem, section, allFileFacades, updatedFacades, variableCache, overwriteHash: false, this.CancellationToken, calculatedCabbingThreadCount, this.TimeTakerFactory);
                         command.Execute();
                     }
                 }

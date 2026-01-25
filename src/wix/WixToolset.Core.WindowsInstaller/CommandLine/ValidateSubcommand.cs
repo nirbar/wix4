@@ -10,6 +10,7 @@ namespace WixToolset.Core.WindowsInstaller.CommandLine
     using WixToolset.Core.WindowsInstaller.Validate;
     using WixToolset.Data;
     using WixToolset.Data.WindowsInstaller;
+    using WixToolset.Extensibility;
     using WixToolset.Extensibility.Data;
     using WixToolset.Extensibility.Services;
 
@@ -19,11 +20,14 @@ namespace WixToolset.Core.WindowsInstaller.CommandLine
         {
             this.Messaging = serviceProvider.GetService<IMessaging>();
             this.FileSystem = serviceProvider.GetService<IFileSystem>();
+            this.TimeTakerFactory = serviceProvider.GetService<ITimeTakerFactory>();
         }
 
         private IMessaging Messaging { get; }
 
         private IFileSystem FileSystem { get; }
+
+        private ITimeTakerFactory TimeTakerFactory { get; }
 
         private string DatabasePath { get; set; }
 
@@ -100,7 +104,7 @@ namespace WixToolset.Core.WindowsInstaller.CommandLine
                     }
                 }
 
-                var command = new ValidateDatabaseCommand(this.Messaging, this.FileSystem, this.IntermediateFolder, this.DatabasePath, data, this.CubeFiles, this.Ices, this.SuppressIces);
+                var command = new ValidateDatabaseCommand(this.Messaging, this.FileSystem, this.IntermediateFolder, this.DatabasePath, data, this.CubeFiles, this.Ices, this.SuppressIces, this.TimeTakerFactory);
                 command.Execute();
             }
 
