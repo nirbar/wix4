@@ -16,10 +16,11 @@ namespace WixToolset.Core.Burn.Bundles
 
     internal class CreateNonUXContainers
     {
-        public CreateNonUXContainers(IBackendHelper backendHelper, IMessaging messaging, IEnumerable<IBurnContainerExtension> containerExtensions, IEnumerable<WixBundleContainerSymbol> containerSymbols, Dictionary<string, WixBundlePayloadSymbol> payloadSymbols, string intermediateFolder, string layoutFolder, CompressionLevel? defaultCompressionLevel)
+        public CreateNonUXContainers(IBackendHelper backendHelper, IMessaging messaging, IEnumerable<IBurnContainerExtension> containerExtensions, IEnumerable<WixBundleContainerSymbol> containerSymbols, Dictionary<string, WixBundlePayloadSymbol> payloadSymbols, string intermediateFolder, string layoutFolder, CompressionLevel? defaultCompressionLevel, ITimeTakerFactory timeTakerFactory)
         {
             this.BackendHelper = backendHelper;
             this.Messaging = messaging;
+            this.TimeTakerFactory = timeTakerFactory;
             this.Containers = containerSymbols;
             this.PayloadSymbols = payloadSymbols;
             this.IntermediateFolder = intermediateFolder;
@@ -42,6 +43,8 @@ namespace WixToolset.Core.Burn.Bundles
 
         private IMessaging Messaging { get; }
 
+        private ITimeTakerFactory TimeTakerFactory { get; }
+
         private IEnumerable<IBurnContainerExtension> ContainerExtensions { get; }
 
         private Dictionary<string, WixBundlePayloadSymbol> PayloadSymbols { get; }
@@ -54,6 +57,8 @@ namespace WixToolset.Core.Burn.Bundles
 
         public void Execute()
         {
+            var timeTaker = this.TimeTakerFactory.GetTimeTaker("Create containers");
+            timeTaker.Start();
             var fileTransfers = new List<IFileTransfer>();
             var trackedFiles = new List<ITrackedFile>();
             var uxPayloadSymbols = new List<WixBundlePayloadSymbol>();
@@ -120,6 +125,7 @@ namespace WixToolset.Core.Burn.Bundles
             this.UXContainerPayloads = uxPayloadSymbols;
             this.FileTransfers = fileTransfers;
             this.TrackedFiles = trackedFiles;
+            timeTaker.Stop();
         }
 
         private void CreateContainer(WixBundleContainerSymbol container, IEnumerable<WixBundlePayloadSymbol> containerPayloads)

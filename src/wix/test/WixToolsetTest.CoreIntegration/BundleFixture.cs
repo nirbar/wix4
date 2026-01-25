@@ -101,10 +101,13 @@ namespace WixToolsetTest.CoreIntegration
                     "-bindpath", Path.Combine(folder, "data"),
                     "-acceptEula", "wix" + SomeVerInfo.Major,
                     "-o", exePath,
+                    "-timer"
                 });
 
                 result.AssertSuccess();
                 Assert.DoesNotContain(result.Messages, m => m.Level == MessageLevel.Warning);
+                Assert.Contains(result.Messages, m => (m.Level == MessageLevel.Information && m.Id == (int)InformationMessages.Ids.TimeMeasurementTitle));
+                Assert.Contains(result.Messages, m => (m.Level == MessageLevel.Information && m.Id == (int)InformationMessages.Ids.TimeMeasurement));
 
                 Assert.True(File.Exists(exePath));
                 Assert.True(File.Exists(pdbPath));

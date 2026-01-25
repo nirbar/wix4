@@ -29,6 +29,7 @@ namespace WixToolset.Core.Burn
             this.ServiceProvider = context.ServiceProvider;
 
             this.Messaging = context.ServiceProvider.GetService<IMessaging>();
+            this.TimeTakerFactory = context.ServiceProvider.GetService<ITimeTakerFactory>();
             this.FileSystem = context.ServiceProvider.GetService<IFileSystem>();
 
             this.BackendHelper = context.ServiceProvider.GetService<IBackendHelper>();
@@ -50,6 +51,8 @@ namespace WixToolset.Core.Burn
         private IServiceProvider ServiceProvider { get; }
 
         private IMessaging Messaging { get; }
+
+        private ITimeTakerFactory TimeTakerFactory { get; }
 
         private IFileSystem FileSystem { get; }
 
@@ -181,6 +184,8 @@ namespace WixToolset.Core.Burn
 
             // Process each package facade. Note this is likely to add payloads and other symbols so
             // note that any indexes created above may be out of date now.
+            var timeTaker = this.TimeTakerFactory.GetTimeTaker("Process packages");
+            timeTaker.Start();
             foreach (var facade in facades.Values)
             {
                 switch (facade.PackageSymbol.Type)
@@ -228,6 +233,7 @@ namespace WixToolset.Core.Burn
                     BindBundleCommand.PopulatePackageVariableCache(facade, variableCache);
                 }
             }
+            timeTaker.Stop();
 
             if (this.Messaging.EncounteredError)
             {
@@ -457,7 +463,7 @@ namespace WixToolset.Core.Burn
             WixBundleContainerSymbol uxContainer;
             IEnumerable<WixBundlePayloadSymbol> uxPayloads;
             {
-                var command = new CreateNonUXContainers(this.BackendHelper, this.Messaging, this.ContainerExtensions, containers.Values, payloadSymbols, this.IntermediateFolder, layoutDirectory, this.DefaultCompressionLevel);
+                var command = new CreateNonUXContainers(this.BackendHelper, this.Messaging, this.ContainerExtensions, containers.Values, payloadSymbols, this.IntermediateFolder, layoutDirectory, this.DefaultCompressionLevel, this.TimeTakerFactory);
                 command.Execute();
 
                 fileTransfers.AddRange(command.FileTransfers);
@@ -492,8 +498,11 @@ namespace WixToolset.Core.Burn
 
             // Create the UX container.
             {
+                timeTaker = this.TimeTakerFactory.GetTimeTaker("Create UX container");
+                timeTaker.Start();
                 var command = new CreateContainerCommand(manifestPath, uxPayloads, uxContainer.WorkingPath, this.DefaultCompressionLevel);
                 command.Execute();
+                timeTaker.Stop();
 
                 uxContainer.Hash = command.Hash;
                 uxContainer.Size = command.Size;
@@ -502,8 +511,11 @@ namespace WixToolset.Core.Burn
             }
 
             {
+                timeTaker = this.TimeTakerFactory.GetTimeTaker("Create bundle executable");
+                timeTaker.Start();
                 var command = new CreateBundleExeCommand(this.Messaging, this.FileSystem, this.BackendHelper, this.IntermediateFolder, this.OutputPath, bundleSymbol, uxContainer, containers.Values);
                 command.Execute();
+                timeTaker.Stop();
 
                 fileTransfers.Add(command.Transfer);
                 trackedFiles.Add(this.BackendHelper.TrackFile(this.OutputPath, TrackedFileType.BuiltTargetOutput));

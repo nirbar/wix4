@@ -10,6 +10,7 @@ namespace WixToolset.Core.WindowsInstaller.Validate
     using WixToolset.Core.Native;
     using WixToolset.Data;
     using WixToolset.Data.WindowsInstaller;
+    using WixToolset.Extensibility;
     using WixToolset.Extensibility.Data;
     using WixToolset.Extensibility.Services;
 
@@ -18,7 +19,7 @@ namespace WixToolset.Core.WindowsInstaller.Validate
         // Set of ICEs that have equivalent-or-better checks in WiX.
         private static readonly string[] WellKnownSuppressedIces = new[] { "ICE08", "ICE33", "ICE47", "ICE66" };
 
-        public ValidateDatabaseCommand(IMessaging messaging, IFileSystem fileSystem, string intermediateFolder, string databasePath, WindowsInstallerData data, IEnumerable<string> cubeFiles, IEnumerable<string> ices, IEnumerable<string> suppressedIces)
+        public ValidateDatabaseCommand(IMessaging messaging, IFileSystem fileSystem, string intermediateFolder, string databasePath, WindowsInstallerData data, IEnumerable<string> cubeFiles, IEnumerable<string> ices, IEnumerable<string> suppressedIces, ITimeTakerFactory timeTakerFactory)
         {
             this.Messaging = messaging;
             this.FileSystem = fileSystem;
@@ -29,6 +30,7 @@ namespace WixToolset.Core.WindowsInstaller.Validate
             this.IntermediateFolder = intermediateFolder;
             this.OutputSourceLineNumber = new SourceLineNumber(databasePath);
             this.SuppressedIces = suppressedIces == null ? WellKnownSuppressedIces : suppressedIces.Union(WellKnownSuppressedIces);
+            this.TimeTakerFactory = timeTakerFactory;
 
             // Suppress ICE103 for merge modules because the custom action DLL in mergemod.cub is borked.
             // See https://github.com/wixtoolset/issues/issues/6567.
@@ -58,6 +60,8 @@ namespace WixToolset.Core.WindowsInstaller.Validate
 
         private string IntermediateFolder { get; }
 
+        private ITimeTakerFactory TimeTakerFactory { get; }
+
         /// <summary>
         /// Fallback when an exact source line number cannot be calculated for a validation error.
         /// </summary>
@@ -68,6 +72,8 @@ namespace WixToolset.Core.WindowsInstaller.Validate
         public void Execute()
         {
             var stopwatch = Stopwatch.StartNew();
+            var timeTaker = this.TimeTakerFactory.GetTimeTaker("Validate");
+            timeTaker.Start();
 
             this.Messaging.Write(VerboseMessages.ValidatingDatabase());
 
@@ -90,6 +96,7 @@ namespace WixToolset.Core.WindowsInstaller.Validate
                 this.FileSystem.DeleteFile(null, workingDatabasePath);
             }
 
+            timeTaker.Stop();
             stopwatch.Stop();
             this.Messaging.Write(VerboseMessages.ValidatedDatabase(stopwatch.ElapsedMilliseconds));
         }

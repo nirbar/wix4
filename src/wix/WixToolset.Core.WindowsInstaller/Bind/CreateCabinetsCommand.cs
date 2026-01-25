@@ -29,6 +29,7 @@ namespace WixToolset.Core.WindowsInstaller.Bind
         public CreateCabinetsCommand(IServiceProvider serviceProvider, IMessaging messaging, IBackendHelper backendHelper, IEnumerable<IWindowsInstallerBackendBinderExtension> backendExtensions, IntermediateSection section, string cabCachePath, int cabbingThreadCount, string outputPath, string intermediateFolder, CompressionLevel? defaultCompressionLevel, bool compressed, string modularizationSuffix, Dictionary<MediaSymbol, IEnumerable<IFileFacade>> filesByCabinetMedia, WindowsInstallerData data, TableDefinitionCollection tableDefinitions, Func<MediaSymbol, string, string, string> resolveMedia)
         {
             this.Messaging = messaging;
+            this.TimeTakerFactory = serviceProvider.GetService<ITimeTakerFactory>();
 
             this.BackendHelper = backendHelper;
 
@@ -54,6 +55,8 @@ namespace WixToolset.Core.WindowsInstaller.Bind
         }
 
         private IMessaging Messaging { get; }
+
+        private ITimeTakerFactory TimeTakerFactory { get; }
 
         private IBackendHelper BackendHelper { get; }
 
@@ -83,41 +86,51 @@ namespace WixToolset.Core.WindowsInstaller.Bind
 
         public void Execute()
         {
-            this.GetMediaTemplateAttributes(out var maximumCabinetSizeForLargeFileSplitting, out var maximumUncompressedMediaSize);
-
-            var cabinetBuilder = new CabinetBuilder(this.Messaging, this.CabbingThreadCount, maximumCabinetSizeForLargeFileSplitting, maximumUncompressedMediaSize);
-
-            var hashesByFileId = this.Section.Symbols.OfType<MsiFileHashSymbol>().ToDictionary(s => s.Id.Id);
-
-            foreach (var entry in this.FileFacadesByCabinet)
+            var timeTaker = this.TimeTakerFactory.GetTimeTaker("Create cabs");
+            try
             {
-                var mediaSymbol = entry.Key;
-                var files = entry.Value;
-                var compressionLevel = mediaSymbol.CompressionLevel ?? this.DefaultCompressionLevel ?? CompressionLevel.Medium;
-                var cabinetDir = this.ResolveMedia(mediaSymbol, mediaSymbol.Layout, this.LayoutDirectory);
+                timeTaker.Start();
 
-                var cabinetWorkItem = this.CreateCabinetWorkItem(this.Data, cabinetDir, mediaSymbol, compressionLevel, files, hashesByFileId);
-                if (null != cabinetWorkItem)
+                this.GetMediaTemplateAttributes(out var maximumCabinetSizeForLargeFileSplitting, out var maximumUncompressedMediaSize);
+
+                var cabinetBuilder = new CabinetBuilder(this.Messaging, this.CabbingThreadCount, maximumCabinetSizeForLargeFileSplitting, maximumUncompressedMediaSize);
+
+                var hashesByFileId = this.Section.Symbols.OfType<MsiFileHashSymbol>().ToDictionary(s => s.Id.Id);
+
+                foreach (var entry in this.FileFacadesByCabinet)
                 {
-                    cabinetBuilder.Enqueue(cabinetWorkItem);
+                    var mediaSymbol = entry.Key;
+                    var files = entry.Value;
+                    var compressionLevel = mediaSymbol.CompressionLevel ?? this.DefaultCompressionLevel ?? CompressionLevel.Medium;
+                    var cabinetDir = this.ResolveMedia(mediaSymbol, mediaSymbol.Layout, this.LayoutDirectory);
+
+                    var cabinetWorkItem = this.CreateCabinetWorkItem(this.Data, cabinetDir, mediaSymbol, compressionLevel, files, hashesByFileId);
+                    if (null != cabinetWorkItem)
+                    {
+                        cabinetBuilder.Enqueue(cabinetWorkItem);
+                    }
                 }
-            }
 
-            // stop processing if an error previously occurred
-            if (this.Messaging.EncounteredError)
+                // stop processing if an error previously occurred
+                if (this.Messaging.EncounteredError)
+                {
+                    return;
+                }
+
+                // Create queued cabinets with multiple threads.
+                cabinetBuilder.CreateQueuedCabinets();
+
+                if (this.Messaging.EncounteredError)
+                {
+                    return;
+                }
+
+                this.UpdateMediaWithSpannedCabinets(cabinetBuilder.CompletedCabinets);
+            }
+            finally
             {
-                return;
+                timeTaker.Stop();
             }
-
-            // Create queued cabinets with multiple threads.
-            cabinetBuilder.CreateQueuedCabinets();
-
-            if (this.Messaging.EncounteredError)
-            {
-                return;
-            }
-
-            this.UpdateMediaWithSpannedCabinets(cabinetBuilder.CompletedCabinets);
         }
 
         private CabinetWorkItem CreateCabinetWorkItem(WindowsInstallerData data, string cabinetDir, MediaSymbol mediaSymbol, CompressionLevel compressionLevel, IEnumerable<IFileFacade> fileFacades, Dictionary<string, MsiFileHashSymbol> hashesByFileId)

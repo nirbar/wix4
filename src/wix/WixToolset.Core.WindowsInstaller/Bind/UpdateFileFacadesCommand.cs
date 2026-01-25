@@ -14,6 +14,7 @@ namespace WixToolset.Core.WindowsInstaller.Bind
     using WixToolset.Core.Native.Msi;
     using WixToolset.Data;
     using WixToolset.Data.Symbols;
+    using WixToolset.Extensibility;
     using WixToolset.Extensibility.Data;
     using WixToolset.Extensibility.Services;
 
@@ -22,7 +23,7 @@ namespace WixToolset.Core.WindowsInstaller.Bind
     /// </summary>
     internal class UpdateFileFacadesCommand
     {
-        public UpdateFileFacadesCommand(IMessaging messaging, IFileSystem fileSystem, IntermediateSection section, IEnumerable<IFileFacade> allFileFacades, IEnumerable<IFileFacade> updateFileFacades, IDictionary<string, string> variableCache, bool overwriteHash, CancellationToken cancellationToken, int threadCount)
+        public UpdateFileFacadesCommand(IMessaging messaging, IFileSystem fileSystem, IntermediateSection section, IEnumerable<IFileFacade> allFileFacades, IEnumerable<IFileFacade> updateFileFacades, IDictionary<string, string> variableCache, bool overwriteHash, CancellationToken cancellationToken, int threadCount, ITimeTakerFactory timeTakerFactory)
         {
             this.Messaging = messaging;
             this.FileSystem = fileSystem;
@@ -33,9 +34,12 @@ namespace WixToolset.Core.WindowsInstaller.Bind
             this.OverwriteHash = overwriteHash;
             this.CancellationToken = cancellationToken;
             this.ThreadCount = threadCount;
+            this.TimeTakerFactory = timeTakerFactory;
         }
 
         private IMessaging Messaging { get; }
+
+        private ITimeTakerFactory TimeTakerFactory { get; }
 
         private IFileSystem FileSystem { get; }
 
@@ -55,8 +59,10 @@ namespace WixToolset.Core.WindowsInstaller.Bind
 
         public void Execute()
         {
+            var timeTaker = this.TimeTakerFactory.GetTimeTaker("Calculate file hash");
             try
             {
+                timeTaker.Start();
                 this.UpdateFileFacadesInParallel(this.UpdateFileFacades.Where(f => f.SourcePath != null));
             }
             catch (AggregateException ae)
@@ -65,6 +71,10 @@ namespace WixToolset.Core.WindowsInstaller.Bind
                 {
                     throw ex;
                 }
+            }
+            finally
+            {
+                timeTaker.Stop();
             }
         }
 

@@ -45,6 +45,8 @@ namespace WixToolset.BuildTasks
 
         public bool Pedantic { get; set; }
 
+        public bool Timer { get; set; }
+
         [Required]
         public ITaskItem[] SourceFiles { get; set; }
 
@@ -80,6 +82,7 @@ namespace WixToolset.BuildTasks
             commandLineBuilder.AppendSwitchIfNotNull("-trackingfile ", this.BindTrackingFile);
             commandLineBuilder.AppendSwitchIfNotNull("-defaultcompressionlevel ", this.DefaultCompressionLevel);
             commandLineBuilder.AppendTextAsArray("-acceptEula ", this.AcceptEula);
+            commandLineBuilder.AppendIfTrue("-timer", this.Timer);
 
             base.BuildCommandLine(commandLineBuilder);
 

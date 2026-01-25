@@ -7,6 +7,7 @@ namespace WixToolset.Core
     using WixToolset.Core.CommandLine;
     using WixToolset.Core.ExtensibilityServices;
     using WixToolset.Data;
+    using WixToolset.Extensibility;
     using WixToolset.Extensibility.Data;
     using WixToolset.Extensibility.Services;
 
@@ -30,6 +31,7 @@ namespace WixToolset.Core
             this.AddService((provider, singletons) => AddSingleton<IFileResolver>(singletons, new FileResolver()));
             this.AddService((provider, singletons) => AddSingleton<IFileSystem>(singletons, new FileSystem()));
             this.AddService((provider, singletons) => AddSingleton<IWixBranding>(singletons, new WixBranding()));
+            this.AddService((provider, singletons) => AddSingleton<ITimeTakerFactory>(singletons, new TimeTakerFactory(provider)));
 
             // Transients.
             this.AddService<ICommandLineArguments>((provider, singletons) => new CommandLineArguments(provider));
@@ -44,6 +46,7 @@ namespace WixToolset.Core
             this.AddService<IResolveContext>((provider, singletons) => new ResolveContext(provider));
             this.AddService<IBindContext>((provider, singletons) => new BindContext(provider));
             this.AddService<ILayoutContext>((provider, singletons) => new LayoutContext(provider));
+            this.AddService<ITimeTaker>((provider, singletons) => new TimeTaker());
 
             this.AddService<IBindFileWithPath>((provider, singletons) => new BindFileWithPath());
             this.AddService<IBindPath>((provider, singletons) => new BindPath());
