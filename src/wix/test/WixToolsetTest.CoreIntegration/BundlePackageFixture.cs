@@ -129,6 +129,7 @@ namespace WixToolsetTest.CoreIntegration
                 ignoreAttributesByElementName = new Dictionary<string, List<string>>
                 {
                     { "BundlePackage", new List<string> { "Size" } },
+                    { "PayloadRef", new List<string> { "Id" } },
                 };
                 bundlePackages = grandparentExtractResult.GetManifestTestXmlLines("/burn:BurnManifest/burn:Chain/burn:BundlePackage", ignoreAttributesByElementName);
                 WixAssert.CompareLineByLine(new[]
@@ -136,7 +137,9 @@ namespace WixToolsetTest.CoreIntegration
                     $"<BundlePackage Id='parent.exe' Cache='keep' CacheId='{parentBundleId}v1.0.1.0' InstallSize='34' Size='*' PerMachine='yes' Permanent='yes' Vital='yes' RollbackBoundaryForward='WixDefaultBoundary' RollbackBoundaryBackward='WixDefaultBoundary' LogPathVariable='WixBundleLog_parent.exe' RollbackLogPathVariable='WixBundleRollbackLog_parent.exe' BundleCode='{parentBundleId}' Version='1.0.1.0' InstallArguments='' UninstallArguments='' RepairArguments='' SupportsBurnProtocol='yes' Win64='no' EngineVersion='{SomeVerInfo.Major}.{SomeVerInfo.Minor}.{SomeVerInfo.Patch}.{SomeVerInfo.Commits}'>" +
                     $"<Provides Key='{parentBundleId}' Version='1.0.1.0' DisplayName='BundlePackageBundle' Imported='yes' />" +
                     "<RelatedBundle Code='{DFEA7F84-8F9D-5330-AAAE-7D849E650215}' Action='Upgrade' />" +
-                    "<PayloadRef Id='parent.exe' />" +
+                    "<PayloadRef Id='*' />" + // parent.exe
+                    "<PayloadRef Id='*' />" + // chain.exe
+                    "<PayloadRef Id='*' />" + // signed_cab1.cab
                     "</BundlePackage>",
                 }, bundlePackages);
 

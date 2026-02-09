@@ -24,6 +24,15 @@ namespace WixToolsetTest.BurnE2E
         }
 
         [RuntimeFact]
+        public void CanInstallBundleWithBundlePackagesWithDetachedContainers()
+        {
+            var bundleWithBundlePackagesWithDetachedContainers = this.CreateBundleInstaller("BundleWithBundlePackagesWithDetachedContainers");
+
+            bundleWithBundlePackagesWithDetachedContainers.Install();
+            bundleWithBundlePackagesWithDetachedContainers.VerifyRegisteredAndInPackageCache();
+        }
+
+        [RuntimeFact]
         public void CanInstallAndUninstallBundlePackages()
         {
             var packageA = this.CreatePackageInstaller(@"..\BasicFunctionalityTests\PackageA");

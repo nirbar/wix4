@@ -1253,6 +1253,14 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="ExternalPayloadsCompressed" type="YesNoDefaultTypeUnion">
+        <xs:annotation>
+          <xs:documentation>
+            Whether the package external payloads and detached containers should be embedded in a container or left as an external payload.
+            If not be specified then defaults to the Compressed attribute.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
   <xs:element name="RollbackBoundary">
@@ -9049,9 +9057,9 @@
         <xs:annotation>
           <xs:documentation>
             A file-selection pattern that can include directory names, file names, and wildcards.
-            
-            We recommend that patterns be fully-qualified, absolute paths, 
-            preferably via named bind path. You can also use preprocessor 
+
+            We recommend that patterns be fully-qualified, absolute paths,
+            preferably via named bind path. You can also use preprocessor
             variables or unnamed bind paths to create absolute paths.
 
             If the pattern is a relative path, it is interpreted as relative to either:

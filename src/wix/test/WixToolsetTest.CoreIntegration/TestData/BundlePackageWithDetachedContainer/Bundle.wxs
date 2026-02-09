@@ -1,0 +1,7 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+    <Fragment>
+        <PackageGroup Id="BundlePackages">
+            <BundlePackage SourceFile="subpackage.exe" ExternalPayloadsCompressed="no" Compressed="yes"/>
+        </PackageGroup>
+    </Fragment>
+</Wix>

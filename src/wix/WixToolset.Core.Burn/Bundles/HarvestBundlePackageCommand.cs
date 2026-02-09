@@ -15,13 +15,14 @@ namespace WixToolset.Core.Burn.Bundles
 
     internal class HarvestBundlePackageCommand
     {
-        public HarvestBundlePackageCommand(IServiceProvider serviceProvider, IEnumerable<IBurnBackendBinderExtension> backendExtensions, string intermediateFolder, WixBundlePayloadSymbol payloadSymbol, WixBundleBundlePackagePayloadSymbol packagePayloadSymbol, Dictionary<string, WixBundlePayloadSymbol> packagePayloadsById)
+        public HarvestBundlePackageCommand(IServiceProvider serviceProvider, IEnumerable<IBurnBackendBinderExtension> backendExtensions, string intermediateFolder, WixBundlePayloadSymbol payloadSymbol, WixBundleBundlePackagePayloadSymbol packagePayloadSymbol, Dictionary<string, WixBundlePayloadSymbol> packagePayloadsById, YesNoDefaultType externalPayloadsCompressed)
         {
             this.Messaging = serviceProvider.GetService<IMessaging>();
             this.FileSystem = serviceProvider.GetService<IFileSystem>();
             this.BackendHelper = serviceProvider.GetService<IBackendHelper>();
             this.BackendExtensions = backendExtensions;
             this.IntermediateFolder = intermediateFolder;
+            this.ExternalPayloadsCompressed = externalPayloadsCompressed;
 
             this.PackagePayload = payloadSymbol;
             this.BundlePackagePayload = packagePayloadSymbol;
@@ -43,6 +44,8 @@ namespace WixToolset.Core.Burn.Bundles
         private WixBundleBundlePackagePayloadSymbol BundlePackagePayload { get; }
 
         private Dictionary<string, WixBundlePayloadSymbol> PackagePayloadsById { get; }
+
+        private YesNoDefaultType ExternalPayloadsCompressed { get; }
 
         public WixBundleHarvestedBundlePackageSymbol HarvestedBundlePackage { get; private set; }
 
@@ -248,6 +251,13 @@ namespace WixToolset.Core.Burn.Bundles
 
             var containersById = new Dictionary<string, ManifestContainer>();
 
+            var externalPayloadsCompressed = (YesNoDefaultType.Yes == this.ExternalPayloadsCompressed) ? true
+                : (YesNoDefaultType.No == this.ExternalPayloadsCompressed) ? false
+                : this.PackagePayload.Compressed;
+            var externalPayloadsPackaging = (externalPayloadsCompressed == true) ? this.PackagePayload.Packaging
+                : (externalPayloadsCompressed == false) ? PackagingType.External : PackagingType.Unknown;
+            var externalPayloadsContainer = (externalPayloadsCompressed == false) ? null : this.PackagePayload.ContainerRef;
+
             foreach (XmlElement containerElement in document.SelectNodes("/burn:BurnManifest/burn:Container", namespaceManager))
             {
                 var container = new ManifestContainer();
@@ -288,11 +298,11 @@ namespace WixToolset.Core.Burn.Bundles
                     {
                         Name = containerFullName,
                         SourceFile = new IntermediateFieldPathValue { Path = payloadSourceFile },
-                        Compressed = this.PackagePayload.Compressed,
+                        Compressed = externalPayloadsCompressed,
                         UnresolvedSourceFile = containerFullName,
-                        ContainerRef = this.PackagePayload.ContainerRef,
+                        ContainerRef = externalPayloadsContainer,
                         DownloadUrl = this.PackagePayload.DownloadUrl,
-                        Packaging = this.PackagePayload.Packaging,
+                        Packaging = externalPayloadsPackaging,
                         ParentPackagePayloadRef = this.PackagePayload.Id.Id,
                     });
                 }
@@ -348,11 +358,11 @@ namespace WixToolset.Core.Burn.Bundles
                     {
                         Name = payloadFullName,
                         SourceFile = new IntermediateFieldPathValue { Path = payloadSourceFile },
-                        Compressed = this.PackagePayload.Compressed,
+                        Compressed = externalPayloadsCompressed,
                         UnresolvedSourceFile = payloadFullName,
-                        ContainerRef = this.PackagePayload.ContainerRef,
+                        ContainerRef = externalPayloadsContainer,
                         DownloadUrl = this.PackagePayload.DownloadUrl,
-                        Packaging = this.PackagePayload.Packaging,
+                        Packaging = externalPayloadsPackaging,
                         ParentPackagePayloadRef = this.PackagePayload.Id.Id,
                     });
                 }
