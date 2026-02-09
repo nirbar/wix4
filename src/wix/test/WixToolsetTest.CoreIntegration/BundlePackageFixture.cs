@@ -129,14 +129,17 @@ namespace WixToolsetTest.CoreIntegration
                 ignoreAttributesByElementName = new Dictionary<string, List<string>>
                 {
                     { "BundlePackage", new List<string> { "Size" } },
+                    { "PayloadRef", new List<string> { "Id" } },
                 };
                 bundlePackages = grandparentExtractResult.GetManifestTestXmlLines("/burn:BurnManifest/burn:Chain/burn:BundlePackage", ignoreAttributesByElementName);
                 WixAssert.CompareLineByLine(new[]
                 {
-                    $"<BundlePackage Id='parent.exe' Cache='keep' CacheId='{parentBundleId}v1.0.1.0' InstallSize='34' Size='*' Scope='perMachine' Permanent='yes' Vital='yes' RollbackBoundaryForward='WixDefaultBoundary' RollbackBoundaryBackward='WixDefaultBoundary' LogPathVariable='WixBundleLog_parent.exe' RollbackLogPathVariable='WixBundleRollbackLog_parent.exe' BundleCode='{parentBundleId}' Version='1.0.1.0' InstallArguments='' UninstallArguments='' RepairArguments='' SupportsBurnProtocol='yes' EngineVersion='{SomeVerInfo.Major}.{SomeVerInfo.Minor}.{SomeVerInfo.Patch}.{SomeVerInfo.Commits}' Win64='no'>" +
+                    $"<BundlePackage Id='parent.exe' Cache='keep' CacheId='{parentBundleId}v1.0.1.0' InstallSize='34' Size='*' Scope='perMachine' Permanent='yes' Vital='yes' RollbackBoundaryForward='WixDefaultBoundary' RollbackBoundaryBackward='WixDefaultBoundary' LogPathVariable='WixBundleLog_parent.exe' RollbackLogPathVariable='WixBundleRollbackLog_parent.exe' BundleCode='{parentBundleId}' Version='1.0.1.0' InstallArguments='' UninstallArguments='' RepairArguments='' SupportsBurnProtocol='yes' Win64='no' EngineVersion='{SomeVerInfo.Major}.{SomeVerInfo.Minor}.{SomeVerInfo.Patch}.{SomeVerInfo.Commits}'>" +
                     $"<Provides Key='{parentBundleId}' Version='1.0.1.0' DisplayName='BundlePackageBundle' Imported='yes' />" +
                     "<RelatedBundle Code='{DFEA7F84-8F9D-5330-AAAE-7D849E650215}' Action='Upgrade' />" +
-                    "<PayloadRef Id='parent.exe' />" +
+                    "<PayloadRef Id='*' />" + // parent.exe
+                    "<PayloadRef Id='*' />" + // chain.exe
+                    "<PayloadRef Id='*' />" + // signed_cab1.cab
                     "</BundlePackage>",
                 }, bundlePackages);
 
@@ -394,14 +397,17 @@ namespace WixToolsetTest.CoreIntegration
                 var ignoreAttributesByElementName = new Dictionary<string, List<string>>
                 {
                     { "BundlePackage", new List<string> { "Size" } },
+                    { "PayloadRef", new List<string> { "Id" } },
                 };
                 var bundlePackages = bundle2ExtractResult.GetManifestTestXmlLines("/burn:BurnManifest/burn:Chain/burn:BundlePackage", ignoreAttributesByElementName);
                 WixAssert.CompareLineByLine(new[]
                 {
-                    $"<BundlePackage Id='BundleWithPerUserOrMachinePackage.exe' Cache='keep' CacheId='{bundleId}v9.9' InstallSize='28' Size='*' Scope='perUserOrMachine' Permanent='no' Vital='yes' RollbackBoundaryForward='WixDefaultBoundary' RollbackBoundaryBackward='WixDefaultBoundary' LogPathVariable='WixBundleLog_BundleWithPerUserOrMachinePackage.exe' RollbackLogPathVariable='WixBundleRollbackLog_BundleWithPerUserOrMachinePackage.exe' BundleCode='{bundleId}' Version='9.9' InstallArguments='' UninstallArguments='' RepairArguments='' SupportsBurnProtocol='yes' Win64='no' HideARP='yes'>" +
+                    $"<BundlePackage Id='BundleWithPerUserOrMachinePackage.exe' Cache='keep' CacheId='{bundleId}v9.9' InstallSize='28' Size='*' Scope='perUserOrMachine' Permanent='no' Vital='yes' RollbackBoundaryForward='WixDefaultBoundary' RollbackBoundaryBackward='WixDefaultBoundary' LogPathVariable='WixBundleLog_BundleWithPerUserOrMachinePackage.exe' RollbackLogPathVariable='WixBundleRollbackLog_BundleWithPerUserOrMachinePackage.exe' BundleCode='{bundleId}' Version='9.9' InstallArguments='' UninstallArguments='' RepairArguments='' SupportsBurnProtocol='yes' Win64='no' EngineVersion='{SomeVerInfo.Major}.{SomeVerInfo.Minor}.{SomeVerInfo.Patch}.{SomeVerInfo.Commits}' HideARP='yes'>" +
                     $"<Provides Key='{bundleId}' Version='9.9' DisplayName='Per-user-or-machine Bundle' Imported='yes' />" +
                     "<RelatedBundle Code='{BC2E5008-C3FF-5746-A3F1-A5C190E3BFC3}' Action='Upgrade' />" +
-                    "<PayloadRef Id='BundleWithPerUserOrMachinePackage.exe' />" +
+                    "<PayloadRef Id='*' />" + // BundleWithPerUserOrMachinePackage.exe
+                    "<PayloadRef Id='*' />" + // test.msi
+                    "<PayloadRef Id='*' />" + // cab
                     "</BundlePackage>",
                 }, bundlePackages);
 

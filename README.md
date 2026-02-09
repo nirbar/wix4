@@ -21,3 +21,6 @@ This repository contains the PanelSwWix4: A custom WiX Toolset codebase
 - Reorder cache actions: moves non-executing package caching to the end of the plan. This optimizes run time as packages that are cached but not executed will not stand in the way of executing packages.
 - [8896](https://github.com/wixtoolset/issues/issues/8896): Component/@WiX3CompatibleGuid- Support WiX3-compatible auto-guids for registry key path
 - [7778](https://github.com/wixtoolset/issues/issues/7778): @Wix3DependencyMode=yes/no for Bundle, MsiPackage, and MspPackage elements. If yes, then default MSI/MSP provider key uses the ProductCode/PatchCode.
+- BUGFIX: BundlePackage with implicit external payloads fails to cache these payloads alognside the bundlepackage.
+- BundlePackage/@ExternalPayloadsCompressed: Support compressing or sideloading implicit external payloads of BundlePackage.
+- MSBuild property BuildTimer=true: print some build time measurements

@@ -107,7 +107,7 @@ namespace WixToolset.Core.Burn.Bundles
 
         private WixBundleHarvestedBundlePackageSymbol HarvestPackage()
         {
-            var command = new HarvestBundlePackageCommand(this.ServiceProvider, this.BackendExtensions, this.IntermediateFolder, this.PackagePayload, this.BundlePackagePayload, this.PackagePayloads);
+            var command = new HarvestBundlePackageCommand(this.ServiceProvider, this.BackendExtensions, this.IntermediateFolder, this.PackagePayload, this.BundlePackagePayload, this.PackagePayloads, this.BundlePackage.ExternalPayloadsCompressed);
             command.Execute();
 
             this.TrackedFiles.AddRange(command.TrackedFiles);
@@ -122,6 +122,13 @@ namespace WixToolset.Core.Burn.Bundles
             foreach (var payload in command.Payloads)
             {
                 this.Section.AddSymbol(payload);
+                this.Section.AddSymbol(new WixGroupSymbol(this.BundlePackage.SourceLineNumbers)
+                {
+                    ParentType = ComplexReferenceParentType.Package,
+                    ParentId = this.PackageId,
+                    ChildType = ComplexReferenceChildType.Payload,
+                    ChildId = payload.Id.Id,
+                });
             }
 
             foreach (var relatedBundle in command.RelatedBundles)

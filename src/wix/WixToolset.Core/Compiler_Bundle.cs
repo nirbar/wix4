@@ -2299,6 +2299,7 @@ namespace WixToolset.Core
             var arpWin64 = YesNoType.NotSet;
             var arpUseUninstallString = YesNoType.NotSet;
             var wix3DependencyMode = YesNoType.NotSet;
+            var externalPayloadsCompressed = YesNoDefaultType.NotSet;
 
             var expectedNetFx4Args = new string[] { "/q", "/norestart" };
 
@@ -2454,6 +2455,10 @@ namespace WixToolset.Core
                         case "Slipstream":
                             slipstream = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             allowed = (packageType == WixBundlePackageType.Msp);
+                            break;
+                        case "ExternalPayloadsCompressed":
+                            externalPayloadsCompressed = this.Core.GetAttributeYesNoDefaultValue(sourceLineNumbers, attrib);
+                            allowed = (packageType == WixBundlePackageType.Bundle);
                             break;
                         default:
                             allowed = false;
@@ -2819,6 +2824,7 @@ namespace WixToolset.Core
                             InstallCommand = installArguments,
                             RepairCommand = repairArguments,
                             UninstallCommand = uninstallArguments,
+                            ExternalPayloadsCompressed = externalPayloadsCompressed,
                         });
                         break;
 
