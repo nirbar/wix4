@@ -2168,13 +2168,14 @@ namespace WixToolset.BootstrapperApplicationApi
         /// This class is for events raised by the engine.
         /// It is not intended to be instantiated by user code.
         /// </summary>
-        public CacheAcquireResolvingEventArgs(string packageOrContainerId, string payloadId, string[] searchPaths, bool foundLocal, int recommendedSearchPath, string downloadUrl, string payloadContainerId, CacheResolveOperation recommendation, int chosenSearchPath, CacheResolveOperation action, bool cancel)
+        public CacheAcquireResolvingEventArgs(string packageOrContainerId, string payloadId, string[] searchPaths, bool foundLocal, bool vital, int recommendedSearchPath, string downloadUrl, string payloadContainerId, CacheResolveOperation recommendation, int chosenSearchPath, CacheResolveOperation action, bool cancel)
             : base(cancel, recommendation, action)
         {
             this.PackageOrContainerId = packageOrContainerId;
             this.PayloadId = payloadId;
             this.SearchPaths = searchPaths;
             this.FoundLocal = foundLocal;
+            this.Vital = vital;
             this.RecommendedSearchPath = recommendedSearchPath;
             this.DownloadUrl = downloadUrl;
             this.PayloadContainerId = payloadContainerId;
@@ -2200,6 +2201,11 @@ namespace WixToolset.BootstrapperApplicationApi
         /// Gets whether <see cref="RecommendedSearchPath"/> indicates that a file was found at that search path.
         /// </summary>
         public bool FoundLocal { get; private set; }
+
+        /// <summary>
+        /// Whether payload is vital
+        /// </summary>
+        public bool Vital { get; private set; }
 
         /// <summary>
         /// When <see cref="FoundLocal"/> is true, the index to <see cref="SearchPaths"/> for the recommended local file.

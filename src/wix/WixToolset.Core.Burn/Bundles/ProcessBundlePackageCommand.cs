@@ -107,7 +107,7 @@ namespace WixToolset.Core.Burn.Bundles
 
         private WixBundleHarvestedBundlePackageSymbol HarvestPackage()
         {
-            var command = new HarvestBundlePackageCommand(this.ServiceProvider, this.BackendExtensions, this.IntermediateFolder, this.PackagePayload, this.BundlePackagePayload, this.PackagePayloads, this.BundlePackage.ExternalPayloadsCompressed);
+            var command = new HarvestBundlePackageCommand(this.ServiceProvider, this.BackendExtensions, this.IntermediateFolder, this.PackagePayload, this.BundlePackagePayload, this.PackagePayloads, this.BundlePackage.ExternalPayloadsCompressed, this.BundlePackage.ExternalPayloadsVital);
             command.Execute();
 
             this.TrackedFiles.AddRange(command.TrackedFiles);

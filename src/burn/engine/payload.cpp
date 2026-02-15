@@ -114,6 +114,15 @@ extern "C" HRESULT PayloadsParseFromXml(
             hr = XmlGetYesNoAttribute(pixnNode, L"LayoutOnly", &pPayload->fLayoutOnly);
             ExitOnOptionalXmlQueryFailure(hr, fXmlFound, "Failed to get @LayoutOnly.");
 
+            // @Vital
+            hr = XmlGetYesNoAttribute(pixnNode, L"Vital", &pPayload->fVital);
+            ExitOnOptionalXmlQueryFailure(hr, fXmlFound, "Failed to get @Vital.");
+
+            if (!fXmlFound)
+            {
+                pPayload->fVital = TRUE;
+            }
+
             // @DownloadUrl
             hr = XmlGetAttributeEx(pixnNode, L"DownloadUrl", &pPayload->downloadSource.sczUrl);
             ExitOnOptionalXmlQueryFailure(hr, fXmlFound, "Failed to get @DownloadUrl.");

@@ -1351,3 +1351,10 @@ SymbolicName=MSG_DETECTED_ALTERNATIVE_PROVIDER
 Language=English
 Detected an existing dependency provider. Package: %1!ls!. Existing provider key: %2!ls!.
 .
+
+MessageId=712
+Severity=Warning
+SymbolicName=MSG_NON_VITAL_PAYLOAD_SKIPPED
+Language=English
+BA skipped non-vital payload. Package: %1!ls!. Payload: %2!ls!. Path: %3!ls!.
+.

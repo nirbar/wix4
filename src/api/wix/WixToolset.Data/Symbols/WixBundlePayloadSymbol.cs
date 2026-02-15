@@ -64,16 +64,19 @@ namespace WixToolset.Data.Symbols
     {
         None = 0x0,
         ContentFile = 0x1,
+        Vital = 0x2,
     }
 
     public class WixBundlePayloadSymbol : IntermediateSymbol
     {
         public WixBundlePayloadSymbol() : base(SymbolDefinitions.WixBundlePayload, null, null)
         {
+            this.Vital = true;
         }
 
         public WixBundlePayloadSymbol(SourceLineNumber sourceLineNumber, Identifier id = null) : base(SymbolDefinitions.WixBundlePayload, sourceLineNumber, id)
         {
+            this.Vital = true;
         }
 
         public IntermediateField this[WixBundlePayloadSymbolFields index] => this.Fields[(int)index];
@@ -198,6 +201,22 @@ namespace WixToolset.Data.Symbols
                 else
                 {
                     this.Attributes &= ~WixBundlePayloadAttributes.ContentFile;
+                }
+            }
+        }
+
+        public bool Vital
+        {
+            get { return this.Attributes.HasFlag(WixBundlePayloadAttributes.Vital); }
+            set
+            {
+                if (value)
+                {
+                    this.Attributes |= WixBundlePayloadAttributes.Vital;
+                }
+                else
+                {
+                    this.Attributes &= ~WixBundlePayloadAttributes.Vital;
                 }
             }
         }

@@ -49,6 +49,7 @@ typedef struct _BURN_PAYLOAD
     BYTE* pbHash;
     DWORD cbHash;
     BURN_PAYLOAD_VERIFICATION verification;
+    BOOL fVital;
 
     LPWSTR sczSourcePath;
     BURN_CONTAINER* pContainer;

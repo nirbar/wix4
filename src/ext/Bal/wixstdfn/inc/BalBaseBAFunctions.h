@@ -509,6 +509,7 @@ public: // IBootstrapperApplication
         __in_z LPCWSTR* /*rgSearchPaths*/,
         __in DWORD /*cSearchPaths*/,
         __in BOOL /*fFoundLocal*/,
+        __in BOOL /*fVital*/,
         __in DWORD /*dwRecommendedSearchPath*/,
         __in_z_opt LPCWSTR /*wzDownloadUrl*/,
         __in_z_opt LPCWSTR /*wzPayloadContainerId*/,

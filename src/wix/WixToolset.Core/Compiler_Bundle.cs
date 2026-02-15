@@ -1453,6 +1453,9 @@ namespace WixToolset.Core
                         case "DownloadUrl":
                             compilerPayload.ParseDownloadUrl(attrib);
                             break;
+                        case "Vital":
+                            compilerPayload.ParseVital(attrib);
+                            break;
                         default:
                             allowed = false;
                             break;
@@ -2200,6 +2203,7 @@ namespace WixToolset.Core
             var arpUseUninstallString = YesNoType.NotSet;
             var wix3DependencyMode = YesNoType.NotSet;
             var externalPayloadsCompressed = YesNoDefaultType.NotSet;
+            var externalPayloadsVital = YesNoType.Yes;
 
             var expectedNetFx4Args = new string[] { "/q", "/norestart" };
 
@@ -2358,6 +2362,10 @@ namespace WixToolset.Core
                             break;
                         case "ExternalPayloadsCompressed":
                             externalPayloadsCompressed = this.Core.GetAttributeYesNoDefaultValue(sourceLineNumbers, attrib);
+                            allowed = (packageType == WixBundlePackageType.Bundle);
+                            break;
+                        case "ExternalPayloadsVital":
+                            externalPayloadsVital = this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
                             allowed = (packageType == WixBundlePackageType.Bundle);
                             break;
                         default:
@@ -2722,6 +2730,7 @@ namespace WixToolset.Core
                             RepairCommand = repairArguments,
                             UninstallCommand = uninstallArguments,
                             ExternalPayloadsCompressed = externalPayloadsCompressed,
+                            ExternalPayloadsVital = externalPayloadsVital,
                         });
                         break;
 

@@ -33,6 +33,21 @@ namespace WixToolsetTest.BurnE2E
         }
 
         [RuntimeFact]
+        public void CanInstallBundleWithBundlePackagesWithNonVitalDetachedContainers()
+        {
+            var bundleWithBundlePackagesWithNonVitalDetachedContainers = this.CreateBundleInstaller("BundleWithBundlePackagesWithNonVitalDetachedContainers");
+            var optional = Path.Combine(Path.GetDirectoryName(bundleWithBundlePackagesWithNonVitalDetachedContainers.Bundle), "BundleE_PackageA_x64.cab");
+
+            Assert.True(File.Exists(optional));
+            File.Delete(optional);
+
+            var installLogPath = bundleWithBundlePackagesWithNonVitalDetachedContainers.Install();
+            bundleWithBundlePackagesWithNonVitalDetachedContainers.VerifyRegisteredAndInPackageCache();
+
+            Assert.True(LogVerifier.MessageInLogFileRegex(installLogPath, @"BA skipped non-vital payload\. Package: BundleE\. Payload: [a-zA-Z0-9\.]+\. Path: BundleE_PackageA_x64\.cab"));
+        }
+
+        [RuntimeFact]
         public void CanInstallAndUninstallBundlePackages()
         {
             var packageA = this.CreatePackageInstaller(@"..\BasicFunctionalityTests\PackageA");

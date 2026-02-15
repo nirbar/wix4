@@ -630,6 +630,7 @@ EXTERN_C HRESULT BACallbackOnCacheAcquireResolving(
     __in_ecount_z(cSearchPaths) LPWSTR* rgSearchPaths,
     __in DWORD cSearchPaths,
     __in BOOL fFoundLocal,
+    __in BOOL fVital,
     __in DWORD* pdwChosenSearchPath,
     __in_z_opt LPWSTR* pwzDownloadUrl,
     __in_z_opt LPCWSTR wzPayloadContainerId,
@@ -651,6 +652,7 @@ EXTERN_C HRESULT BACallbackOnCacheAcquireResolving(
     args.rgSearchPaths = const_cast<LPCWSTR*>(rgSearchPaths);
     args.cSearchPaths = cSearchPaths;
     args.fFoundLocal = fFoundLocal;
+    args.fVital = fVital;
     args.dwRecommendedSearchPath = *pdwChosenSearchPath;
     args.wzDownloadUrl = *pwzDownloadUrl;
     args.recommendation = *pCacheOperation;
@@ -680,6 +682,9 @@ EXTERN_C HRESULT BACallbackOnCacheAcquireResolving(
 
     hr = BuffWriteNumberToBuffer(&bufferArgs, args.fFoundLocal);
     ExitOnFailure(hr, "Failed to write found local of OnCacheAcquireResolving args.");
+
+    hr = BuffWriteNumberToBuffer(&bufferArgs, args.fVital);
+    ExitOnFailure(hr, "Failed to write vital of OnCacheAcquireResolving args.");
 
     hr = BuffWriteNumberToBuffer(&bufferArgs, args.dwRecommendedSearchPath);
     ExitOnFailure(hr, "Failed to write recommended search path of OnCacheAcquireResolving args.");
@@ -734,6 +739,7 @@ EXTERN_C HRESULT BACallbackOnCacheAcquireResolving(
         // Verify the BA requested an action that is possible.
         if (BOOTSTRAPPER_CACHE_RESOLVE_DOWNLOAD == results.action && *pwzDownloadUrl && **pwzDownloadUrl ||
             BOOTSTRAPPER_CACHE_RESOLVE_CONTAINER == results.action && wzPayloadContainerId ||
+            BOOTSTRAPPER_CACHE_RESOLVE_IGNORE == results.action && !fVital ||
             BOOTSTRAPPER_CACHE_RESOLVE_RETRY == results.action ||
             BOOTSTRAPPER_CACHE_RESOLVE_NONE == results.action)
         {

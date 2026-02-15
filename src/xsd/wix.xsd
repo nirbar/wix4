@@ -1261,6 +1261,13 @@
           </xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name="ExternalPayloadsVital" type="YesNoTypeUnion">
+        <xs:annotation>
+          <xs:documentation>
+            Whether the package external payloads and detached containers should be marked as Vital. Defaults to "yes"
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
     </xs:complexType>
   </xs:element>
   <xs:element name="RollbackBoundary">
@@ -1960,6 +1967,11 @@
           <html:li>{2} is replaced by the payload file name.</html:li>
           </html:ul>
         </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="Vital" type="YesNoTypeUnion">
+        <xs:annotation>
+          <xs:documentation>Whether the payload is allowed to be skipped if not found.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
       <xs:anyAttribute namespace="##other" processContents="lax">

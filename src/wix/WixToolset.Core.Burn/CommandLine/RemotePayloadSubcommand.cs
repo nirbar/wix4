@@ -417,7 +417,7 @@ namespace WixToolset.Core.Burn.CommandLine
                 PayloadGeneration = this.BundlePayloadGeneration,
             };
 
-            var command = new HarvestBundlePackageCommand(this.ServiceProvider, this.BackendExtensions, this.IntermediateFolder, harvestedFile.PayloadSymbol, packagePayloadSymbol, new Dictionary<string, WixBundlePayloadSymbol>(), YesNoDefaultType.No);
+            var command = new HarvestBundlePackageCommand(this.ServiceProvider, this.BackendExtensions, this.IntermediateFolder, harvestedFile.PayloadSymbol, packagePayloadSymbol, new Dictionary<string, WixBundlePayloadSymbol>(), YesNoDefaultType.No, YesNoType.Yes);
             command.Execute();
 
             if (!this.Messaging.EncounteredError)

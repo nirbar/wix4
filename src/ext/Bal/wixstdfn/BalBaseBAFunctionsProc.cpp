@@ -368,7 +368,7 @@ static HRESULT BalBaseBAFunctionsProcOnCacheAcquireResolving(
     __inout BA_ONCACHEACQUIRERESOLVING_RESULTS* pResults
     )
 {
-    return pBAFunctions->OnCacheAcquireResolving(pArgs->wzPackageOrContainerId, pArgs->wzPayloadId, pArgs->rgSearchPaths, pArgs->cSearchPaths, pArgs->fFoundLocal, pArgs->dwRecommendedSearchPath, pArgs->wzDownloadUrl, pArgs->wzPayloadContainerId, pArgs->recommendation, &pResults->dwChosenSearchPath, &pResults->action, &pResults->fCancel);
+    return pBAFunctions->OnCacheAcquireResolving(pArgs->wzPackageOrContainerId, pArgs->wzPayloadId, pArgs->rgSearchPaths, pArgs->cSearchPaths, pArgs->fFoundLocal, pArgs->fVital, pArgs->dwRecommendedSearchPath, pArgs->wzDownloadUrl, pArgs->wzPayloadContainerId, pArgs->recommendation, &pResults->dwChosenSearchPath, &pResults->action, &pResults->fCancel);
 }
 
 static HRESULT BalBaseBAFunctionsProcOnCacheAcquireComplete(
