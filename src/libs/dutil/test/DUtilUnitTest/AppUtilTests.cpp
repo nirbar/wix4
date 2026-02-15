@@ -56,5 +56,50 @@ namespace DutilTests
                 ReleaseHandle(hTwo);
             }
         }
+
+        [Fact]
+        void AppAppendCommandLineArgumentTest()
+        {
+            HRESULT hr = S_OK;
+            LPCWSTR rgszArgs[] = {
+                L"a.exe",
+                L"a\\",
+                L"C:\\My Folder",
+                L"C:\\My Folder\\",
+                L"C:\\My Folder\\ ",
+                L"C:\\My Folder\\\\",
+                L"C:\\My Folder\"",
+            };
+            int rgcArgs = ARRAYSIZE(rgszArgs);
+            LPWSTR szCommandLine = nullptr;
+            LPWSTR *rgszParsedArgs = nullptr;
+            int rgcParsedArgs = 0;
+
+            try
+            {
+                for (auto i = 0; i < rgcArgs; ++i)
+                {
+                    hr = AppAppendCommandLineArgument(&szCommandLine, rgszArgs[i]);
+                    NativeAssert::Succeeded(hr, "Failed to append command line argument.");
+                }
+
+                rgszParsedArgs = ::CommandLineToArgvW(szCommandLine, &rgcParsedArgs);
+                NativeAssert::NotNull((LPCWSTR)rgszParsedArgs);
+                Assert::Equal<int>(rgcArgs, rgcParsedArgs);
+
+                for (auto i = 0; i < rgcArgs; ++i)
+                {
+                    NativeAssert::StringEqual(rgszArgs[i], rgszParsedArgs[i]);
+                }
+            }
+            finally
+            {
+                if (rgszParsedArgs)
+                {
+                    ::LocalFree(rgszParsedArgs);
+                }
+                ReleaseStr(szCommandLine);
+            }
+        }
     };
 }

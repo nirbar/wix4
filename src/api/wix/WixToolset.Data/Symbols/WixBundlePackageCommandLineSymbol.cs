@@ -15,6 +15,7 @@ namespace WixToolset.Data
                 new IntermediateFieldDefinition(nameof(WixBundlePackageCommandLineSymbolFields.UninstallArgument), IntermediateFieldType.String),
                 new IntermediateFieldDefinition(nameof(WixBundlePackageCommandLineSymbolFields.RepairArgument), IntermediateFieldType.String),
                 new IntermediateFieldDefinition(nameof(WixBundlePackageCommandLineSymbolFields.Condition), IntermediateFieldType.String),
+                new IntermediateFieldDefinition(nameof(WixBundlePackageCommandLineSymbolFields.Escape), IntermediateFieldType.Bool),
             },
             typeof(WixBundlePackageCommandLineSymbol));
     }
@@ -29,6 +30,7 @@ namespace WixToolset.Data.Symbols
         UninstallArgument,
         RepairArgument,
         Condition,
+        Escape,
     }
 
     public class WixBundlePackageCommandLineSymbol : IntermediateSymbol
@@ -71,6 +73,12 @@ namespace WixToolset.Data.Symbols
         {
             get => (string)this.Fields[(int)WixBundlePackageCommandLineSymbolFields.Condition];
             set => this.Set((int)WixBundlePackageCommandLineSymbolFields.Condition, value);
+        }
+
+        public bool Escape
+        {
+            get => this.Fields[(int)WixBundlePackageCommandLineSymbolFields.Escape].AsBool();
+            set => this.Set((int)WixBundlePackageCommandLineSymbolFields.Escape, value);
         }
     }
 }

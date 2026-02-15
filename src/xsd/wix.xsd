@@ -1885,7 +1885,13 @@
             action being applied to the package. For example, when the package is
             being installed, the InstallArgument attribute value is appended to the command
             line when the package is executed.
+            If not specified, then the condition evaluates to true.
           </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="Quote" type="wix:YesNoType">
+        <xs:annotation>
+          <xs:documentation>Whether or not the argument should be escaped as a single argument. If yes, the argument will be quoted as needed to provide as a single command line argument to the executable.</xs:documentation>
         </xs:annotation>
       </xs:attribute>
     </xs:complexType>

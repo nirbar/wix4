@@ -929,14 +929,17 @@ static HRESULT ExecuteBundle(
     for (DWORD i = 0; i < pPackage->Bundle.cCommandLineArguments; ++i)
     {
         BURN_EXE_COMMAND_LINE_ARGUMENT* commandLineArgument = &pPackage->Bundle.rgCommandLineArguments[i];
-        BOOL fCondition = FALSE;
+        BOOL fCondition = TRUE;
 
-        hr = ConditionEvaluate(pVariables, commandLineArgument->sczCondition, &fCondition);
-        ExitOnFailure(hr, "Failed to evaluate bundle package command-line condition.");
+        if (commandLineArgument->sczCondition && *commandLineArgument->sczCondition)
+        {
+            hr = ConditionEvaluate(pVariables, commandLineArgument->sczCondition, &fCondition);
+            ExitOnFailure(hr, "Failed to evaluate bundle package command-line condition.");
+        }
 
         if (fCondition)
         {
-            if (sczUnformattedUserArgs)
+            if (sczUnformattedUserArgs && !commandLineArgument->fEscape)
             {
                 hr = StrAllocConcat(&sczUnformattedUserArgs, L" ", 0);
                 ExitOnFailure(hr, "Failed to separate command-line arguments.");
@@ -945,18 +948,42 @@ static HRESULT ExecuteBundle(
             switch (action)
             {
             case BOOTSTRAPPER_ACTION_STATE_INSTALL:
-                hr = StrAllocConcat(&sczUnformattedUserArgs, commandLineArgument->sczInstallArgument, 0);
-                ExitOnFailure(hr, "Failed to get command-line argument for install.");
+                if (commandLineArgument->fEscape)
+                {
+                    hr = AppAppendCommandLineArgument(&sczUnformattedUserArgs, commandLineArgument->sczInstallArgument);
+                    ExitOnFailure(hr, "Failed to get command-line argument for install.");
+                }
+                else
+                {
+                    hr = StrAllocConcat(&sczUnformattedUserArgs, commandLineArgument->sczInstallArgument, 0);
+                    ExitOnFailure(hr, "Failed to get command-line argument for install.");
+                }
                 break;
 
             case BOOTSTRAPPER_ACTION_STATE_UNINSTALL:
-                hr = StrAllocConcat(&sczUnformattedUserArgs, commandLineArgument->sczUninstallArgument, 0);
-                ExitOnFailure(hr, "Failed to get command-line argument for uninstall.");
+                if (commandLineArgument->fEscape)
+                {
+                    hr = AppAppendCommandLineArgument(&sczUnformattedUserArgs, commandLineArgument->sczUninstallArgument);
+                    ExitOnFailure(hr, "Failed to get command-line argument for uninstall.");
+                }
+                else
+                {
+                    hr = StrAllocConcat(&sczUnformattedUserArgs, commandLineArgument->sczUninstallArgument, 0);
+                    ExitOnFailure(hr, "Failed to get command-line argument for uninstall.");
+                }
                 break;
 
             case BOOTSTRAPPER_ACTION_STATE_REPAIR:
-                hr = StrAllocConcat(&sczUnformattedUserArgs, commandLineArgument->sczRepairArgument, 0);
-                ExitOnFailure(hr, "Failed to get command-line argument for repair.");
+                if (commandLineArgument->fEscape)
+                {
+                    hr = AppAppendCommandLineArgument(&sczUnformattedUserArgs, commandLineArgument->sczRepairArgument);
+                    ExitOnFailure(hr, "Failed to get command-line argument for repair.");
+                }
+                else
+                {
+                    hr = StrAllocConcat(&sczUnformattedUserArgs, commandLineArgument->sczRepairArgument, 0);
+                    ExitOnFailure(hr, "Failed to get command-line argument for repair.");
+                }
                 break;
 
             default:

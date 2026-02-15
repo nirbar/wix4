@@ -26,3 +26,4 @@ This repository contains the PanelSwWix4: A custom WiX Toolset codebase
 - BUGFIX: BundlePackage with implicit external payloads fails to cache these payloads alognside the bundlepackage.
 - BundlePackage/@ExternalPayloadsCompressed: Support compressing or sideloading implicit external payloads of BundlePackage.
 - MSBuild property BuildTimer=true: print some build time measurements
+- CommandLine/@Quote: Support escaping command line argument.

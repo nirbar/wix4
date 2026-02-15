@@ -6,6 +6,7 @@
 #include <strsafe.h>
 #include <ShlObj.h>
 #include <sddl.h>
+#include <shellapi.h>
 
 // Include error.h before dutil.h
 #include <dutilsources.h>

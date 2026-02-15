@@ -114,6 +114,7 @@ typedef struct _BURN_EXE_COMMAND_LINE_ARGUMENT
     LPWSTR sczUninstallArgument;
     LPWSTR sczRepairArgument;
     LPWSTR sczCondition;
+    BOOL fEscape;
 } BURN_EXE_COMMAND_LINE_ARGUMENT;
 
 typedef struct _BURN_MSPTARGETPRODUCT
