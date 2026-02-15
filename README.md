@@ -23,4 +23,7 @@ This repository contains the PanelSwWix4: A custom WiX Toolset codebase
 - [7778](https://github.com/wixtoolset/issues/issues/7778): @Wix3DependencyMode=yes/no for Bundle, MsiPackage, and MspPackage elements. If yes, then default MSI/MSP provider key uses the ProductCode/PatchCode.
 - BUGFIX: BundlePackage with implicit external payloads fails to cache these payloads alognside the bundlepackage.
 - BundlePackage/@ExternalPayloadsCompressed: Support compressing or sideloading implicit external payloads of BundlePackage.
+- BundlePackage/@ExternalPayloadsVital: BundlePackage external payloads may be non-vital.
+- Payload/@Vital: Payloads may be non-vital.
 - MSBuild property BuildTimer=true: print some build time measurements
+- CommandLine/@Quote: Support escaping command line argument.

@@ -10,10 +10,23 @@
     <Variable Name="UnquotedInstallFolder" Value="4" Type="formatted" Persisted="no" bal:Overridable="yes"/>
 
     <PackageGroup Id="BundlePackages">
+      <PackageGroupRef Id="PackageA"/>
+      <PackageGroupRef Id="PackageA_x64"/>
+    </PackageGroup>
+
+    <PackageGroup Id="PackageA">
       <MsiPackage Id="PackageA" SourceFile="$(var.PackageA.TargetPath)" />
     </PackageGroup>
-    <Container Id="BundleE.cab" Type="detached">
-        <PackageGroupRef Id="BundlePackages"/>
+    <Container Id="BundleE_PackageA.cab" Type="detached">
+        <PackageGroupRef Id="PackageA"/>
     </Container>
+
+    <PackageGroup Id="PackageA_x64">
+      <MsiPackage Id="PackageA_x64" SourceFile="$(var.PackageA_x64.TargetPath)" InstallCondition="0"/>
+    </PackageGroup>
+    <Container Id="BundleE_PackageA_x64.cab" Type="detached">
+        <PackageGroupRef Id="PackageA_x64"/>
+    </Container>
+
   </Fragment>
 </Wix>

@@ -15,7 +15,7 @@ namespace WixToolset.Core.Burn.Bundles
 
     internal class HarvestBundlePackageCommand
     {
-        public HarvestBundlePackageCommand(IServiceProvider serviceProvider, IEnumerable<IBurnBackendBinderExtension> backendExtensions, string intermediateFolder, WixBundlePayloadSymbol payloadSymbol, WixBundleBundlePackagePayloadSymbol packagePayloadSymbol, Dictionary<string, WixBundlePayloadSymbol> packagePayloadsById, YesNoDefaultType externalPayloadsCompressed)
+        public HarvestBundlePackageCommand(IServiceProvider serviceProvider, IEnumerable<IBurnBackendBinderExtension> backendExtensions, string intermediateFolder, WixBundlePayloadSymbol payloadSymbol, WixBundleBundlePackagePayloadSymbol packagePayloadSymbol, Dictionary<string, WixBundlePayloadSymbol> packagePayloadsById, YesNoDefaultType externalPayloadsCompressed, YesNoType externalPayloadsVital)
         {
             this.Messaging = serviceProvider.GetService<IMessaging>();
             this.FileSystem = serviceProvider.GetService<IFileSystem>();
@@ -23,6 +23,7 @@ namespace WixToolset.Core.Burn.Bundles
             this.BackendExtensions = backendExtensions;
             this.IntermediateFolder = intermediateFolder;
             this.ExternalPayloadsCompressed = externalPayloadsCompressed;
+            this.ExternalPayloadsVital = externalPayloadsVital;
 
             this.PackagePayload = payloadSymbol;
             this.BundlePackagePayload = packagePayloadSymbol;
@@ -46,6 +47,8 @@ namespace WixToolset.Core.Burn.Bundles
         private Dictionary<string, WixBundlePayloadSymbol> PackagePayloadsById { get; }
 
         private YesNoDefaultType ExternalPayloadsCompressed { get; }
+
+        private YesNoType ExternalPayloadsVital { get; }
 
         public WixBundleHarvestedBundlePackageSymbol HarvestedBundlePackage { get; private set; }
 
@@ -265,6 +268,7 @@ namespace WixToolset.Core.Burn.Bundles
 
             var containersById = new Dictionary<string, ManifestContainer>();
 
+            var externalPayloadsVital = (YesNoType.Yes == this.ExternalPayloadsVital);
             var externalPayloadsCompressed = (YesNoDefaultType.Yes == this.ExternalPayloadsCompressed) ? true
                 : (YesNoDefaultType.No == this.ExternalPayloadsCompressed) ? false
                 : this.PackagePayload.Compressed;
@@ -318,6 +322,7 @@ namespace WixToolset.Core.Burn.Bundles
                         DownloadUrl = this.PackagePayload.DownloadUrl,
                         Packaging = externalPayloadsPackaging,
                         ParentPackagePayloadRef = this.PackagePayload.Id.Id,
+                        Vital = externalPayloadsVital,
                     });
                 }
             }
@@ -378,6 +383,7 @@ namespace WixToolset.Core.Burn.Bundles
                         DownloadUrl = this.PackagePayload.DownloadUrl,
                         Packaging = externalPayloadsPackaging,
                         ParentPackagePayloadRef = this.PackagePayload.Id.Id,
+                        Vital = externalPayloadsVital,
                     });
                 }
             }

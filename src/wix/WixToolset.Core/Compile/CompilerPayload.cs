@@ -24,6 +24,8 @@ namespace WixToolset.Core
 
         public SourceLineNumber SourceLineNumbers { get; }
 
+        public YesNoType Vital { get; set; } = YesNoType.Yes;
+
         public YesNoDefaultType Compressed { get; set; } = YesNoDefaultType.Default;
 
         public string Description { get; set; }
@@ -205,6 +207,7 @@ namespace WixToolset.Core
 
                 this.Compressed = YesNoDefaultType.Yes;
                 this.DownloadUrl = null;
+                this.Vital = YesNoType.Yes;
             }
 
             if (String.IsNullOrEmpty(this.Name) && String.IsNullOrEmpty(this.SourceFile))
@@ -227,7 +230,8 @@ namespace WixToolset.Core
                     FileSize = this.Size,
                     Version = this.Version,
                     CertificatePublicKey = this.CertificatePublicKey,
-                    CertificateThumbprint = this.CertificateThumbprint
+                    CertificateThumbprint = this.CertificateThumbprint,
+                    Vital = YesNoType.Yes == this.Vital,
                 });
 
                 this.Core.CreateGroupAndOrderingRows(this.SourceLineNumbers, parentType, parentId, ComplexReferenceChildType.Payload, symbol.Id.Id, ComplexReferenceChildType.Unknown, null);
@@ -290,6 +294,11 @@ namespace WixToolset.Core
         public void ParseCompressed(XAttribute attrib)
         {
             this.Compressed = this.Core.GetAttributeYesNoDefaultValue(this.SourceLineNumbers, attrib);
+        }
+
+        public void ParseVital(XAttribute attrib)
+        {
+            this.Vital = this.Core.GetAttributeYesNoValue(this.SourceLineNumbers, attrib);
         }
 
         public void ParseDescription(XAttribute attrib)

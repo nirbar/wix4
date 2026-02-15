@@ -407,6 +407,7 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
     //
     //  rgSearchPaths are the search paths used for source resolution.
     //  fFoundLocal is TRUE when dwRecommendedSearchPath indicates that the file was found.
+    //  fVital is FALSE for non-vital payloads.
     //  dwRecommendedSearchPath is the index into rgSearchPaths for the recommended local file.
     //
     STDMETHOD(OnCacheAcquireResolving)(
@@ -415,6 +416,7 @@ DECLARE_INTERFACE_IID_(IBootstrapperApplication, IUnknown, "53C31D56-49C0-426B-A
         __in_z LPCWSTR* rgSearchPaths,
         __in DWORD cSearchPaths,
         __in BOOL fFoundLocal,
+        __in BOOL fVital,
         __in DWORD dwRecommendedSearchPath,
         __in_z_opt LPCWSTR wzDownloadUrl,
         __in_z_opt LPCWSTR wzPayloadContainerId,

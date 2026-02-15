@@ -99,6 +99,8 @@ enum BOOTSTRAPPER_CACHE_RESOLVE_OPERATION
     BOOTSTRAPPER_CACHE_RESOLVE_CONTAINER,
     // Look again for the payload or container locally.
     BOOTSTRAPPER_CACHE_RESOLVE_RETRY,
+    // Skip this payload. Applicable only for non-vital payloads.
+    BOOTSTRAPPER_CACHE_RESOLVE_IGNORE,
 };
 
 enum BOOTSTRAPPER_CACHE_VERIFY_STEP
@@ -517,6 +519,7 @@ struct BA_ONCACHEACQUIRERESOLVING_ARGS
     LPCWSTR* rgSearchPaths;
     DWORD cSearchPaths;
     BOOL fFoundLocal;
+    BOOL fVital;
     DWORD dwRecommendedSearchPath;
     LPCWSTR wzDownloadUrl;
     LPCWSTR wzPayloadContainerId;

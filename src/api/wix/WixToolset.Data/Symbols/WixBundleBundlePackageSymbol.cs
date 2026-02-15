@@ -18,6 +18,7 @@ namespace WixToolset.Data
                 new IntermediateFieldDefinition(nameof(WixBundleBundlePackageSymbolFields.RepairCommand), IntermediateFieldType.String),
                 new IntermediateFieldDefinition(nameof(WixBundleBundlePackageSymbolFields.UninstallCommand), IntermediateFieldType.String),
                 new IntermediateFieldDefinition(nameof(WixBundleBundlePackageSymbolFields.ExternalPayloadsCompressed), IntermediateFieldType.Number),
+                new IntermediateFieldDefinition(nameof(WixBundleBundlePackageSymbolFields.ExternalPayloadsVital), IntermediateFieldType.Number),
             },
             typeof(WixBundleBundlePackageSymbol));
     }
@@ -39,6 +40,7 @@ namespace WixToolset.Data.Symbols
         RepairCommand,
         UninstallCommand,
         ExternalPayloadsCompressed,
+        ExternalPayloadsVital,
     }
 
     [Flags]
@@ -113,6 +115,12 @@ namespace WixToolset.Data.Symbols
         {
             get => (YesNoDefaultType)this.Fields[(int)WixBundleBundlePackageSymbolFields.ExternalPayloadsCompressed].AsNumber();
             set => this.Set((int)WixBundleBundlePackageSymbolFields.ExternalPayloadsCompressed, (int)value);
+        }
+
+        public YesNoType ExternalPayloadsVital
+        {
+            get => (YesNoType)this.Fields[(int)WixBundleBundlePackageSymbolFields.ExternalPayloadsVital].AsNumber();
+            set => this.Set((int)WixBundleBundlePackageSymbolFields.ExternalPayloadsVital, (int)value);
         }
 
         public bool SupportsBurnProtocol

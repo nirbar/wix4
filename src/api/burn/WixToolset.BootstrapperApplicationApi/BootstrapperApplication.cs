@@ -1831,9 +1831,9 @@ namespace WixToolset.BootstrapperApplicationApi
             return args.HResult;
         }
 
-        int IBootstrapperApplication.OnCacheAcquireResolving(string wzPackageOrContainerId, string wzPayloadId, string[] searchPaths, int cSearchPaths, bool fFoundLocal, int dwRecommendedSearchPath, string wzDownloadUrl, string wzPayloadContainerId, CacheResolveOperation recommendation, ref int dwChosenSearchPath, ref CacheResolveOperation action, ref bool fCancel)
+        int IBootstrapperApplication.OnCacheAcquireResolving(string wzPackageOrContainerId, string wzPayloadId, string[] searchPaths, int cSearchPaths, bool fFoundLocal, bool fVital, int dwRecommendedSearchPath, string wzDownloadUrl, string wzPayloadContainerId, CacheResolveOperation recommendation, ref int dwChosenSearchPath, ref CacheResolveOperation action, ref bool fCancel)
         {
-            CacheAcquireResolvingEventArgs args = new CacheAcquireResolvingEventArgs(wzPackageOrContainerId, wzPayloadId, searchPaths, fFoundLocal, dwRecommendedSearchPath, wzDownloadUrl, wzPayloadContainerId, recommendation, dwChosenSearchPath, action, fCancel);
+            CacheAcquireResolvingEventArgs args = new CacheAcquireResolvingEventArgs(wzPackageOrContainerId, wzPayloadId, searchPaths, fFoundLocal, fVital, dwRecommendedSearchPath, wzDownloadUrl, wzPayloadContainerId, recommendation, dwChosenSearchPath, action, fCancel);
             this.OnCacheAcquireResolving(args);
 
             dwChosenSearchPath = args.ChosenSearchPath;

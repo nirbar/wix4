@@ -67,6 +67,7 @@ HRESULT BACallbackOnCacheAcquireResolving(
     __in_z LPWSTR* rgSearchPaths,
     __in DWORD cSearchPaths,
     __in BOOL fFoundLocal,
+    __in BOOL fVital,
     __in DWORD* pdwChosenSearchPath,
     __in_z_opt LPWSTR* pwzDownloadUrl,
     __in_z_opt LPCWSTR wzPayloadContainerId,

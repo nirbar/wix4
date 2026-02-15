@@ -519,6 +519,9 @@ static HRESULT OnCacheAcquireResolving(
     hr = BuffReaderReadNumber(pReaderArgs, reinterpret_cast<DWORD*>(&args.fFoundLocal));
     ExitOnFailure(hr, "Failed to read found local of OnCacheAcquireResolving args.");
 
+    hr = BuffReaderReadNumber(pReaderArgs, reinterpret_cast<DWORD*>(&args.fVital));
+    ExitOnFailure(hr, "Failed to read payload vital of OnCacheAcquireResolving args.");
+
     hr = BuffReaderReadNumber(pReaderArgs, &args.dwRecommendedSearchPath);
     ExitOnFailure(hr, "Failed to read recommended search path of OnCacheAcquireResolving args.");
 
@@ -550,7 +553,7 @@ static HRESULT OnCacheAcquireResolving(
 
     if (E_NOTIMPL == hr)
     {
-        hr = pApplication->OnCacheAcquireResolving(args.wzPackageOrContainerId, args.wzPayloadId, args.rgSearchPaths, args.cSearchPaths, args.fFoundLocal, args.dwRecommendedSearchPath, args.wzDownloadUrl, args.wzPayloadContainerId, args.recommendation, &results.dwChosenSearchPath, &results.action, &results.fCancel);
+        hr = pApplication->OnCacheAcquireResolving(args.wzPackageOrContainerId, args.wzPayloadId, args.rgSearchPaths, args.cSearchPaths, args.fFoundLocal, args.fVital, args.dwRecommendedSearchPath, args.wzDownloadUrl, args.wzPayloadContainerId, args.recommendation, &results.dwChosenSearchPath, &results.action, &results.fCancel);
     }
 
     pApplication->BAProcFallback(BOOTSTRAPPER_APPLICATION_MESSAGE_ONCACHEACQUIRERESOLVING, &args, &results, &hr);

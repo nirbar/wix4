@@ -542,6 +542,7 @@ namespace WixToolset.BootstrapperApplicationApi
             [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 3, ArraySubType = UnmanagedType.LPWStr), In] string[] searchPaths,
             [MarshalAs(UnmanagedType.U4)] int cSearchPaths,
             [MarshalAs(UnmanagedType.Bool)] bool fFoundLocal,
+            [MarshalAs(UnmanagedType.Bool)] bool fVital,
             [MarshalAs(UnmanagedType.U4)] int dwRecommendedSearchPath,
             [MarshalAs(UnmanagedType.LPWStr)] string wzDownloadUrl,
             [MarshalAs(UnmanagedType.LPWStr)] string wzPayloadContainerId,
@@ -1493,6 +1494,11 @@ namespace WixToolset.BootstrapperApplicationApi
         /// Look again for the payload or container locally.
         /// </summary>
         Retry,
+
+        /// <summary>
+        /// Instructs the engine to skip this payload. Applicable for non-vital payloads only.
+        /// </summary>
+        Ignore,
     }
 
     /// <summary>
@@ -1897,27 +1903,6 @@ namespace WixToolset.BootstrapperApplicationApi
         /// Evaluated to true.
         /// </summary>
         True,
-    }
-
-    /// <summary>
-    /// The available actions for <see cref="IDefaultBootstrapperApplication.CacheAcquireResolving"/>.
-    /// </summary>
-    public enum BOOTSTRAPPER_RESOLVESOURCE_ACTION
-    {
-        /// <summary>
-        /// Instructs the engine that the source can't be found.
-        /// </summary>
-        None,
-
-        /// <summary>
-        /// Instructs the engine to try the local source again.
-        /// </summary>
-        Retry,
-
-        /// <summary>
-        /// Instructs the engine to try the download source.
-        /// </summary>
-        Download,
     }
 
     /// <summary>

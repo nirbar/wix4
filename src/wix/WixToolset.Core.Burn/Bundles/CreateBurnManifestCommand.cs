@@ -819,6 +819,11 @@ namespace WixToolset.Core.Burn.Bundles
                 writer.WriteAttributeString("DownloadUrl", payload.DownloadUrl);
             }
 
+            if (!payload.Vital)
+            {
+                writer.WriteAttributeString("Vital", "no");
+            }
+
             switch (payload.Packaging)
             {
                 case PackagingType.Embedded: // this means it's in a container.

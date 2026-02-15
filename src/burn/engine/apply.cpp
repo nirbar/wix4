@@ -143,11 +143,13 @@ static HRESULT ApplyAcquireContainerOrPayload(
     __in BURN_CACHE_CONTEXT* pContext,
     __in_opt BURN_CONTAINER* pContainer,
     __in_opt BURN_PACKAGE* pPackage,
-    __in_opt BURN_PAYLOAD_GROUP_ITEM* pPayloadGroupItem
-    );
+    __in_opt BURN_PAYLOAD_GROUP_ITEM* pPayloadGroupItem,
+    __out BOOL* pfSkip
+);
 static HRESULT AcquireContainerOrPayload(
     __in BURN_CACHE_PROGRESS_CONTEXT* pProgress,
-    __out BOOL* pfRetry
+    __out BOOL* pfRetry,
+    __out_opt BOOL* pfSkip
     );
 static BOOL IsValidLocalFile(
     __in_z LPCWSTR wzFilePath,
@@ -1125,7 +1127,7 @@ static HRESULT ApplyExtractContainer(
 
     if (!pContainer->fActuallyAttached)
     {
-        hr = ApplyAcquireContainerOrPayload(pContext, pContainer, NULL, NULL);
+        hr = ApplyAcquireContainerOrPayload(pContext, pContainer, NULL, NULL, NULL);
         LogExitOnFailure(hr, MSG_FAILED_ACQUIRE_CONTAINER, "Failed to acquire container: %ls to working path: %ls", pContainer->sczId, pContainer->sczUnverifiedPath);
     }
 
@@ -1204,7 +1206,7 @@ static HRESULT ApplyLayoutContainer(
     {
         fRetry = FALSE;
 
-        hr = ApplyAcquireContainerOrPayload(pContext, pContainer, NULL, NULL);
+        hr = ApplyAcquireContainerOrPayload(pContext, pContainer, NULL, NULL, NULL);
         LogExitOnFailure(hr, MSG_FAILED_ACQUIRE_CONTAINER, "Failed to acquire container: %ls to working path: %ls", pContainer->sczId, pContainer->sczUnverifiedPath);
 
         hr = LayoutOrCacheContainerOrPayload(pContext, pContainer, NULL, NULL, cTryAgainAttempts, &fRetry);
@@ -1275,10 +1277,17 @@ static HRESULT ApplyProcessPayload(
 
     for (;;)
     {
+        BOOL fSkip = FALSE;
         fRetry = FALSE;
 
-        hr = ApplyAcquireContainerOrPayload(pContext, NULL, pPackage, pPayloadGroupItem);
+        hr = ApplyAcquireContainerOrPayload(pContext, NULL, pPackage, pPayloadGroupItem, &fSkip);
         LogExitOnFailure(hr, MSG_FAILED_ACQUIRE_PAYLOAD, "Failed to acquire payload: %ls to working path: %ls", pPayload->sczKey, pPayload->sczUnverifiedPath);
+
+        if (fSkip)
+        {
+            hr = S_FALSE;
+            break;
+        }
 
         hr = LayoutOrCacheContainerOrPayload(pContext, NULL, pPackage, pPayloadGroupItem, cTryAgainAttempts, &fRetry);
         if (SUCCEEDED(hr))
@@ -1568,7 +1577,8 @@ static HRESULT ApplyAcquireContainerOrPayload(
     __in BURN_CACHE_CONTEXT* pContext,
     __in_opt BURN_CONTAINER* pContainer,
     __in_opt BURN_PACKAGE* pPackage,
-    __in_opt BURN_PAYLOAD_GROUP_ITEM* pPayloadGroupItem
+    __in_opt BURN_PAYLOAD_GROUP_ITEM* pPayloadGroupItem,
+    __out BOOL* pfSkip
     )
 {
     AssertSz(pContainer || pPayloadGroupItem, "Must provide a container or a payload.");
@@ -1585,15 +1595,20 @@ static HRESULT ApplyAcquireContainerOrPayload(
 
     do
     {
-        hr = AcquireContainerOrPayload(&progress, &fRetry);
+        hr = AcquireContainerOrPayload(&progress, &fRetry, pfSkip);
 
         if (fRetry)
         {
-            LogErrorId(hr, pContainer ? MSG_APPLY_RETRYING_ACQUIRE_CONTAINER : MSG_APPLY_RETRYING_ACQUIRE_PAYLOAD, pContainer ? pContainer->sczId : pPayloadGroupItem->pPayload->sczKey, NULL, NULL);
+            LogErrorId(hr, pContainer ? MSG_APPLY_RETRYING_ACQUIRE_CONTAINER : MSG_APPLY_RETRYING_ACQUIRE_PAYLOAD, pContainer ? pContainer->sczId : pPayloadGroupItem && pPayloadGroupItem->pPayload ? pPayloadGroupItem->pPayload->sczKey : L"", NULL, NULL);
             hr = S_OK;
         }
+        else if (pfSkip && *pfSkip)
+        {
+            LogId(REPORT_WARNING, MSG_NON_VITAL_PAYLOAD_SKIPPED, pPackage ? pPackage->sczId : L"", pPayloadGroupItem && pPayloadGroupItem->pPayload ? pPayloadGroupItem->pPayload->sczKey : L"", pPayloadGroupItem && pPayloadGroupItem->pPayload ? pPayloadGroupItem->pPayload->sczSourcePath : L"");
+            hr = S_FALSE;
+        }
 
-        ExitOnFailure(hr, "Failed to acquire %hs: %ls", pContainer ? "container" : "payload", pContainer ? pContainer->sczId : pPayloadGroupItem->pPayload->sczKey);
+        ExitOnFailure(hr, "Failed to acquire %hs: %ls", pContainer ? "container" : "payload", pContainer ? pContainer->sczId : pPayloadGroupItem && pPayloadGroupItem->pPayload ? pPayloadGroupItem->pPayload->sczKey : L"");
     } while (fRetry);
 
 LExit:
@@ -1602,7 +1617,8 @@ LExit:
 
 static HRESULT AcquireContainerOrPayload(
     __in BURN_CACHE_PROGRESS_CONTEXT* pProgress,
-    __out BOOL* pfRetry
+    __out BOOL* pfRetry,
+    __out_opt BOOL* pfSkip
     )
 {
     BURN_CACHE_CONTEXT* pContext = pProgress->pCacheContext;
@@ -1631,6 +1647,10 @@ static HRESULT AcquireContainerOrPayload(
     BOOL fEqual = FALSE;
     BOOL fAllowHardLink = pContainer && !*pfRetry; // Not allowing hard links on payloads to ensure it isn't modified after verification. We don't mind hard links on containers because the extracted files will not be suspectible to modifications
 
+    if (pfSkip)
+    {
+        *pfSkip = FALSE;
+    }
     if (pContainer)
     {
         if (pContainer->fAttached)
@@ -1751,8 +1771,13 @@ static HRESULT AcquireContainerOrPayload(
                 }
             }
 
+            if (BOOTSTRAPPER_CACHE_RESOLVE_NONE == resolveOperation && pPayload && !pPayload->fVital && pfSkip)
+            {
+                resolveOperation = BOOTSTRAPPER_CACHE_RESOLVE_IGNORE;
+            }
+
             // Let the BA have a chance to override the source.
-            hr = BACallbackOnCacheAcquireResolving(pContext->pUX, wzPackageOrContainerId, wzPayloadId, pContext->rgSearchPaths, pContext->cSearchPaths, fFoundLocal, &dwChosenSearchPath, pwzDownloadUrl, wzPayloadContainerId, &resolveOperation);
+            hr = BACallbackOnCacheAcquireResolving(pContext->pUX, wzPackageOrContainerId, wzPayloadId, pContext->rgSearchPaths, pContext->cSearchPaths, fFoundLocal, !pPayload || pPayload->fVital, &dwChosenSearchPath, pwzDownloadUrl, wzPayloadContainerId, &resolveOperation);
             ExitOnRootFailure(hr, "BA aborted cache acquire resolving.");
 
             switch (resolveOperation)
@@ -1768,6 +1793,10 @@ static HRESULT AcquireContainerOrPayload(
                 break;
             case BOOTSTRAPPER_CACHE_RESOLVE_RETRY:
                 pContext->cSearchPathsMax = max(pContext->cSearchPaths, pContext->cSearchPathsMax);
+            case BOOTSTRAPPER_CACHE_RESOLVE_IGNORE:
+                ExitOnNull(pfSkip, hr, E_INVALIDSTATE, "CacheAcquireResolving required to ignore payload, but skip flag is null");
+                cacheOperation = BOOTSTRAPPER_CACHE_OPERATION_NONE;
+                *pfSkip = TRUE;
                 break;
             }
         } while (BOOTSTRAPPER_CACHE_RESOLVE_RETRY == resolveOperation);
@@ -1804,6 +1833,11 @@ static HRESULT AcquireContainerOrPayload(
 
         break;
     default:
+        if (pfSkip && *pfSkip)
+        {
+            hr = S_FALSE;
+            ExitFunction();
+        }
         LogExitWithRootFailure(hr, E_FILENOTFOUND, MSG_RESOLVE_SOURCE_FAILED, "Failed to resolve source, payload: %ls, package: %ls, container: %ls", wzPayloadId ? wzPayloadId : L"n/a", pPackage ? pPackage->sczId : L"n/a", pContainer ? pContainer->sczId : L"n/a");
     }
 

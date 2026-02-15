@@ -1373,3 +1373,9 @@ Language=English
 Detected an existing dependency provider. Package: %1!ls!. Existing provider key: %2!ls!.
 .
 
+MessageId=711
+Severity=Warning
+SymbolicName=MSG_NON_VITAL_PAYLOAD_SKIPPED
+Language=English
+Skipped non-vital payload. Package: %1!ls!. Payload: %2!ls!. Path: %3!ls!.
+.
