@@ -69,6 +69,7 @@ namespace DutilTests
                 L"C:\\My Folder\\ ",
                 L"C:\\My Folder\\\\",
                 L"C:\\My Folder\"",
+                L"INSTALL_FOLDER=C:\\My Folder\\",
             };
             int rgcArgs = ARRAYSIZE(rgszArgs);
             LPWSTR szCommandLine = nullptr;
@@ -83,7 +84,8 @@ namespace DutilTests
                     NativeAssert::Succeeded(hr, "Failed to append command line argument.");
                 }
 
-                rgszParsedArgs = ::CommandLineToArgvW(szCommandLine, &rgcParsedArgs);
+                hr = AppParseCommandLine(szCommandLine, &rgcParsedArgs, &rgszParsedArgs);
+                NativeAssert::Succeeded(hr, "Failed to parse command line.");
                 NativeAssert::NotNull((LPCWSTR)rgszParsedArgs);
                 Assert::Equal<int>(rgcArgs, rgcParsedArgs);
 
@@ -96,7 +98,7 @@ namespace DutilTests
             {
                 if (rgszParsedArgs)
                 {
-                    ::LocalFree(rgszParsedArgs);
+                    AppFreeCommandLineArgs(rgszParsedArgs);
                 }
                 ReleaseStr(szCommandLine);
             }

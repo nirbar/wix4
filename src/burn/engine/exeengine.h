@@ -66,6 +66,12 @@ HRESULT ExeEngineParseCommandLineArgumentsFromXml(
     __inout BURN_EXE_COMMAND_LINE_ARGUMENT** prgCommandLineArguments,
     __inout DWORD* pcCommandLineArguments
     );
+HRESULT ExeEngineAppendEscapeCommandLineArgument(
+    __in LPCWSTR szArgument,
+    __in BURN_VARIABLES* pVariables,
+    __in BOOL fObfuscateHiddenVariables,
+    __deref_out_z LPWSTR* psczEscapedArguments
+    );
 HRESULT ExeEngineHandleExitCode(
     __in BURN_EXE_EXIT_CODE* rgCustomExitCodes,
     __in DWORD cCustomExitCodes,

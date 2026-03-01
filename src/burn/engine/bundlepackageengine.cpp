@@ -811,6 +811,8 @@ static HRESULT ExecuteBundle(
     LPWSTR sczUnformattedUserArgs = NULL;
     LPWSTR sczUserArgs = NULL;
     LPWSTR sczUserArgsObfuscated = NULL;
+    LPWSTR sczUserArgsEscaped = NULL;
+    LPWSTR sczUserArgsEscapedObfuscated = NULL;
     LPWSTR sczCommandObfuscated = NULL;
     LPWSTR sczArpUninstallString = NULL;
     int argcArp = 0;
@@ -950,8 +952,11 @@ static HRESULT ExecuteBundle(
             case BOOTSTRAPPER_ACTION_STATE_INSTALL:
                 if (commandLineArgument->fEscape)
                 {
-                    hr = AppAppendCommandLineArgument(&sczUnformattedUserArgs, commandLineArgument->sczInstallArgument);
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczInstallArgument, pVariables, FALSE, &sczUserArgsEscaped);
                     ExitOnFailure(hr, "Failed to get command-line argument for install.");
+
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczInstallArgument, pVariables, TRUE, &sczUserArgsEscapedObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for install.");
                 }
                 else
                 {
@@ -963,8 +968,11 @@ static HRESULT ExecuteBundle(
             case BOOTSTRAPPER_ACTION_STATE_UNINSTALL:
                 if (commandLineArgument->fEscape)
                 {
-                    hr = AppAppendCommandLineArgument(&sczUnformattedUserArgs, commandLineArgument->sczUninstallArgument);
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczUninstallArgument, pVariables, FALSE, &sczUserArgsEscaped);
                     ExitOnFailure(hr, "Failed to get command-line argument for uninstall.");
+
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczUninstallArgument, pVariables, TRUE, &sczUserArgsEscapedObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for uninstall.");
                 }
                 else
                 {
@@ -976,8 +984,11 @@ static HRESULT ExecuteBundle(
             case BOOTSTRAPPER_ACTION_STATE_REPAIR:
                 if (commandLineArgument->fEscape)
                 {
-                    hr = AppAppendCommandLineArgument(&sczUnformattedUserArgs, commandLineArgument->sczRepairArgument);
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczRepairArgument, pVariables, FALSE, &sczUserArgsEscaped);
                     ExitOnFailure(hr, "Failed to get command-line argument for repair.");
+
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczRepairArgument, pVariables, TRUE, &sczUserArgsEscapedObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for repair.");
                 }
                 else
                 {
@@ -1081,6 +1092,21 @@ static HRESULT ExecuteBundle(
         ExitOnFailure(hr, "Failed to allocate obfuscated bundle command.");
     }
 
+    if (sczUserArgsEscaped && *sczUserArgsEscaped)
+    {
+        hr = StrAllocConcat(&sczUserArgs, L" ", 0);
+        ExitOnFailure(hr, "Failed to concat exe command.");
+
+        hr = StrAllocConcat(&sczUserArgs, sczUserArgsEscaped, 0);
+        ExitOnFailure(hr, "Failed to concat exe command.");
+
+        hr = StrAllocConcat(&sczCommandObfuscated, L" ", 0);
+        ExitOnFailure(hr, "Failed to concat obfuscated exe command.");
+
+        hr = StrAllocConcat(&sczCommandObfuscated, sczUserArgsEscapedObfuscated, 0);
+        ExitOnFailure(hr, "Failed to concat obfuscated exe command.");
+    }
+
     // Append logging to command line if it doesn't contain '-log'
     CoreAppendLogToCommandLine(&sczBaseCommand, &sczCommandObfuscated, fRollback, pVariables, pPackage);
 
@@ -1121,6 +1147,8 @@ LExit:
     ReleaseStr(sczUnformattedUserArgs);
     StrSecureZeroFreeString(sczUserArgs);
     ReleaseStr(sczUserArgsObfuscated);
+    ReleaseStr(sczUserArgsEscapedObfuscated);
+    ReleaseStr(sczUserArgsEscaped);
     ReleaseStr(sczCommandObfuscated);
     ReleaseStr(sczArpUninstallString);
 

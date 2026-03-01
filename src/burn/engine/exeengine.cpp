@@ -475,6 +475,8 @@ extern "C" HRESULT ExeEngineExecutePackage(
     LPWSTR sczBaseCommand = NULL;
     LPWSTR sczUnformattedUserArgs = NULL;
     LPWSTR sczUserArgs = NULL;
+    LPWSTR sczUserArgsEscaped = NULL;
+    LPWSTR sczUserArgsEscapedObfuscated = NULL;
     LPWSTR sczUserArgsObfuscated = NULL;
     LPWSTR sczCommandObfuscated = NULL;
     LPWSTR sczArpUninstallString = NULL;
@@ -614,8 +616,11 @@ extern "C" HRESULT ExeEngineExecutePackage(
             case BOOTSTRAPPER_ACTION_STATE_INSTALL:
                 if (commandLineArgument->fEscape)
                 {
-                    hr = AppAppendCommandLineArgument(&sczUnformattedUserArgs, commandLineArgument->sczInstallArgument);
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczInstallArgument, pVariables, FALSE, &sczUserArgsEscaped);
                     ExitOnFailure(hr, "Failed to get command-line argument for install.");
+
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczInstallArgument, pVariables, TRUE, &sczUserArgsEscapedObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for install.");
                 }
                 else
                 {
@@ -627,8 +632,11 @@ extern "C" HRESULT ExeEngineExecutePackage(
             case BOOTSTRAPPER_ACTION_STATE_UNINSTALL:
                 if (commandLineArgument->fEscape)
                 {
-                    hr = AppAppendCommandLineArgument(&sczUnformattedUserArgs, commandLineArgument->sczInstallArgument);
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczUninstallArgument, pVariables, FALSE, &sczUserArgsEscaped);
                     ExitOnFailure(hr, "Failed to get command-line argument for uninstall.");
+
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczUninstallArgument, pVariables, TRUE, &sczUserArgsEscapedObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for uninstall.");
                 }
                 else
                 {
@@ -640,8 +648,11 @@ extern "C" HRESULT ExeEngineExecutePackage(
             case BOOTSTRAPPER_ACTION_STATE_REPAIR:
                 if (commandLineArgument->fEscape)
                 {
-                    hr = AppAppendCommandLineArgument(&sczUnformattedUserArgs, commandLineArgument->sczInstallArgument);
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczRepairArgument, pVariables, FALSE, &sczUserArgsEscaped);
                     ExitOnFailure(hr, "Failed to get command-line argument for repair.");
+
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczRepairArgument, pVariables, TRUE, &sczUserArgsEscapedObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for repair.");
                 }
                 else
                 {
@@ -715,6 +726,21 @@ extern "C" HRESULT ExeEngineExecutePackage(
         ExitOnFailure(hr, "Failed to allocate obfuscated exe command.");
     }
 
+    if (sczUserArgsEscaped && *sczUserArgsEscaped)
+    {
+        hr = StrAllocConcat(&sczUserArgs, L" ", 0);
+        ExitOnFailure(hr, "Failed to concat exe command.");
+
+        hr = StrAllocConcat(&sczUserArgs, sczUserArgsEscaped, 0);
+        ExitOnFailure(hr, "Failed to concat exe command.");
+
+        hr = StrAllocConcat(&sczCommandObfuscated, L" ", 0);
+        ExitOnFailure(hr, "Failed to concat obfuscated exe command.");
+
+        hr = StrAllocConcat(&sczCommandObfuscated, sczUserArgsEscapedObfuscated, 0);
+        ExitOnFailure(hr, "Failed to concat obfuscated exe command.");
+    }
+
     // Log obfuscated command, which won't include raw hidden variable values or protocol specific arguments to avoid exposing secrets.
     LogId(REPORT_STANDARD, MSG_APPLYING_PACKAGE, LoggingRollbackOrExecute(fRollback), pPackage->sczId, LoggingActionStateToString(pExecuteAction->exePackage.action), sczExecutablePath, sczCommandObfuscated ? sczCommandObfuscated : sczBaseCommand);
 
@@ -744,6 +770,8 @@ LExit:
     ReleaseStr(sczUnformattedUserArgs);
     StrSecureZeroFreeString(sczUserArgs);
     ReleaseStr(sczUserArgsObfuscated);
+    ReleaseStr(sczUserArgsEscapedObfuscated);
+    ReleaseStr(sczUserArgsEscaped);
     ReleaseStr(sczCommandObfuscated);
     ReleaseStr(sczArpUninstallString);
 
@@ -1016,6 +1044,15 @@ extern "C" HRESULT ExeEngineParseCommandLineArgumentsFromXml(
             hr = XmlGetAttributeEx(pixnNode, L"Condition", &pCommandLineArgument->sczCondition);
             ExitOnRequiredXmlQueryFailure(hr, "Failed to get @Condition.");
 
+            // @Escape
+            hr = XmlGetYesNoAttribute(pixnNode, L"Escape", &pCommandLineArgument->fEscape);
+            ExitOnOptionalXmlQueryFailure(hr, fFoundXml, "Failed to get @Escape.");
+
+            if (!fFoundXml)
+            {
+                pCommandLineArgument->fEscape = FALSE;
+            }
+
             // Prepare next iteration.
             ReleaseNullObject(pixnNode);
         }
@@ -1027,6 +1064,36 @@ LExit:
     ReleaseObject(pixnNodes);
     ReleaseObject(pixnNode);
     ReleaseStr(scz);
+
+    return hr;
+}
+
+extern "C" HRESULT ExeEngineAppendEscapeCommandLineArgument(
+    __in LPCWSTR szArgument,
+    __in BURN_VARIABLES* pVariables,
+    __in BOOL fObfuscateHiddenVariables,
+    __deref_out_z LPWSTR* psczEscapedArguments
+    )
+{
+    HRESULT hr = S_OK;
+    LPWSTR sz = NULL;
+
+    if (fObfuscateHiddenVariables)
+    {
+        hr = VariableFormatStringObfuscated(pVariables, szArgument, &sz, NULL);
+        ExitOnFailure(hr, "Failed to format argument.");
+    }
+    else
+    {
+        hr = VariableFormatString(pVariables, szArgument, &sz, NULL);
+        ExitOnFailure(hr, "Failed to format argument.");
+    }
+
+    hr = AppAppendCommandLineArgument(psczEscapedArguments, sz);
+    ExitOnFailure(hr, "Failed to append argument.");
+
+LExit:
+    ReleaseStr(sz);
 
     return hr;
 }

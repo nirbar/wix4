@@ -48,6 +48,16 @@ namespace WixToolsetTest.BurnE2E
         }
 
         [RuntimeFact]
+        public void CanEscapeBundlePackageWithCommandLineArguments()
+        {
+            var bundlePackageWithCommandLineArguments = this.CreateBundleInstaller("BundlePackageWithCommandLineArguments");
+            var installLogPath = bundlePackageWithCommandLineArguments.Install();
+            bundlePackageWithCommandLineArguments.VerifyRegisteredAndInPackageCache();
+
+            Assert.True(LogVerifier.MessageInLogFile(installLogPath, "\"InstallFolder=C:\\Program Files\\*****\" \"InstallFolder2=C:\\Program Files\\***** 2\\\\\""));
+        }
+
+        [RuntimeFact]
         public void CanInstallAndUninstallBundlePackages()
         {
             var packageA = this.CreatePackageInstaller(@"..\BasicFunctionalityTests\PackageA");
