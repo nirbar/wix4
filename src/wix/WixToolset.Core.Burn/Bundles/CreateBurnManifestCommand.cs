@@ -611,6 +611,7 @@ namespace WixToolset.Core.Burn.Bundles
                         writer.WriteAttributeString("UninstallArgument", commandLine.UninstallArgument);
                         writer.WriteAttributeString("RepairArgument", commandLine.RepairArgument);
                         writer.WriteAttributeString("Condition", commandLine.Condition);
+                        writer.WriteAttributeString("Escape", commandLine.Escape ? "yes" : "no");
                         writer.WriteEndElement();
                     }
 

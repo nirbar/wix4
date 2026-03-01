@@ -3415,6 +3415,7 @@ namespace WixToolset.Core
             string uninstallArgument = null;
             string repairArgument = null;
             string condition = null;
+            var escape = false;
 
             foreach (var attrib in node.Attributes())
             {
@@ -3434,6 +3435,9 @@ namespace WixToolset.Core
                         case "Condition":
                             condition = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
+                        case "Quote":
+                            escape = YesNoType.Yes == this.Core.GetAttributeYesNoValue(sourceLineNumbers, attrib);
+                            break;
                         default:
                             this.Core.UnexpectedAttribute(node, attrib);
                             break;
@@ -3443,11 +3447,6 @@ namespace WixToolset.Core
                 {
                     this.Core.ParseExtensionAttribute(node, attrib);
                 }
-            }
-
-            if (String.IsNullOrEmpty(condition))
-            {
-                this.Core.Write(ErrorMessages.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Condition"));
             }
 
             this.Core.ParseForExtensionElements(node);
@@ -3460,7 +3459,8 @@ namespace WixToolset.Core
                     InstallArgument = installArgument,
                     UninstallArgument = uninstallArgument,
                     RepairArgument = repairArgument,
-                    Condition = condition
+                    Condition = condition,
+                    Escape = escape,
                 });
             }
         }

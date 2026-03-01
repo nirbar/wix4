@@ -773,7 +773,6 @@ static HRESULT ExecuteBundle(
     LPWSTR sczCachedDirectory = NULL;
     LPWSTR sczExecutablePath = NULL;
     LPWSTR sczBaseCommand = NULL;
-    LPWSTR sczUnformattedUserArgs = NULL;
     LPWSTR sczUserArgs = NULL;
     LPWSTR sczUserArgsObfuscated = NULL;
     LPWSTR sczCommandObfuscated = NULL;
@@ -887,41 +886,83 @@ static HRESULT ExecuteBundle(
     // now add optional arguments
     if (wzArguments && *wzArguments)
     {
-        hr = StrAllocString(&sczUnformattedUserArgs, wzArguments, 0);
-        ExitOnFailure(hr, "Failed to copy package arguments.");
+        hr = ExeEngineAppendCommandLineArgument(wzArguments, pVariables, FALSE, &sczUserArgs);
+        ExitOnFailure(hr, "Failed to get command-line arguments.");
+
+        hr = ExeEngineAppendCommandLineArgument(wzArguments, pVariables, TRUE, &sczUserArgsObfuscated);
+        ExitOnFailure(hr, "Failed to get obfuscated command-line arguments.");
     }
 
     for (DWORD i = 0; i < pPackage->Bundle.cCommandLineArguments; ++i)
     {
         BURN_EXE_COMMAND_LINE_ARGUMENT* commandLineArgument = &pPackage->Bundle.rgCommandLineArguments[i];
-        BOOL fCondition = FALSE;
+        BOOL fCondition = TRUE;
 
-        hr = ConditionEvaluate(pVariables, commandLineArgument->sczCondition, &fCondition);
-        ExitOnFailure(hr, "Failed to evaluate bundle package command-line condition.");
+        if (commandLineArgument->sczCondition && *commandLineArgument->sczCondition)
+        {
+            hr = ConditionEvaluate(pVariables, commandLineArgument->sczCondition, &fCondition);
+            ExitOnFailure(hr, "Failed to evaluate bundle package command-line condition.");
+        }
 
         if (fCondition)
         {
-            if (sczUnformattedUserArgs)
-            {
-                hr = StrAllocConcat(&sczUnformattedUserArgs, L" ", 0);
-                ExitOnFailure(hr, "Failed to separate command-line arguments.");
-            }
-
             switch (action)
             {
             case BOOTSTRAPPER_ACTION_STATE_INSTALL:
-                hr = StrAllocConcat(&sczUnformattedUserArgs, commandLineArgument->sczInstallArgument, 0);
-                ExitOnFailure(hr, "Failed to get command-line argument for install.");
+                if (commandLineArgument->fEscape)
+                {
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczInstallArgument, pVariables, FALSE, &sczUserArgs);
+                    ExitOnFailure(hr, "Failed to get command-line argument for install.");
+
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczInstallArgument, pVariables, TRUE, &sczUserArgsObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for install.");
+                }
+                else
+                {
+                    hr = ExeEngineAppendCommandLineArgument(commandLineArgument->sczInstallArgument, pVariables, FALSE, &sczUserArgs);
+                    ExitOnFailure(hr, "Failed to get command-line argument for install.");
+
+                    hr = ExeEngineAppendCommandLineArgument(commandLineArgument->sczInstallArgument, pVariables, TRUE, &sczUserArgsObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for install.");
+                }
                 break;
 
             case BOOTSTRAPPER_ACTION_STATE_UNINSTALL:
-                hr = StrAllocConcat(&sczUnformattedUserArgs, commandLineArgument->sczUninstallArgument, 0);
-                ExitOnFailure(hr, "Failed to get command-line argument for uninstall.");
+                if (commandLineArgument->fEscape)
+                {
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczUninstallArgument, pVariables, FALSE, &sczUserArgs);
+                    ExitOnFailure(hr, "Failed to get command-line argument for uninstall.");
+
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczUninstallArgument, pVariables, TRUE, &sczUserArgsObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for uninstall.");
+                }
+                else
+                {
+                    hr = ExeEngineAppendCommandLineArgument(commandLineArgument->sczUninstallArgument, pVariables, FALSE, &sczUserArgs);
+                    ExitOnFailure(hr, "Failed to get command-line argument for uninstall.");
+
+                    hr = ExeEngineAppendCommandLineArgument(commandLineArgument->sczUninstallArgument, pVariables, TRUE, &sczUserArgsObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for uninstall.");
+                }
                 break;
 
             case BOOTSTRAPPER_ACTION_STATE_REPAIR:
-                hr = StrAllocConcat(&sczUnformattedUserArgs, commandLineArgument->sczRepairArgument, 0);
-                ExitOnFailure(hr, "Failed to get command-line argument for repair.");
+                if (commandLineArgument->fEscape)
+                {
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczRepairArgument, pVariables, FALSE, &sczUserArgs);
+                    ExitOnFailure(hr, "Failed to get command-line argument for repair.");
+
+                    hr = ExeEngineAppendEscapeCommandLineArgument(commandLineArgument->sczRepairArgument, pVariables, TRUE, &sczUserArgsObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for repair.");
+                }
+                else
+                {
+                    hr = ExeEngineAppendCommandLineArgument(commandLineArgument->sczRepairArgument, pVariables, FALSE, &sczUserArgs);
+                    ExitOnFailure(hr, "Failed to get command-line argument for repair.");
+
+                    hr = ExeEngineAppendCommandLineArgument(commandLineArgument->sczRepairArgument, pVariables, TRUE, &sczUserArgsObfuscated);
+                    ExitOnFailure(hr, "Failed to get obfuscated command-line argument for repair.");
+                }
                 break;
 
             default:
@@ -1017,14 +1058,8 @@ static HRESULT ExecuteBundle(
     }
 
     // build user args
-    if (sczUnformattedUserArgs && *sczUnformattedUserArgs)
+    if (sczUserArgsObfuscated && *sczUserArgsObfuscated)
     {
-        hr = VariableFormatString(pVariables, sczUnformattedUserArgs, &sczUserArgs, NULL);
-        ExitOnFailure(hr, "Failed to format argument string.");
-
-        hr = VariableFormatStringObfuscated(pVariables, sczUnformattedUserArgs, &sczUserArgsObfuscated, NULL);
-        ExitOnFailure(hr, "Failed to format obfuscated argument string.");
-
         hr = StrAllocFormatted(&sczCommandObfuscated, L"%ls %ls", sczBaseCommand, sczUserArgsObfuscated);
         ExitOnFailure(hr, "Failed to allocate obfuscated bundle command.");
     }
@@ -1066,7 +1101,6 @@ LExit:
     ReleaseStr(sczCachedDirectory);
     ReleaseStr(sczExecutablePath);
     ReleaseStr(sczBaseCommand);
-    ReleaseStr(sczUnformattedUserArgs);
     StrSecureZeroFreeString(sczUserArgs);
     ReleaseStr(sczUserArgsObfuscated);
     ReleaseStr(sczCommandObfuscated);
