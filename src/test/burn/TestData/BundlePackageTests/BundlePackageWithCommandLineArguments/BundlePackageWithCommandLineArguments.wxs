@@ -6,8 +6,9 @@
     <Variable Name="HiddenVar" Value="Test Folder" Hidden="yes" Type="formatted"/>
 
     <PackageGroup Id="BundlePackages">
-      <BundlePackage Id="BundleE" SourceFile="$(var.BundleE.TargetPath)">
+      <BundlePackage Id="BundleE" SourceFile="$(var.BundleE.TargetPath)" InstallArguments="&quot;NotInstallFolder=1 2 3&quot;">
         <CommandLine InstallArgument="InstallFolder=[ProgramFiles6432Folder][HiddenVar]" Quote="yes"/>
+        <CommandLine InstallArgument="UnquotedInstallFolder=123" Quote="yes"/>
         <CommandLine InstallArgument="InstallFolder2=[ProgramFiles6432Folder][HiddenVar] 2\" Quote="yes"/>
       </BundlePackage>
     </PackageGroup>

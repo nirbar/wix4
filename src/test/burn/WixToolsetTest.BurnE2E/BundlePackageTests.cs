@@ -54,7 +54,13 @@ namespace WixToolsetTest.BurnE2E
             var installLogPath = bundlePackageWithCommandLineArguments.Install();
             bundlePackageWithCommandLineArguments.VerifyRegisteredAndInPackageCache();
 
-            Assert.True(LogVerifier.MessageInLogFile(installLogPath, "\"InstallFolder=C:\\Program Files\\*****\" \"InstallFolder2=C:\\Program Files\\***** 2\\\\\""));
+            Assert.True(LogVerifier.MessageInLogFile(installLogPath, "\"NotInstallFolder=1 2 3\" \"InstallFolder=C:\\Program Files\\*****\" UnquotedInstallFolder=123 \"InstallFolder2=C:\\Program Files\\***** 2\\\\\""));
+
+            var bundleELogPath = Path.Combine(Path.GetDirectoryName(installLogPath), Path.GetFileNameWithoutExtension(installLogPath) + "_000_BundleE.log");
+            Assert.True(LogVerifier.MessageInLogFile(bundleELogPath, "Setting string variable 'InstallFolder' to value 'C:\\Program Files\\Test Folder'"));
+            Assert.True(LogVerifier.MessageInLogFile(bundleELogPath, "Setting string variable 'InstallFolder2' to value 'C:\\Program Files\\Test Folder 2\\'"));
+            Assert.True(LogVerifier.MessageInLogFile(bundleELogPath, "Setting string variable 'UnquotedInstallFolder' to value '123'"));
+            Assert.True(LogVerifier.MessageInLogFile(bundleELogPath, "Setting string variable 'NotInstallFolder' to value '1 2 3'"));
         }
 
         [RuntimeFact]

@@ -1,8 +1,14 @@
 ﻿<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
 
 
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
   <Fragment>
+
+    <Variable Name="NotInstallFolder" Value="0" Type="formatted" Persisted="no" bal:Overridable="yes"/>
+    <Variable Name="InstallFolder" Value="1" Type="formatted" Persisted="no" bal:Overridable="yes"/>
+    <Variable Name="InstallFolder2" Value="2" Type="formatted" Persisted="no" bal:Overridable="yes"/>
+    <Variable Name="UnquotedInstallFolder" Value="4" Type="formatted" Persisted="no" bal:Overridable="yes"/>
+
     <PackageGroup Id="BundlePackages">
       <PackageGroupRef Id="PackageA"/>
       <PackageGroupRef Id="PackageA_x64"/>

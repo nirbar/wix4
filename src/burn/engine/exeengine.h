@@ -72,6 +72,12 @@ HRESULT ExeEngineAppendEscapeCommandLineArgument(
     __in BOOL fObfuscateHiddenVariables,
     __deref_out_z LPWSTR* psczEscapedArguments
     );
+HRESULT ExeEngineAppendCommandLineArgument(
+    __in LPCWSTR szArgument,
+    __in BURN_VARIABLES* pVariables,
+    __in BOOL fObfuscateHiddenVariables,
+    __deref_out_z LPWSTR* psczArguments
+    );
 HRESULT ExeEngineHandleExitCode(
     __in BURN_EXE_EXIT_CODE* rgCustomExitCodes,
     __in DWORD cCustomExitCodes,
