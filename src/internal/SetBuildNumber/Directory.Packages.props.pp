@@ -11,10 +11,11 @@
     <PackageVersion Include="PanelSwWix4.Dtf.WindowsInstaller" Version="{packageversion}" />
     <PackageVersion Include="PanelSwWix4.Dtf.WindowsInstaller.Package" Version="{packageversion}" />
 
-    <PackageVersion Include="WixInternal.TestSupport" Version="{packageversion}" />
-    <PackageVersion Include="WixInternal.MSTestSupport" Version="{packageversion}" />
+    <PackageVersion Include="PanelSwWix4.TestSupport" Version="{packageversion}" />
+    <PackageVersion Include="PanelSwWix4.MSTestSupport" Version="{packageversion}" />
     <PackageVersion Include="WixInternal.TestSupport.Native" Version="{packageversion}" />
     <PackageVersion Include="WixInternal.BaseBuildTasks.Sources" Version="{packageversion}" />
+    <PackageVersion Include="WixInternal.TestTools.Firewall" Version="{packageversion}" />
 
     <PackageVersion Include="PanelSwWix4.DUtil" Version="{packageversion}" />
     <PackageVersion Include="PanelSwWix4.WcaUtil" Version="{packageversion}" />
@@ -82,16 +83,24 @@
   <!-- MSBuild (aligned with VS 17.13 toolset) -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="17.13.26" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.3" />
   </ItemGroup>
 
-  <!-- Keep the following versions in sync with internal\WixInternal.TestSupport.Native\packages.config -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
 
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.v3.assert" Version="3.2.2" />
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
     <PackageVersion Include="xunit.assert" Version="2.9.3" />
+    <PackageVersion Include="xunit.core" Version="2.9.3" />
+    <PackageVersion Include="xunit.extensibility.core" Version="2.9.3" />
+    <PackageVersion Include="xunit.extensibility.execution" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.msbuild" Version="2.9.3" />
+    <PackageVersion Include="MsiZapEx" Version="0.2.6.55" />
   </ItemGroup>
 
   <ItemGroup>

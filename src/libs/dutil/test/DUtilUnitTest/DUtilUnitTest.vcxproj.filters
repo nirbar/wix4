@@ -75,10 +75,13 @@
     <ClCompile Include="VerUtilTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LocUtilTests.cpp">
+    <ClCompile Include="PipeUtilTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PipeUtilTest.cpp">
+    <ClCompile Include="LocControlsUtilTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LocStringsUtilTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

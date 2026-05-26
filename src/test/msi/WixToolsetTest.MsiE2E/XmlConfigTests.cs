@@ -5,9 +5,9 @@ namespace WixToolsetTest.MsiE2E;
 using System;
 using System.IO;
 using System.Xml.Linq;
-using WixTestTools;
+using WixToolset.TestTools;
 using Xunit;
-using Xunit.Abstractions;
+
 
 public class XmlConfigTests : MsiE2ETests
 {

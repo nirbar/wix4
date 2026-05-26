@@ -7,8 +7,8 @@ namespace WixToolsetTest.MsiE2E
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using WixTestTools;
-    using Xunit.Abstractions;
+    using WixToolset.TestTools;
+    using Xunit;
 
     public class MsmqExtensionTests : MsiE2ETests
     {

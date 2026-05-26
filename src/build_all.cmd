@@ -18,6 +18,10 @@ call build_init.cmd
 
 call dtf\dtf.cmd %_C% || exit /b
 
+:: DTF
+
+call testsupport\testsupport.cmd %_C% || exit /b
+
 
 :: internal
 

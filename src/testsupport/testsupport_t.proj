@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.Build.Traversal">
+  <ItemGroup>
+    <ProjectReference Include="WixToolset.TestSupport\WixToolset.TestSupport.csproj" Targets="Pack" />
+    <ProjectReference Include="WixToolset.MSTestSupport\WixToolset.MSTestSupport.csproj" Targets="Pack" />
+  </ItemGroup>
+</Project>

@@ -3,9 +3,9 @@
 namespace WixToolsetTest.MsiE2E
 {
     using System;
-    using WixTestTools;
+    using WixToolset.TestTools;
     using Xunit;
-    using Xunit.Abstractions;
+    
 
     public class ComPlusExtensionTests : MsiE2ETests
     {

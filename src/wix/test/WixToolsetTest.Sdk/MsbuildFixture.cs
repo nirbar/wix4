@@ -11,7 +11,7 @@ namespace WixToolsetTest.Sdk
     using System.IO;
     using System.Linq;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using WixInternal.MSTestSupport;
+    using WixToolset.MSTestSupport;
     using WixToolset.Data;
     using WixToolset.Data.Symbols;
 

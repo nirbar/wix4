@@ -4,11 +4,10 @@ namespace WixToolsetTest.BurnE2E
 {
     using System;
     using System.IO;
-    using WixInternal.TestSupport;
-    using WixTestTools;
+    using WixToolset.TestSupport;
+    using WixToolset.TestTools;
     using Xunit;
-    using Xunit.Abstractions;
-
+    
     public class BasicFunctionalityTests : BurnE2ETests
     {
         public BasicFunctionalityTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }
@@ -89,7 +88,7 @@ namespace WixToolsetTest.BurnE2E
 
             if (alternateExitCode == bundle.LastExitCode)
             {
-                WixAssert.Skip($"Install exited with {bundle.LastExitCode}");
+                Assert.Skip($"Install exited with {bundle.LastExitCode}");
             }
 
             bundle.Uninstall(cachedBundlePath);
@@ -101,7 +100,7 @@ namespace WixToolsetTest.BurnE2E
 
             if (alternateExitCode == bundle.LastExitCode)
             {
-                WixAssert.Skip($"Uninstall exited with {bundle.LastExitCode}");
+                Assert.Skip($"Uninstall exited with {bundle.LastExitCode}");
             }
         }
     }

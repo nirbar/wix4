@@ -7,7 +7,8 @@
   <Project Path="ForTestingUseOnlyExtension/ForTestingUseOnly.wixext.csproj" />
   <Project Path="TestBA/TestBA.csproj" />
   <Project Path="TestExe/TestExe.csproj" />
-  <Project Path="WixTestTools/WixTestTools.csproj" />
+  <Project Path="WixToolset.TestTools/WixToolset.TestTools.csproj" />
+  <Project Path="WixTestToolsFirewall/WixInternal.TestTools.Firewall.csproj" />
   <Project Path="WixToolset.WixBA/WixToolset.WixBA.csproj" />
   <Project Path="WixToolsetTest.BurnE2E/WixToolsetTest.BurnE2E.csproj" />
 </Solution>

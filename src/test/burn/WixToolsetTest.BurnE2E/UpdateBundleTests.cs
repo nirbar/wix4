@@ -6,9 +6,8 @@ namespace WixToolsetTest.BurnE2E
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using WixTestTools;
+    using WixToolset.TestTools;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class UpdateBundleTests : BurnE2ETests
     {

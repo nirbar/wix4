@@ -10,7 +10,7 @@ namespace WixToolsetTest.Msmq
     using System.IO;
     using System.Linq;
     using System.Xml.Linq;
-    using WixInternal.MSTestSupport;
+    using WixToolset.MSTestSupport;
     using WixInternal.Core.MSTestPackage;
     using WixToolset.Msmq;
 

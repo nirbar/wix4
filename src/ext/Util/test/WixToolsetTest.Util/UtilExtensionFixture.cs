@@ -12,7 +12,7 @@ namespace WixToolsetTest.Util
     using System.Xml.Linq;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using WixInternal.Core.MSTestPackage;
-    using WixInternal.MSTestSupport;
+    using WixToolset.MSTestSupport;
     using WixToolset.Util;
 
     [TestClass]

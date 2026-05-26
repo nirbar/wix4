@@ -9,7 +9,7 @@ namespace WixToolsetTest.CoreIntegration
     using System.Text;
     using System.Xml;
     using Example.Extension;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixToolset.Core.Burn;
     using WixInternal.Core.TestPackage;
     using WixToolset.Data;

@@ -14,7 +14,7 @@ namespace WixToolsetTest.CoreIntegration
     using System.Xml;
     using System.Xml.Linq;
     using Example.Extension;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixInternal.Core.TestPackage;
     using WixToolset.Data;
     using WixToolset.Data.Burn;
