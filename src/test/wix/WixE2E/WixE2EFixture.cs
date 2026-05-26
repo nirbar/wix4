@@ -7,7 +7,7 @@ namespace WixE2E
     using System.Linq;
     using System.Security.Cryptography;
     using System.Text;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using Xunit;
 
     public class WixE2EFixture

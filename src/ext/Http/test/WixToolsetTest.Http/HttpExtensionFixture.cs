@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace WixToolsetTest.Http
 {
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using WixInternal.MSTestSupport;
+    using WixToolset.MSTestSupport;
     using WixInternal.Core.MSTestPackage;
     using WixToolset.Http;
 

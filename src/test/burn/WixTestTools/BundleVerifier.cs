@@ -6,7 +6,7 @@ namespace WixTestTools
     using System.IO;
     using System.Linq;
     using Microsoft.Win32;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixToolset.Data;
     using WixToolset.Data.Symbols;
     using Xunit;

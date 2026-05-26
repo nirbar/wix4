@@ -13,7 +13,7 @@
 
 @echo Burn integration tests %_C%
 
-msbuild -Restore -p:Configuration=%_C% -tl -nologo -m -warnaserror -bl:%_L%\test_burn_build.binlog || exit /b
+msbuild -Restore test_burn_t.proj -p:Configuration=%_C% -tl -nologo -m -warnaserror -bl:%_L%\test_burn_build.binlog || exit /b
 msbuild -Restore TestData\TestData.proj -p:Configuration=%_C% -tl -nologo -m -warnaserror -bl:%_L%\test_burn_data_build.binlog || exit /b
 msbuild -Restore TestData6\TestData6.proj -p:Configuration=%_C% -tl -nologo -m -warnaserror -bl:%_L%\test_burn_data6_build.binlog || exit /b
 

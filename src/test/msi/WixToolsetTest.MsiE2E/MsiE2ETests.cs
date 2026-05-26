@@ -6,7 +6,7 @@ namespace WixToolsetTest.MsiE2E
     using System.Collections.Generic;
     using WixTestTools;
     using Xunit;
-    using Xunit.Abstractions;
+    
 
     [Collection("MsiE2E")]
     public abstract class MsiE2ETests : WixTestBase, IDisposable

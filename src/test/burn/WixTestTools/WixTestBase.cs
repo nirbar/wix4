@@ -2,7 +2,7 @@
 
 namespace WixTestTools
 {
-    using Xunit.Abstractions;
+    using Xunit;
 
     public abstract class WixTestBase
     {

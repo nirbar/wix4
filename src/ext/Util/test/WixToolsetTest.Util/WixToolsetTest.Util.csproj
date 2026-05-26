@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WixInternal.MSTestSupport" />
+    <PackageReference Include="PanelSwWix4.MSTestSupport" />
     <PackageReference Include="WixInternal.Core.MSTestPackage" />
   </ItemGroup>
 </Project>

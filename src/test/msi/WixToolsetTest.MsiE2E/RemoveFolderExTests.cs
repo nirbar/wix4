@@ -6,7 +6,7 @@ using System;
 using System.IO;
 using WixTestTools;
 using Xunit;
-using Xunit.Abstractions;
+
 
 public class RemoveFolderExTests : MsiE2ETests
 {

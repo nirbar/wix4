@@ -13,6 +13,10 @@
     <SignOutput>false</SignOutput>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(IsWixTestProject)'=='true' ">
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(IsWixMSTestProject)' == 'true' ">
     <!-- Force a .NET v6-compatible package. -->
     <MicrosoftTestingExtensionsCodeCoverageVersion>17.11.5</MicrosoftTestingExtensionsCodeCoverageVersion>
@@ -28,7 +32,7 @@
 
   <ItemGroup Condition=" '$(IsWixTestProject)'=='true' ">
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="All" />
   </ItemGroup>
 

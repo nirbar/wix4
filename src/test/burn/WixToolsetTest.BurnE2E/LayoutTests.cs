@@ -4,10 +4,9 @@ namespace WixToolsetTest.BurnE2E
 {
     using System.Collections.Generic;
     using System.IO;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixTestTools;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class LayoutTests : BurnE2ETests
     {

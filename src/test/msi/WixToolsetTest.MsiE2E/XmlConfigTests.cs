@@ -7,7 +7,7 @@ using System.IO;
 using System.Xml.Linq;
 using WixTestTools;
 using Xunit;
-using Xunit.Abstractions;
+
 
 public class XmlConfigTests : MsiE2ETests
 {

@@ -6,7 +6,6 @@ namespace WixToolsetTest.BurnE2E
     using WixTestTools;
     using WixToolset.BootstrapperApplicationApi;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class RegistrationTests : BurnE2ETests
     {

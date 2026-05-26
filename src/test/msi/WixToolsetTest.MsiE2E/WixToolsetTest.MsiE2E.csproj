@@ -28,7 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WixInternal.TestSupport" />
+    <PackageReference Include="PanelSwWix4.TestSupport" />
     <PackageReference Include="PanelSwWix4.Data" />
+    <PackageReference Include="WixInternal.TestTools.Firewall" />
   </ItemGroup>
 </Project>

@@ -6,29 +6,23 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
     <IsWixTestSupportProject>true</IsWixTestSupportProject>
+    <IsPackable>true</IsPackable>
+    <PackageId>PanelSwWix4.TestTools</PackageId>
   </PropertyGroup>
-  <ItemGroup>
-    <COMReference Include="NetFwTypeLib">
-      <VersionMinor>0</VersionMinor>
-      <VersionMajor>1</VersionMajor>
-      <Guid>58fbcf7c-e7a9-467c-80b3-fc65e8fcca08</Guid>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.DirectoryServices" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" />
     <PackageReference Include="System.Management" />
-    <PackageReference Include="WixInternal.TestSupport" />
+    <PackageReference Include="PanelSwWix4.TestSupport" />
     <PackageReference Include="PanelSwWix4.Data" />
     <PackageReference Include="PanelSwWix4.BootstrapperApplicationApi" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.v3.extensibility.core">
+      <PrivateAssets>build;buildTransitive</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="MsiZapEx" />
   </ItemGroup>
 </Project>

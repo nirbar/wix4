@@ -4,7 +4,7 @@ namespace WixTestTools
 {
     using System;
     using Microsoft.Win32;
-    using Xunit.Abstractions;
+    using Xunit;
 
     public class BundleRegistration : GenericArpRegistration
     {

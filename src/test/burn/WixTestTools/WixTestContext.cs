@@ -4,11 +4,9 @@ namespace WixTestTools
 {
     using System;
     using System.IO;
-    using System.Linq;
-    using System.Reflection;
     using Microsoft.Win32;
-    using WixInternal.TestSupport;
-    using Xunit.Abstractions;
+    using WixToolset.TestSupport;
+    using Xunit;
 
     public class WixTestContext
     {
@@ -18,11 +16,9 @@ namespace WixTestTools
         {
             this.TestOutputHelper = testOutputHelper;
 
-            var test = GetTest(testOutputHelper);
-            var splitClassName = test.TestCase.TestMethod.TestClass.Class.Name.Split('.');
-
-            this.TestGroupName = splitClassName.Last();
-            this.TestName = test.TestCase.TestMethod.Method.Name;
+            var testMethod = TestContext.Current.TestMethod;
+            this.TestGroupName = testMethod?.TestClass?.TestClassSimpleName ?? "Unknown";
+            this.TestName = testMethod?.MethodName ?? "Unknown";
 
             this.TestDataFolder = Path.Combine(RootDataPath, this.TestGroupName);
         }
@@ -67,13 +63,5 @@ namespace WixTestTools
             return Registry.LocalMachine.OpenSubKey(key, true);
         }
 
-        private static ITest GetTest(ITestOutputHelper output)
-        {
-            // https://github.com/xunit/xunit/issues/416#issuecomment-378512739
-            var type = output.GetType();
-            var testMember = type.GetField("test", BindingFlags.Instance | BindingFlags.NonPublic);
-            var test = (ITest)testMember.GetValue(output);
-            return test;
-        }
     }
 }

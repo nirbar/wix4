@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Owin" />
-    <PackageReference Include="WixInternal.TestSupport" />
+    <PackageReference Include="PanelSwWix4.TestSupport" />
     <PackageReference Include="PanelSwWix4.Data" />
     <PackageReference Include="PanelSwWix4.BootstrapperApplicationApi" />
   </ItemGroup>

@@ -8,7 +8,6 @@ namespace WixToolsetTest.BurnE2E
     using System.IO;
     using WixTestTools;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class UpdateBundleTests : BurnE2ETests
     {

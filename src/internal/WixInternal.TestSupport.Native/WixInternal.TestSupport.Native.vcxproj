@@ -63,7 +63,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WixInternal.TestSupport\WixInternal.TestSupport.csproj">
+    <ProjectReference Include="..\..\test\WixToolset.TestSupport\WixToolset.TestSupport.csproj">
       <Project>{6C57EF2C-979A-4106-A9E5-FE342810619A}</Project>
     </ProjectReference>
   </ItemGroup>

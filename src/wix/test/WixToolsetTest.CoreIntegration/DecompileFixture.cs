@@ -6,7 +6,7 @@ namespace WixToolsetTest.CoreIntegration
     using System.Diagnostics;
     using System.IO;
     using WixInternal.Core.TestPackage;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixToolset.Core;
     using WixToolset.Core.WindowsInstaller;
     using WixToolset.Data;

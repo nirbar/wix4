@@ -3,7 +3,7 @@
 namespace WixToolsetTest.BurnE2E
 {
     using WixTestTools;
-    using Xunit.Abstractions;
+    using Xunit;
 
     public class WixStdBaTests : BurnE2ETests
     {

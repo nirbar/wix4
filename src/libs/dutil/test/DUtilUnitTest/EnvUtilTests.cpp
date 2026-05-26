@@ -6,7 +6,8 @@ using namespace System;
 using namespace System::Collections;
 using namespace Xunit;
 using namespace WixInternal::TestSupport;
-using namespace WixInternal::TestSupport::XunitExtensions;
+using namespace WixToolset::TestSupport;
+using namespace WixToolset::TestSupport::XunitExtensions;
 
 namespace DutilTests
 {

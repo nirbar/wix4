@@ -7,7 +7,6 @@ namespace WixToolsetTest.BurnE2E
     using System.Xml;
     using WixTestTools;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class PatchTests : BurnE2ETests
     {

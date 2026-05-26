@@ -5,7 +5,6 @@ namespace WixTestTools
     using System;
     using Microsoft.Win32;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class GenericArpRegistration
     {

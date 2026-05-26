@@ -8,7 +8,7 @@ namespace WixToolsetTest.Iis
 {
     using System.Linq;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using WixInternal.MSTestSupport;
+    using WixToolset.MSTestSupport;
     using WixInternal.Core.MSTestPackage;
     using WixToolset.Iis;
 

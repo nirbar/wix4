@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,7 +12,7 @@ namespace WixToolsetTest.BootstrapperApplications
     using System.Linq;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using WixInternal.Core.MSTestPackage;
-    using WixInternal.MSTestSupport;
+    using WixToolset.MSTestSupport;
 
     [TestClass]
     public class BalExtensionFixture

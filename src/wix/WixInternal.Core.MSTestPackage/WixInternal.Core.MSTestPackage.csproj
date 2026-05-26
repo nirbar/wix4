@@ -24,10 +24,7 @@
   <ItemGroup>
     <PackageReference Include="PanelSwWix4.Data" />
     <PackageReference Include="PanelSwWix4.Extensibility" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="WixInternal.MSTestSupport" />
+    <PackageReference Include="PanelSwWix4.MSTestSupport" />
   </ItemGroup>
 
   <ItemGroup>

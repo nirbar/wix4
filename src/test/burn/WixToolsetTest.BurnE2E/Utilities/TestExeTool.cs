@@ -3,7 +3,7 @@
 namespace WixTestTools
 {
     using System.IO;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
 
     public class TestExeTool : TestTool
     {

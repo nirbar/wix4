@@ -6,8 +6,7 @@ namespace WixToolsetTest.BurnE2E
     using System.Collections.Generic;
     using WixTestTools;
     using Xunit;
-    using Xunit.Abstractions;
-
+    
     [Collection("BurnE2E")]
     public abstract class BurnE2ETests : WixTestBase, IDisposable
     {

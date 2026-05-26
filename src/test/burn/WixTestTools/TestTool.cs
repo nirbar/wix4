@@ -6,7 +6,7 @@ namespace WixTestTools
     using System.Collections.Generic;
     using System.Text;
     using System.Text.RegularExpressions;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using Xunit;
 
     public class TestTool : ExternalExecutable

@@ -1,11 +1,11 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
 
 #include "precomp.h"
 
 using namespace System;
 using namespace Xunit;
 using namespace WixInternal::TestSupport;
-using namespace WixInternal::TestSupport::XunitExtensions;
+using namespace WixToolset::TestSupport::XunitExtensions;
 
 namespace BalUtilTests
 {

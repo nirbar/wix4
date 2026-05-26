@@ -6,7 +6,7 @@ namespace WixToolsetTest.CoreIntegration
     using System.IO;
     using System.Linq;
     using WixInternal.Core.TestPackage;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixToolset.Data;
     using WixToolset.Data.Symbols;
     using Xunit;

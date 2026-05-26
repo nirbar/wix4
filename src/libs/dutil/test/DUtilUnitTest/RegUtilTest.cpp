@@ -7,6 +7,7 @@ using namespace System::Collections::Generic;
 using namespace System::Runtime::InteropServices;
 using namespace Xunit;
 using namespace WixInternal::TestSupport;
+using namespace WixToolset::TestSupport;
 
 LPCWSTR wzBaseRegKey = L"Software\\RegUtilTest\\";
 LPWSTR rgwzMultiValue[2] = { L"First", L"Second" };

@@ -7,11 +7,10 @@ namespace WixToolsetTest.BurnE2E
     using System.IO;
     using System.Runtime.InteropServices;
     using Microsoft.Win32;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixTestTools;
     using WixToolset.BootstrapperApplicationApi;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class LongPathTests : BurnE2ETests
     {
@@ -98,7 +97,7 @@ namespace WixToolsetTest.BurnE2E
 
             if (alternateExitCode == bundle.LastExitCode)
             {
-                WixAssert.Skip($"Install exited with {bundle.LastExitCode}");
+                Assert.Skip($"Install exited with {bundle.LastExitCode}");
             }
 
             bundle.Uninstall(bundleCopiedPath);
@@ -110,7 +109,7 @@ namespace WixToolsetTest.BurnE2E
 
             if (alternateExitCode == bundle.LastExitCode)
             {
-                WixAssert.Skip($"Uninstall exited with {bundle.LastExitCode}");
+                Assert.Skip($"Uninstall exited with {bundle.LastExitCode}");
             }
         }
 
@@ -221,7 +220,7 @@ namespace WixToolsetTest.BurnE2E
 
                     if (alternateExitCode == nonCompressedBundle.LastExitCode)
                     {
-                        WixAssert.Skip($"Install exited with {nonCompressedBundle.LastExitCode}");
+                        Assert.Skip($"Install exited with {nonCompressedBundle.LastExitCode}");
                     }
                 }
                 finally
@@ -240,7 +239,7 @@ namespace WixToolsetTest.BurnE2E
 
                     if (alternateExitCode == nonCompressedBundle.LastExitCode)
                     {
-                        WixAssert.Skip($"Uninstall exited with {nonCompressedBundle.LastExitCode}");
+                        Assert.Skip($"Uninstall exited with {nonCompressedBundle.LastExitCode}");
                     }
                 }
 
@@ -282,12 +281,12 @@ namespace WixToolsetTest.BurnE2E
                     int lastError = Marshal.GetLastWin32Error();
                     if (lastError == 206)
                     {
-                        WixAssert.Skip($"MAX_PATH is being enforced ({baseFolder})");
+                        Assert.Skip($"MAX_PATH is being enforced ({baseFolder})");
                     }
                     else if (lastError == 3)
                     {
                         // TODO: figure out why Windows Sandbox returns this error instead of 206 like all other environments.
-                        WixAssert.Skip($"The system cannot find the path specified ({baseFolder})");
+                        Assert.Skip($"The system cannot find the path specified ({baseFolder})");
                     }
                     throw new Win32Exception(lastError);
                 }

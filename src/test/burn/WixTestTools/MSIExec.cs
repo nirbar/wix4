@@ -5,7 +5,7 @@ namespace WixTestTools
     using System;
     using System.IO;
     using System.Text;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
 
     public class MSIExec : TestTool
     {

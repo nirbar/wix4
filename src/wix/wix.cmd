@@ -69,7 +69,7 @@ msbuild pack_t.proj -p:Configuration=%_C% -tl -nologo -m -warnaserror -bl:%_L%\w
 @rd /s/q "%USERPROFILE%\.nuget\packages\panelswwix4.core.burn" 2> nul
 @rd /s/q "%USERPROFILE%\.nuget\packages\panelswwix4.core.native" 2> nul
 @rd /s/q "%USERPROFILE%\.nuget\packages\panelswwix4.core.windowsinstaller" 2> nul
-@rd /s/q "%USERPROFILE%\.nuget\packages\wixinternal.core.testpackage" 2> nul
+@rd /s/q "%USERPROFILE%\.nuget\packages\WixInternal.Core.TestPackage" 2> nul
 @rd /s/q "%USERPROFILE%\.nuget\packages\panelswwix4.sdk" 2> nul
 @exit /b
 

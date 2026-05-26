@@ -5,7 +5,7 @@ namespace WixTestTools
     using System;
     using System.DirectoryServices.ActiveDirectory;
     using System.Security.Principal;
-    using WixInternal.TestSupport.XunitExtensions;
+    using WixToolset.TestSupport.XunitExtensions;
     using System.Runtime.InteropServices;
 
     public class RuntimeFactAttribute : SkippableFactAttribute

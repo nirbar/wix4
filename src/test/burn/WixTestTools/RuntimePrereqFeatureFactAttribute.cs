@@ -8,7 +8,7 @@ namespace WixTestTools
     using System.Management;
     using System.Collections.Generic;
     using System.Security.Principal;
-    using WixInternal.TestSupport.XunitExtensions;
+    using WixToolset.TestSupport.XunitExtensions;
 
     public class RuntimePrereqFeatureFactAttribute : RuntimeFactAttribute
     {

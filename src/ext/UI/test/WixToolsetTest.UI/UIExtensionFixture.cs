@@ -10,7 +10,7 @@ namespace WixToolsetTest.UI
     using System.Linq;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using WixInternal.Core.MSTestPackage;
-    using WixInternal.MSTestSupport;
+    using WixToolset.MSTestSupport;
     using WixToolset.Data.WindowsInstaller;
     using WixToolset.UI;
 
