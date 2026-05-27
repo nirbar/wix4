@@ -53,14 +53,24 @@ namespace WixToolsetTest.BurnE2E
         {
             var bundleWithBundlePackagesWithNonVitalDetachedContainers = this.CreateBundleInstaller("BundleWithBundlePackagesWithNonVitalDetachedContainers");
             var optional = Path.Combine(Path.GetDirectoryName(bundleWithBundlePackagesWithNonVitalDetachedContainers.Bundle), "BundleE_PackageA_x64.cab");
+            var optional_ = Path.Combine(Path.GetDirectoryName(bundleWithBundlePackagesWithNonVitalDetachedContainers.Bundle), "BundleE_PackageA_x64.cab_");
+            try
+            {
+                Assert.True(File.Exists(optional));
+                Assert.False(File.Exists(optional_));
+                File.Move(optional, optional_);
 
-            Assert.True(File.Exists(optional));
-            File.Delete(optional);
+                var installLogPath = bundleWithBundlePackagesWithNonVitalDetachedContainers.Install();
+                bundleWithBundlePackagesWithNonVitalDetachedContainers.VerifyRegisteredAndInPackageCache();
 
-            var installLogPath = bundleWithBundlePackagesWithNonVitalDetachedContainers.Install();
-            bundleWithBundlePackagesWithNonVitalDetachedContainers.VerifyRegisteredAndInPackageCache();
-
-            Assert.True(LogVerifier.MessageInLogFileRegex(installLogPath, @"Skipped non-vital payload\. Package: BundleE\. Payload: [a-zA-Z0-9\.]+\. Path: BundleE_PackageA_x64\.cab"));
+                Assert.True(LogVerifier.MessageInLogFileRegex(installLogPath, @"Skipped non-vital payload\. Package: BundleE\. Payload: [a-zA-Z0-9\.]+\. Path: BundleE_PackageA_x64\.cab"));
+            }
+            finally
+            {
+                File.Move(optional_, optional);
+                Assert.False(File.Exists(optional_));
+                Assert.True(File.Exists(optional));
+            }
         }
 
         [RuntimeFact]
