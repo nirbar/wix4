@@ -1394,3 +1394,10 @@ Language=English
 Skipped related uninstall bundle: %1!ls! since it is already absent, action: %2!hs!.
 .
 
+MessageId=714
+Severity=Success
+SymbolicName=MSG_UNITTEST_START
+Language=English
+Unit test starting.
+.
+

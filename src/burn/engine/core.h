@@ -16,6 +16,7 @@ const LPCWSTR BURN_COMMANDLINE_SWITCH_PARENT_NONE = L"parent:none";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_WORKING_DIRECTORY = L"burn.engine.working.directory";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_ELEVATED = L"burn.elevated";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_EMBEDDED = L"burn.embedded";
+const LPCWSTR BURN_COMMANDLINE_SWITCH_UNITTEST = L"burn.unittest";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_EMBEDDED_CAPABILITIES = L"burn.embedded.capabilities";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_RUNONCE = L"burn.runonce";
 const LPCWSTR BURN_COMMANDLINE_SWITCH_LOG_APPEND = L"burn.log.append";
@@ -136,6 +137,14 @@ typedef struct _BURN_REDIRECTED_LOGGING_CONTEXT
     HANDLE hThread;
 } BURN_REDIRECTED_LOGGING_CONTEXT;
 
+typedef struct _BURN_UNIT_TEST_CONTEXT
+{
+    LPWSTR wzUnittestPasswordHash;
+    BOOL fUnitTest;
+    BOOL fUnitTestQuit;
+    BURN_PIPE_CONNECTION unittestConnection;
+} BURN_UNIT_TEST_CONTEXT;
+
 typedef struct _BURN_ENGINE_STATE
 {
     // UX flow control
@@ -192,6 +201,8 @@ typedef struct _BURN_ENGINE_STATE
     LPCWSTR wzRestartInitiatedPackageId;
 
     BURN_ENGINE_COMMAND internalCommand;
+
+    BURN_UNIT_TEST_CONTEXT unitTestContext;
 } BURN_ENGINE_STATE;
 
 typedef struct _BURN_APPLY_CONTEXT
@@ -320,6 +331,7 @@ HRESULT CoreParseCommandLine(
     __in BOOTSTRAPPER_COMMAND* pCommand,
     __in BURN_PIPE_CONNECTION* pCompanionConnection,
     __in BURN_PIPE_CONNECTION* pEmbeddedConnection,
+    __in BURN_UNIT_TEST_CONTEXT* pUnittestContext,
     __inout HANDLE* phSectionFile,
     __inout HANDLE* phSourceEngineFile
     );

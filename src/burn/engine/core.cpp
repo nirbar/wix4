@@ -167,18 +167,30 @@ extern "C" HRESULT CoreInitialize(
     // the payloads from the BA container.
     if (BURN_MODE_NORMAL == pEngineState->internalCommand.mode || BURN_MODE_EMBEDDED == pEngineState->internalCommand.mode)
     {
-        // Extract all UX payloads to working folder.
-        hr = BootstrapperApplicationEnsureWorkingFolder(pEngineState->internalCommand.fInitiallyElevated, &pEngineState->cache, &pEngineState->userExperience.sczTempDirectory);
-        ExitOnFailure(hr, "Failed to get unique temporary folder for bootstrapper application.");
+        if (pEngineState->unitTestContext.fUnitTest && pEngineState->userExperience.sczTempDirectory)
+        {
+            // On unit-test restart the payloads are already extracted; just restore the path variables.
+            hr = PathConcat(pEngineState->userExperience.sczTempDirectory, L"BootstrapperApplicationData.xml", &pEngineState->command.wzBootstrapperApplicationDataPath);
+            ExitOnFailure(hr, "Failed to get BootstrapperApplicationDataPath.");
 
-        hr = PayloadExtractUXContainer(&pEngineState->userExperience.payloads, &containerContext, pEngineState->userExperience.sczTempDirectory);
-        ExitOnFailure(hr, "Failed to extract bootstrapper application payloads.");
+            hr = StrAllocString(&pEngineState->command.wzBootstrapperWorkingFolder, pEngineState->userExperience.sczTempDirectory, 0);
+            ExitOnFailure(hr, "Failed to copy sczBootstrapperWorkingFolder.");
+        }
+        else
+        {
+            // Extract all UX payloads to working folder.
+            hr = BootstrapperApplicationEnsureWorkingFolder(pEngineState->internalCommand.fInitiallyElevated, &pEngineState->cache, &pEngineState->userExperience.sczTempDirectory);
+            ExitOnFailure(hr, "Failed to get unique temporary folder for bootstrapper application.");
 
-        hr = PathConcat(pEngineState->userExperience.sczTempDirectory, L"BootstrapperApplicationData.xml", &pEngineState->command.wzBootstrapperApplicationDataPath);
-        ExitOnFailure(hr, "Failed to get BootstrapperApplicationDataPath.");
+            hr = PayloadExtractUXContainer(&pEngineState->userExperience.payloads, &containerContext, pEngineState->userExperience.sczTempDirectory);
+            ExitOnFailure(hr, "Failed to extract bootstrapper application payloads.");
 
-        hr = StrAllocString(&pEngineState->command.wzBootstrapperWorkingFolder, pEngineState->userExperience.sczTempDirectory, 0);
-        ExitOnFailure(hr, "Failed to copy sczBootstrapperWorkingFolder.");
+            hr = PathConcat(pEngineState->userExperience.sczTempDirectory, L"BootstrapperApplicationData.xml", &pEngineState->command.wzBootstrapperApplicationDataPath);
+            ExitOnFailure(hr, "Failed to get BootstrapperApplicationDataPath.");
+
+            hr = StrAllocString(&pEngineState->command.wzBootstrapperWorkingFolder, pEngineState->userExperience.sczTempDirectory, 0);
+            ExitOnFailure(hr, "Failed to copy sczBootstrapperWorkingFolder.");
+        }
     }
 
 LExit:
@@ -1422,6 +1434,7 @@ extern "C" HRESULT CoreParseCommandLine(
     __in BOOTSTRAPPER_COMMAND* pCommand,
     __in BURN_PIPE_CONNECTION* pCompanionConnection,
     __in BURN_PIPE_CONNECTION* pEmbeddedConnection,
+    __in BURN_UNIT_TEST_CONTEXT* pUnittestContext,
     __inout HANDLE* phSectionFile,
     __inout HANDLE* phSourceEngineFile
     )
@@ -1717,6 +1730,32 @@ extern "C" HRESULT CoreParseCommandLine(
                     TraceLog(hr, "Failed to parse embedded connection.");
                     hr = S_OK;
                 }
+
+                i += 2;
+            }
+            else if (CSTR_EQUAL == ::CompareStringOrdinal(&argv[i][1], -1, BURN_COMMANDLINE_SWITCH_UNITTEST, -1, TRUE))
+            {
+                // Password, token and parent process id
+                if (i + 4 >= argc)
+                {
+                    fInvalidCommandLine = TRUE;
+                    ExitWithRootFailure(hr, E_INVALIDARG, "Must specify the unit test password, pipe name, token and parent process id.");
+                }
+
+                ++i;
+                hr = UnittestValidatePassword(pUnittestContext, argv[i]);
+                ExitOnFailure(hr, "Unittest failed password validation");
+
+                ++i;
+                hr = ParsePipeConnection(argv + i, &pUnittestContext->unittestConnection);
+                if (FAILED(hr))
+                {
+                    fInvalidCommandLine = TRUE;
+                    TraceLog(hr, "Failed to parse unit test connection.");
+                    hr = S_OK;
+                }
+                pUnittestContext->fUnitTest = TRUE;
+                LogId(REPORT_STANDARD, MSG_UNITTEST_START);
 
                 i += 2;
             }

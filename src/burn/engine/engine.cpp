@@ -13,6 +13,9 @@ static HRESULT InitializeEngineState(
     __in BURN_ENGINE_STATE* pEngineState,
     __in HANDLE hEngineFile
     );
+static void UnitTestUninitializeEngineState(
+    __in BURN_ENGINE_STATE* pEngineState
+    );
 static void UninitializeEngineState(
     __in BURN_ENGINE_STATE* pEngineState
     );
@@ -96,11 +99,11 @@ extern "C" HRESULT EngineRun(
     BURN_ENGINE_STATE engineState = { };
     engineState.command.cbSize = sizeof(BOOTSTRAPPER_COMMAND);
 
-    // Always initialize logging first
+LUnittestRestart:
+    // Initialize logging at the start of each iteration (once per unit test, or once for a normal run)
     LogInitialize(::GetModuleHandleW(NULL));
     DutilInitialize(&BurnTraceError);
     fLogInitialized = TRUE;
-
     // Ensure that log contains approriate level of information
 #ifdef _DEBUG
     LogSetLevel(REPORT_DEBUG, FALSE);
@@ -302,40 +305,66 @@ LExit:
         LogId(REPORT_STANDARD, MSG_EXITING_ELEVATED, FAILED(hr) ? (int)hr : *pdwExitCode);
     }
 
-    BootstrapperApplicationRemove(&engineState.userExperience);
-
-    CacheRemoveBaseWorkingFolder(&engineState.cache);
-
-    UninitializeEngineState(&engineState);
+    if (engineState.unitTestContext.fUnitTest && !engineState.unitTestContext.fUnitTestQuit)
+    {
+        UnitTestUninitializeEngineState(&engineState);
+    }
+    else
+    {
+        BootstrapperApplicationRemove(&engineState.userExperience);
+        CacheRemoveBaseWorkingFolder(&engineState.cache);
+        UninitializeEngineState(&engineState);
+    }
 
     if (fXmlInitialized)
     {
         XmlUninitialize();
+        fXmlInitialized = FALSE;
     }
 
     if (fWiuInitialized)
     {
         WiuUninitialize();
+        fWiuInitialized = FALSE;
     }
 
     if (fRegInitialized)
     {
         RegUninitialize();
+        fRegInitialized = FALSE;
     }
 
     if (fDpiuInitialized)
     {
         DpiuUninitialize();
+        fDpiuInitialized = FALSE;
     }
 
     if (fCrypInitialized)
     {
         CrypUninitialize();
+        fCrypInitialized = FALSE;
     }
 
     if (fComInitialized)
     {
         ::CoUninitialize();
+        fComInitialized = FALSE;
+    }
+
+    // On unit-test restart, close the current log so each test gets a fresh log file.
+    if (engineState.unitTestContext.fUnitTest && !engineState.unitTestContext.fUnitTestQuit)
+    {
+        if (fLogInitialized)
+        {
+            DutilUninitialize();
+            LogUninitialize(FALSE);
+            fLogInitialized = FALSE;
+        }
+        fRunNormal = FALSE;
+        fRunElevated = FALSE;
+        fRunRunOnce = FALSE;
+        goto LUnittestRestart;
     }
 
     if (fLogInitialized)
@@ -372,13 +401,14 @@ static HRESULT InitializeEngineState(
     ::InitializeCriticalSection(&pEngineState->userExperience.csEngineActive);
     BurnPipeConnectionInitialize(&pEngineState->companionConnection);
     BurnPipeConnectionInitialize(&pEngineState->embeddedConnection);
+    BurnPipeConnectionInitialize(&pEngineState->unitTestContext.unittestConnection);
 
     // Retain whether bundle was initially run elevated.
     hr = ProcIsHighIntegrity(::GetCurrentProcess(), &pEngineState->internalCommand.fInitiallyElevated);
     ExitOnFailure(hr, "Failed to determine if process is running elevated.");
 
     // Parse command line.
-    hr = CoreParseCommandLine(&pEngineState->internalCommand, &pEngineState->command, &pEngineState->companionConnection, &pEngineState->embeddedConnection, &hSectionFile, &hSourceEngineFile);
+    hr = CoreParseCommandLine(&pEngineState->internalCommand, &pEngineState->command, &pEngineState->companionConnection, &pEngineState->embeddedConnection, &pEngineState->unitTestContext, &hSectionFile, &hSourceEngineFile);
     ExitOnFailure(hr, "Fatal error while parsing command line.");
 
     hr = SectionInitialize(&pEngineState->section, hSectionFile, hSourceEngineFile);
@@ -389,6 +419,28 @@ static HRESULT InitializeEngineState(
 
 LExit:
     return hr;
+}
+
+static void UnitTestUninitializeEngineState(
+    __in BURN_ENGINE_STATE* pEngineState
+)
+{
+    // fUnitTestQuit controls whether the engine restarts for the next test; it is not
+    // derived from the command line so it must survive the reinitialize.
+    BOOL fUnitTestQuit = pEngineState->unitTestContext.fUnitTestQuit;
+
+    // Preserve the BA temp directory so already-extracted payloads are not re-extracted.
+    LPWSTR sczTempDirectory = pEngineState->userExperience.sczTempDirectory;
+    pEngineState->userExperience.sczTempDirectory = NULL;
+
+    // Full cleanup — this zeros pEngineState via memset.
+    UninitializeEngineState(pEngineState);
+
+    // Restore only the fields that the command-line reparse cannot recover.
+    pEngineState->command.cbSize = sizeof(BOOTSTRAPPER_COMMAND);
+    pEngineState->unitTestContext.fUnitTestQuit = fUnitTestQuit;
+
+    pEngineState->userExperience.sczTempDirectory = sczTempDirectory;
 }
 
 static void UninitializeEngineState(
@@ -411,6 +463,8 @@ static void UninitializeEngineState(
 
     BurnPipeConnectionUninitialize(&pEngineState->embeddedConnection);
     BurnPipeConnectionUninitialize(&pEngineState->companionConnection);
+    BurnPipeConnectionUninitialize(&pEngineState->unitTestContext.unittestConnection);
+    ReleaseStr(pEngineState->unitTestContext.wzUnittestPasswordHash);
 
     ReleaseHandle(pEngineState->hMessageWindowThread);
 
@@ -777,7 +831,15 @@ LExit:
     }
 
     // Stop the BA.
-    BootstrapperApplicationStop(&pEngineState->userExperience, pfReloadApp);
+    if (pEngineState->unitTestContext.fUnitTest)
+    {
+        ReleaseHandle(pEngineState->userExperience.hBAProcess);
+        *pfReloadApp = FALSE;
+    }
+    else
+    {
+        BootstrapperApplicationStop(&pEngineState->userExperience, pfReloadApp);
+    }
 
     if (*pfReloadApp && !pEngineState->userExperience.pSecondaryExePayload)
     {

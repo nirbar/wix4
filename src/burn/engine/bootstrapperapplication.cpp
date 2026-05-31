@@ -146,14 +146,31 @@ EXTERN_C HRESULT BootstrapperApplicationStart(
         ExitOnFailure(hr, "Failed to find bootstrapper application path.");
     }
 
-    hr = BurnPipeCreateNameAndSecret(&sczBasePipeName, &sczSecret);
-    ExitOnFailure(hr, "Failed to create bootstrapper application pipename and secret");
+    if (pEngineState->unitTestContext.fUnitTest)
+    {
+        hr = StrAllocString(&sczBasePipeName, pEngineState->unitTestContext.unittestConnection.sczName, 0);
+        ExitOnFailure(hr, "Failed to copy string");
+
+        hr = StrAllocString(&sczSecret, pEngineState->unitTestContext.unittestConnection.sczSecret, 0);
+        ExitOnFailure(hr, "Failed to copy string");
+
+        pUserExperience->hBAProcess = ::OpenProcess(SYNCHRONIZE, FALSE, pEngineState->unitTestContext.unittestConnection.dwProcessId);
+        ExitOnNullWithLastError(pUserExperience->hBAProcess, hr, "Failed to open unit test process");
+    }
+    else
+    {
+        hr = BurnPipeCreateNameAndSecret(&sczBasePipeName, &sczSecret);
+        ExitOnFailure(hr, "Failed to create bootstrapper application pipename and secret");
+    }
 
     hr = CreateBootstrapperApplicationPipes(sczBasePipeName, &hBAPipe, &hBAEnginePipe);
     ExitOnFailure(hr, "Failed to create bootstrapper application pipes");
 
-    hr = CreateBootstrapperApplicationProcess(wzBootstrapperApplicationPath, pCommand->nCmdShow, sczBasePipeName, sczSecret, &pUserExperience->hBAProcess);
-    ExitOnFailure(hr, "Failed to create bootstrapper application process: %ls", wzBootstrapperApplicationPath);
+    if (!pEngineState->unitTestContext.fUnitTest)
+    {
+        hr = CreateBootstrapperApplicationProcess(wzBootstrapperApplicationPath, pCommand->nCmdShow, sczBasePipeName, sczSecret, &pUserExperience->hBAProcess);
+        ExitOnFailure(hr, "Failed to create bootstrapper application process: %ls", wzBootstrapperApplicationPath);
+    }
 
     hr = WaitForBootstrapperApplicationConnect(pUserExperience->hBAProcess, hBAPipe, hBAEnginePipe, sczSecret);
     ExitOnFailure(hr, "Failed while waiting for bootstrapper application to connect.");
@@ -166,6 +183,12 @@ EXTERN_C HRESULT BootstrapperApplicationStart(
 
     PipeRpcInitialize(&pUserExperience->hBARpcPipe, hBAPipe, TRUE);
     hBAPipe = INVALID_HANDLE_VALUE;
+
+    if (pEngineState->unitTestContext.fUnitTest)
+    {
+        hr = BACallbackOnUnittestStartRealBA(pUserExperience, wzBootstrapperApplicationPath, pCommand->nCmdShow);
+        ExitOnFailure(hr, "Failed to send real bootstrapper application command line");
+    }
 
     hr = BAEngineStartListening(pUserExperience->pEngineContext, hBAEnginePipe);
     ExitOnFailure(hr, "Failed to start listening to bootstrapper application engine pipe.");
@@ -184,7 +207,7 @@ LExit:
 
     ReleasePipeHandle(hBAEnginePipe);
     ReleasePipeHandle(hBAPipe);
-    ReleaseStr(sczSecret);
+    ReleaseNullStrSecure(sczSecret);
     ReleaseStr(sczBasePipeName);
 
     return hr;

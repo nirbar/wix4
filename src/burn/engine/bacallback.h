@@ -530,7 +530,11 @@ HRESULT BACallbackOnUnregisterComplete(
     __in BURN_USER_EXPERIENCE* pUserExperience,
     __in HRESULT hrStatus
     );
-
+HRESULT BACallbackOnUnittestStartRealBA(
+    __in BURN_USER_EXPERIENCE* pUserExperience,
+    __in_z LPCWSTR wzBootstrapperApplicationPath,
+    __in int nCmdShow
+    );
 #if defined(__cplusplus)
 }
 #endif

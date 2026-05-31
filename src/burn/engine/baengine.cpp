@@ -1299,6 +1299,43 @@ LExit:
     return hr;
 }
 
+static HRESULT BAEngineUnittestQuit(
+    __in BAENGINE_CONTEXT* pContext,
+    __in BUFF_READER* pReaderArgs,
+    __in BUFF_READER* pReaderResults,
+    __in BUFF_BUFFER* pBuffer
+    )
+{
+    HRESULT hr = S_OK;
+    BAENGINE_UNITTESTQUIT_ARGS args = { };
+    BAENGINE_UNITTESTQUIT_RESULTS results = { };
+
+    // Read args.
+    hr = BuffReaderReadNumber(pReaderArgs, &args.dwApiVersion);
+    ExitOnFailure(hr, "Failed to read API version of BAEngineUnittestQuit args.");
+
+    hr = BuffReaderReadNumber(pReaderArgs, &args.dwExitCode);
+    ExitOnFailure(hr, "Failed to read exit code of BAEngineUnittestQuit args.");
+
+    // Read results.
+    hr = BuffReaderReadNumber(pReaderResults, &results.dwApiVersion);
+    ExitOnFailure(hr, "Failed to read API version of BAEngineUnittestQuit results.");
+
+    // Mark all unit tests as complete before enqueueing the quit so the engine exits rather than restarts.
+    hr = UnittestQuit(pContext->pEngineState);
+    ExitOnFailure(hr, "Failed to signal unit test quit.");
+
+    hr = ExternalEngineQuit(pContext, args.dwExitCode);
+    ExitOnFailure(hr, "Failed to enqueue engine quit for unit test completion.");
+
+    // Pack result.
+    hr = BuffWriteNumberToBuffer(pBuffer, sizeof(results));
+    ExitOnFailure(hr, "Failed to write size of BAEngineUnittestQuit struct.");
+
+LExit:
+    return hr;
+}
+
 static HRESULT BAEngineLaunchApprovedExe(
     __in BAENGINE_CONTEXT* pContext,
     __in BUFF_READER* pReaderArgs,
@@ -1445,7 +1482,7 @@ HRESULT WINAPI EngineForApplicationProc(
     hr = ParseArgsAndResults(pbData, cbData, &readerArgs, &readerResults);
     if (SUCCEEDED(hr))
     {
-        switch (message)
+        switch ((DWORD)message)
         {
         case BOOTSTRAPPER_ENGINE_MESSAGE_GETPACKAGECOUNT:
             hr = BAEngineGetPackageCount(pContext, &readerArgs, &readerResults, &bufferResponse);
@@ -1527,6 +1564,9 @@ HRESULT WINAPI EngineForApplicationProc(
             break;
         case BOOTSTRAPPER_ENGINE_MESSAGE_GETRELATEDBUNDLEVARIABLE:
             hr = BAEngineGetRelatedBundleVariable(pContext, &readerArgs, &readerResults, &bufferResponse);
+            break;
+        case UNITTEST_ENGINE_MESSAGE_QUIT:
+            hr = BAEngineUnittestQuit(pContext, &readerArgs, &readerResults, &bufferResponse);
             break;
         default:
             hr = E_NOTIMPL;
