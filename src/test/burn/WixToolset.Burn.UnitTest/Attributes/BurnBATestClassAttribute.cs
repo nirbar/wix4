@@ -17,5 +17,21 @@ namespace WixToolset.Burn.UnitTest
         /// Defaults to 600 (10 minutes) to allow for initial UX extraction.
         /// </summary>
         public int TimeoutSeconds { get; init; } = 600;
+
+        /// <summary>
+        /// Gets or sets the global execution order for this test class.
+        /// Tests with a lower <see cref="Order"/> value run first.
+        /// Tests with the same order value run in discovery order.
+        /// Defaults to 0.
+        /// </summary>
+        public int Order { get; init; } = 0;
+
+        /// <summary>
+        /// Gets or sets whether subsequent tests should be stopped when this test fails.
+        /// When <see langword="true"/>, any test failure in this class causes all remaining
+        /// tests in the same run to be reported as <c>Skipped</c>.
+        /// Defaults to <see langword="false"/>.
+        /// </summary>
+        public bool StopTestsOnError { get; init; } = false;
     }
 }

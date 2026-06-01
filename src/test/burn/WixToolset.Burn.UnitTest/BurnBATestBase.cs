@@ -18,7 +18,7 @@ namespace WixToolset.Burn.UnitTest
     /// A class that overrides nothing is a valid test: it simply verifies that the bundle completes
     /// without any unhandled exception.
     /// </summary>
-    public class BurnBATestBase : IBootstrapperApplication
+    public class BurnBATestBase : IBootstrapperApplication, IDisposable
     {
         /// <summary>
         /// Gets the per-iteration inline data provided via <see cref="BurnBAInlineDataAttribute"/>.
@@ -32,9 +32,30 @@ namespace WixToolset.Burn.UnitTest
         public int TestIteration { get; internal set; }
 
         /// <summary>
+        /// Gets the parsed command passed to <see cref="OnCreate"/>.
+        /// Available inside any BA callback after <see cref="OnCreate"/> has been called.
+        /// </summary>
+        public TestBaCommand Command { get; internal set; }
+
+        /// <summary>
+        /// Stores the first unhandled exception thrown by a test override so the runner can
+        /// surface it as a test failure.
+        /// </summary>
+        internal Exception TestFailureException { get; set; }
+
+        /// <summary>
         /// Per-dispatch context.  Set by the runner/dispatcher before each virtual method call.
         /// </summary>
         internal BurnBAMessageContext _messageContext;
+
+        /// <summary>
+        /// Called by the test framework when an exception is thrown by any BA callback override,
+        /// and again at the end of each test iteration.
+        /// Override to release resources or reset state that should not survive a test failure.
+        /// Implementations should be safe to call more than once.
+        /// The default implementation is a no-op.
+        /// </summary>
+        public virtual void Dispose() { }
 
         // -----------------------------------------------------------------------
         // Low-level COM fallbacks – not intended for test overrides.

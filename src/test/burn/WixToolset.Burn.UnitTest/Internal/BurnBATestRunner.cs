@@ -17,18 +17,20 @@ namespace WixToolset.Burn.UnitTest.Internal
     /// </summary>
     internal sealed class TestRunEntry
     {
-        internal TestRunEntry(TestCase testCase, Type testClassType, object[] testData, int iterationIndex)
+        internal TestRunEntry(TestCase testCase, Type testClassType, object[] testData, int iterationIndex, bool stopTestsOnError = false)
         {
             this.TestCase = testCase;
             this.TestClassType = testClassType;
             this.TestData = testData;
             this.IterationIndex = iterationIndex;
+            this.StopTestsOnError = stopTestsOnError;
         }
 
         internal TestCase TestCase { get; }
         internal Type TestClassType { get; }
         internal object[] TestData { get; }
         internal int IterationIndex { get; }
+        internal bool StopTestsOnError { get; }
     }
 
     /// <summary>
@@ -60,6 +62,7 @@ namespace WixToolset.Burn.UnitTest.Internal
             var pipeName = "BurnBATest-" + Guid.NewGuid().ToString("N");
 
             var bundleProcess = StartBundle(bundlePath, password, pipeName);
+            bool stopRemaining = false;
             try
             {
                 for (int i = 0; i < entries.Count; i++)
@@ -72,6 +75,15 @@ namespace WixToolset.Burn.UnitTest.Internal
                         StartTime = DateTimeOffset.UtcNow,
                     };
 
+                    if (stopRemaining)
+                    {
+                        result.Outcome = TestOutcome.Skipped;
+                        result.ErrorMessage = "Skipped because a previous test with StopTestsOnError=true failed.";
+                        result.EndTime = DateTimeOffset.UtcNow;
+                        frameworkHandle.RecordResult(result);
+                        continue;
+                    }
+
                     try
                     {
                         await RunOneIterationAsync(entry, pipeName, i == 0, isLast, bundleProcess, frameworkHandle, ct)
@@ -79,8 +91,22 @@ namespace WixToolset.Burn.UnitTest.Internal
 
                         result.Outcome = TestOutcome.Passed;
                     }
+                    catch (OperationCanceledException ex) when (!ct.IsCancellationRequested)
+                    {
+                        // OCE originated from test-override code, not from the framework's
+                        // cancellation token — treat it as a test failure.
+                        result.Outcome = TestOutcome.Failed;
+                        result.ErrorMessage = ex.Message;
+                        result.ErrorStackTrace = ex.StackTrace;
+
+                        if (entry.StopTestsOnError)
+                        {
+                            stopRemaining = true;
+                        }
+                    }
                     catch (OperationCanceledException)
                     {
+                        // OCE from the framework's own ct — the run was cancelled externally.
                         result.Outcome = TestOutcome.None;
                         result.ErrorMessage = "Test run was cancelled.";
                     }
@@ -89,6 +115,11 @@ namespace WixToolset.Burn.UnitTest.Internal
                         result.Outcome = TestOutcome.Failed;
                         result.ErrorMessage = ex.Message;
                         result.ErrorStackTrace = ex.StackTrace;
+
+                        if (entry.StopTestsOnError)
+                        {
+                            stopRemaining = true;
+                        }
                     }
                     finally
                     {
@@ -198,6 +229,18 @@ namespace WixToolset.Burn.UnitTest.Internal
 
             // Stop the real BA server.
             realBAServer?.Dispose();
+
+            // Dispose the test instance (normal end-of-iteration cleanup).
+            instance.Dispose();
+
+            // If a test override threw an assertion or other exception, rethrow it now so the
+            // runner records this iteration as failed.
+            if (instance.TestFailureException != null)
+            {
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo
+                    .Capture(instance.TestFailureException)
+                    .Throw();
+            }
         }
 
         private static async Task<(RealBAPipeServer server, Task relayTask)> HandleStartRealBAAsync(

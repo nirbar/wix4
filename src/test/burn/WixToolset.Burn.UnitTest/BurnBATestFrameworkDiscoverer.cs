@@ -41,6 +41,26 @@ namespace WixToolset.Burn.UnitTest
                 typeof(string),
                 typeof(BurnBATestFrameworkDiscoverer));
 
+        /// <summary>
+        /// TestProperty that stores the <see cref="BurnBATestClassAttribute.Order"/> value.
+        /// </summary>
+        public static readonly TestProperty OrderProperty =
+            TestProperty.Register(
+                "BurnBA.Order",
+                "Burn BA Test Order",
+                typeof(int),
+                typeof(BurnBATestFrameworkDiscoverer));
+
+        /// <summary>
+        /// TestProperty that stores the <see cref="BurnBATestClassAttribute.StopTestsOnError"/> value.
+        /// </summary>
+        public static readonly TestProperty StopTestsOnErrorProperty =
+            TestProperty.Register(
+                "BurnBA.StopTestsOnError",
+                "Burn BA Stop Tests On Error",
+                typeof(bool),
+                typeof(BurnBATestFrameworkDiscoverer));
+
         /// <inheritdoc/>
         public void DiscoverTests(
             IEnumerable<string> sources,
@@ -98,7 +118,7 @@ namespace WixToolset.Burn.UnitTest
                 if (iterationList.Count == 0)
                 {
                     // Single iteration with no data.
-                    var testCase = MakeTestCase(assemblyPath, type, iterationIndex: 0, displaySuffix: null);
+                    var testCase = MakeTestCase(assemblyPath, type, classAttr, iterationIndex: 0, displaySuffix: null);
                     discoverySink.SendTestCase(testCase);
                 }
                 else
@@ -106,14 +126,14 @@ namespace WixToolset.Burn.UnitTest
                     for (int i = 0; i < iterationList.Count; i++)
                     {
                         var suffix = $"[{i}]";
-                        var testCase = MakeTestCase(assemblyPath, type, iterationIndex: i, displaySuffix: suffix);
+                        var testCase = MakeTestCase(assemblyPath, type, classAttr, iterationIndex: i, displaySuffix: suffix);
                         discoverySink.SendTestCase(testCase);
                     }
                 }
             }
         }
 
-        private static TestCase MakeTestCase(string source, Type type, int iterationIndex, string displaySuffix)
+        private static TestCase MakeTestCase(string source, Type type, BurnBATestClassAttribute classAttr, int iterationIndex, string displaySuffix)
         {
             var fullyQualifiedName = type.FullName + displaySuffix;
             var testCase = new TestCase(fullyQualifiedName, BurnBATestFrameworkExecutor.ExecutorUri, source)
@@ -122,6 +142,8 @@ namespace WixToolset.Burn.UnitTest
             };
             testCase.SetPropertyValue(IterationIndexProperty, iterationIndex);
             testCase.SetPropertyValue(TestClassNameProperty, type.FullName!);
+            testCase.SetPropertyValue(OrderProperty, classAttr.Order);
+            testCase.SetPropertyValue(StopTestsOnErrorProperty, classAttr.StopTestsOnError);
             return testCase;
         }
     }

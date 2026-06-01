@@ -119,6 +119,8 @@ namespace WixToolset.Burn.UnitTest
 
                 var className = testCase.GetPropertyValue<string>(BurnBATestFrameworkDiscoverer.TestClassNameProperty, null);
                 var iterationIndex = testCase.GetPropertyValue<int>(BurnBATestFrameworkDiscoverer.IterationIndexProperty, 0);
+                var order = testCase.GetPropertyValue<int>(BurnBATestFrameworkDiscoverer.OrderProperty, 0);
+                var stopTestsOnError = testCase.GetPropertyValue<bool>(BurnBATestFrameworkDiscoverer.StopTestsOnErrorProperty, false);
 
                 if (string.IsNullOrEmpty(className))
                 {
@@ -149,7 +151,7 @@ namespace WixToolset.Burn.UnitTest
                     ? inlineDataAttrs[iterationIndex].Data
                     : Array.Empty<object>();
 
-                entries.Add(new TestRunEntry(testCase, type, testData, iterationIndex));
+                entries.Add(new TestRunEntry(testCase, type, testData, iterationIndex, stopTestsOnError));
             }
 
             if (entries.Count == 0)
@@ -157,12 +159,20 @@ namespace WixToolset.Burn.UnitTest
                 return;
             }
 
+            // Sort by the Order property from the attribute (stable sort preserves discovery order for ties).
+            var orderedEntries = entries
+                .Select((e, idx) => (entry: e, idx, order: e.TestCase.GetPropertyValue<int>(BurnBATestFrameworkDiscoverer.OrderProperty, 0)))
+                .OrderBy(t => t.order)
+                .ThenBy(t => t.idx)
+                .Select(t => t.entry)
+                .ToList();
+
             using var cts = new CancellationTokenSource();
             this._cts = cts;
 
             try
             {
-                BurnBATestRunner.RunAllAsync(entries, settings.BundlePath, settings.Password, frameworkHandle, cts.Token)
+                BurnBATestRunner.RunAllAsync(orderedEntries, settings.BundlePath, settings.Password, frameworkHandle, cts.Token)
                     .GetAwaiter()
                     .GetResult();
             }
@@ -173,7 +183,7 @@ namespace WixToolset.Burn.UnitTest
             catch (Exception ex)
             {
                 // Unexpected runner failure: report against all remaining not-yet-completed tests.
-                foreach (var entry in entries)
+                foreach (var entry in orderedEntries)
                 {
                     var result = new TestResult(entry.TestCase)
                     {
