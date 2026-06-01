@@ -11,8 +11,6 @@
     <PackageVersion Include="PanelSwWix4.Dtf.WindowsInstaller" Version="{packageversion}" />
     <PackageVersion Include="PanelSwWix4.Dtf.WindowsInstaller.Package" Version="{packageversion}" />
 
-    <PackageVersion Include="PanelSwWix4.TestSupport" Version="{packageversion}" />
-    <PackageVersion Include="PanelSwWix4.MSTestSupport" Version="{packageversion}" />
     <PackageVersion Include="WixInternal.TestSupport.Native" Version="{packageversion}" />
     <PackageVersion Include="WixInternal.BaseBuildTasks.Sources" Version="{packageversion}" />
     <PackageVersion Include="WixInternal.TestTools.Firewall" Version="{packageversion}" />
@@ -45,6 +43,11 @@
     <PackageVersion Include="PanelSwWix4.Util.wixext" Version="{packageversion}" />
     <PackageVersion Include="PanelSwWix4.Firewall.wixext" Version="{packageversion}" />
     <PackageVersion Include="PanelSwWix4.Msmq.wixext" Version="{packageversion}" />
+
+    <PackageVersion Include="PanelSwWix4.TestSupport" Version="{packageversion}" />
+    <PackageVersion Include="PanelSwWix4.MSTestSupport" Version="{packageversion}" />
+    <PackageVersion Include="PanelSwWix4.TestTools" Version="{packageversion}" />
+    <PackageVersion Include="PanelSwWix4.Burn.UnitTest" Version="{packageversion}" />
   </ItemGroup>
 
   <ItemGroup>
@@ -90,6 +93,7 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
 
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="18.6.0" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
     <PackageVersion Include="xunit.v3.assert" Version="3.2.2" />
     <PackageVersion Include="xunit.v3.extensibility.core" Version="3.2.2" />

@@ -8,6 +8,7 @@
   <Project Path="TestBA/TestBA.csproj" />
   <Project Path="TestExe/TestExe.csproj" />
   <Project Path="WixToolset.TestTools/WixToolset.TestTools.csproj" />
+  <Project Path="WixToolset.Burn.UnitTest/WixToolset.Burn.UnitTest.csproj" />
   <Project Path="WixTestToolsFirewall/WixInternal.TestTools.Firewall.csproj" />
   <Project Path="WixToolset.WixBA/WixToolset.WixBA.csproj" />
   <Project Path="WixToolsetTest.BurnE2E/WixToolsetTest.BurnE2E.csproj" />
