@@ -145,7 +145,7 @@ namespace WixToolset.Burn.UnitTest.Internal
         {
             if (msg == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYBEGIN)
             {
-                instance._executePackageBeginSeen = true;
+                instance._applyBeginSeen = true;
             }
             else if (msg == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYCOMPLETE)
             {

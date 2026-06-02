@@ -18,6 +18,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\..\..\.agent\skills\burn-ba-unit-test-authoring\SKILL.md" Pack="true" PackagePath="tools/skills/burn-ba-unit-test-authoring/SKILL.md" />
+    <None Include="build\WixToolset.Burn.UnitTest.targets" Pack="true"/>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
     <PackageReference Include="PanelSwWix4.BootstrapperApplicationApi" />
   </ItemGroup>

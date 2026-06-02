@@ -21,7 +21,8 @@ namespace WixToolsetTest.BurnUnitTest
             uninstallCmd.Action = LaunchAction.Uninstall;
             uninstallCmd.Display = Display.None;
 
-            return base.OnCreate(pEngine, ref uninstallCmd.ToCommand());
+            var cmd = uninstallCmd.ToCommand();
+            return base.OnCreate(pEngine, ref cmd);
         }
 
         /// <inheritdoc/>

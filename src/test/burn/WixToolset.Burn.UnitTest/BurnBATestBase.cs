@@ -41,11 +41,12 @@ namespace WixToolset.Burn.UnitTest
         /// When set to <see langword="true"/> the dispatcher skips all further test-BA and
         /// real-BA callbacks and drives burn to a clean shutdown without test involvement.
         ///
-        /// Before the execute phase (before any <c>OnApplyBegin</c>) or after
-        /// <c>OnApplyComplete</c>: burn is allowed to proceed normally and the engine is told
-        /// not to restart (<c>EngineMessageQuit</c> is sent).
+        /// Before the apply phase (before <c>OnApplyBegin</c>) or after <c>OnApplyComplete</c>:
+        /// burn is allowed to proceed normally (no cancel flags set), so detect and plan
+        /// complete without test involvement.
         ///
-        /// During the execute phase: every cancellable message gets <c>fCancel = true</c> so
+        /// During the apply phase (from <c>OnApplyBegin</c> up to but not including
+        /// <c>OnApplyComplete</c>): every cancellable message gets <c>fCancel = true</c> so
         /// burn stops executing packages and eventually sends <c>OnApplyComplete</c>.
         /// </summary>
         public bool EndTestAutoPilot { get; set; }
@@ -76,17 +77,17 @@ namespace WixToolset.Burn.UnitTest
         /// <see langword="true"/> when the dispatcher should set <c>fCancel = true</c> on any
         /// cancellable message.  This combines the failure-cancel and the autopilot cancel so
         /// both checks in the dispatcher can be expressed as a single property read.
-        /// Autopilot cancels all messages up to (but not including) <c>OnApplyComplete</c>;
-        /// once burn has passed the apply gate the cleanup messages proceed normally.
+        /// Autopilot cancels only messages during the apply phase (after <c>OnApplyBegin</c>
+        /// and before <c>OnApplyComplete</c>); messages outside that window are not cancelled.
         /// </summary>
         internal bool TestShouldCancel
             => this.TestFailureException != null
-            || (this.EndTestAutoPilot && !this._applyCompleteSeen);
+            || (this.EndTestAutoPilot && this._applyBeginSeen && !this._applyCompleteSeen);
 
         // ---- Phase-tracking fields (written by the dispatcher) ----
 
-        /// <summary>Set to <see langword="true"/> the moment <c>OnExecutePackageBegin</c> is received.</summary>
-        internal bool _executePackageBeginSeen;
+        /// <summary>Set to <see langword="true"/> the moment <c>OnApplyBegin</c> is received.</summary>
+        internal bool _applyBeginSeen;
 
         /// <summary>Set to <see langword="true"/> the moment <c>OnApplyComplete</c> is received.</summary>
         internal bool _applyCompleteSeen;
@@ -126,7 +127,7 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         public virtual int OnCreate(IBootstrapperEngine engine, ref Command command)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardOnCreateToRealBA(new TestBaCommand(command));
             return _messageContext.ResponseHr;
         }
 

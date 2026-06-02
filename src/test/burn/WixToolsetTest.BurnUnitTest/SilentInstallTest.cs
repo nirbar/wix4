@@ -24,7 +24,8 @@ namespace WixToolsetTest.BurnUnitTest
             installCmd.Action = LaunchAction.Install;
             installCmd.Display = Display.None;
 
-            return base.OnCreate(pEngine, ref installCmd.ToCommand());
+            var cmd = installCmd.ToCommand();
+            return base.OnCreate(pEngine, ref cmd);
         }
 
         /// <inheritdoc/>

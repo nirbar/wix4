@@ -18,12 +18,12 @@ namespace WixToolsetTest.BurnUnitTest
         /// <inheritdoc/>
         public override int OnCreate(IBootstrapperEngine pEngine, ref Command command)
         {
-            this._onCreateCalled = true;
             var installCmd = new TestBaCommand(command);
             installCmd.Action = LaunchAction.Install;
             installCmd.Display = Display.None;
 
-            return base.OnCreate(pEngine, ref installCmd.ToCommand());
+            var cmd = installCmd.ToCommand();
+            return base.OnCreate(pEngine, ref cmd);
         }
 
         /// <inheritdoc/>

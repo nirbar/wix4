@@ -45,18 +45,18 @@ namespace WixToolset.Burn.UnitTest
 
         /// <summary>C'tor.</summary>
         public TestBaCommand(Command command)
-            : this(
-                  command.action,
-                  command.display,
-                  Marshal.PtrToStringUni(command.wzCommandLine),
-                  command.nCmdShow,
-                  command.resume,
-                  command.relation,
-                  command.passthrough,
-                  Marshal.PtrToStringUni(command.wzLayoutDirectory),
-                  Marshal.PtrToStringUni(command.wzBootstrapperWorkingFolder),
-                  Marshal.PtrToStringUni(command.wzBootstrapperApplicationDataPath))
         {
+            var cmd = command.GetBootstrapperCommand();
+            this.Action = cmd.Action;
+            this.Display = cmd.Display;
+            this.CommandLine = cmd.CommandLine;
+            this.CmdShow = cmd.CmdShow;
+            this.Resume = cmd.Resume;
+            this.Relation = cmd.Relation;
+            this.Passthrough = cmd.Passthrough;
+            this.LayoutDirectory = cmd.LayoutDirectory;
+            this.BootstrapperWorkingFolder = cmd.BootstrapperWorkingFolder;
+            this.BootstrapperApplicationDataPath = cmd.BootstrapperApplicationDataPath;
         }
 
         /// <summary>Gets or sets the requested bundle action.</summary>
@@ -88,6 +88,18 @@ namespace WixToolset.Burn.UnitTest
 
         /// <summary>Gets or sets the path to the bootstrapper application data file.</summary>
         public string BootstrapperApplicationDataPath { get; set; }
+
+        /// <summary>
+        /// Builds a <see cref="Command"/> struct from the current property values.
+        /// Allocates unmanaged string memory that is reclaimed when the process exits — acceptable
+        /// for short-lived burn BA unit-test processes.  The returned struct is only valid for the
+        /// duration of the <see cref="IBootstrapperApplication.OnCreate"/> override; pass it
+        /// immediately to <c>base.OnCreate</c> and do not cache it.
+        /// </summary>
+        public Command ToCommand()
+        {
+            return this.ToCommand(new List<IntPtr>());
+        }
 
         /// <summary>
         /// Builds a <see cref="Command"/> struct with the values from this instance.
