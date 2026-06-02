@@ -43,6 +43,22 @@ namespace WixToolset.Burn.UnitTest
             this.BootstrapperApplicationDataPath = bootstrapperApplicationDataPath;
         }
 
+        /// <summary>C'tor.</summary>
+        public TestBaCommand(Command command)
+            : this(
+                  command.action,
+                  command.display,
+                  Marshal.PtrToStringUni(command.wzCommandLine),
+                  command.nCmdShow,
+                  command.resume,
+                  command.relation,
+                  command.passthrough,
+                  Marshal.PtrToStringUni(command.wzLayoutDirectory),
+                  Marshal.PtrToStringUni(command.wzBootstrapperWorkingFolder),
+                  Marshal.PtrToStringUni(command.wzBootstrapperApplicationDataPath))
+        {
+        }
+
         /// <summary>Gets or sets the requested bundle action.</summary>
         public LaunchAction Action { get; set; }
 

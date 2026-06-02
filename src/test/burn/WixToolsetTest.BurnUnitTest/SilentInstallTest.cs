@@ -20,20 +20,11 @@ namespace WixToolsetTest.BurnUnitTest
         public override int OnCreate(IBootstrapperEngine pEngine, ref Command command)
         {
             this._onCreateCalled = true;
+            var installCmd = new TestBaCommand(command);
+            installCmd.Action = LaunchAction.Install;
+            installCmd.Display = Display.None;
 
-            // Verify command-line values via the TestBaCommand wrapper.
-            if (this.Command!.Action != LaunchAction.Install)
-            {
-                this.SetException(new BurnBAAssertException(
-                    $"Expected LaunchAction.Install for a silent install test, got {this.Command.Action}."));
-            }
-            else if (this.Command.Display != Display.None)
-            {
-                this.SetException(new BurnBAAssertException(
-                    $"Expected Display.None for a silent install, got {this.Command.Display}."));
-            }
-
-            return base.OnCreate(pEngine, ref command);
+            return base.OnCreate(pEngine, ref installCmd.ToCommand());
         }
 
         /// <inheritdoc/>

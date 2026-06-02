@@ -16,6 +16,17 @@ namespace WixToolsetTest.BurnUnitTest
         private int _applyCompleteHr;
 
         /// <inheritdoc/>
+        public override int OnCreate(IBootstrapperEngine pEngine, ref Command command)
+        {
+            this._onCreateCalled = true;
+            var installCmd = new TestBaCommand(command);
+            installCmd.Action = LaunchAction.Install;
+            installCmd.Display = Display.None;
+
+            return base.OnCreate(pEngine, ref installCmd.ToCommand());
+        }
+
+        /// <inheritdoc/>
         public override int OnApplyComplete(
             int hrStatus,
             ApplyRestart restart,

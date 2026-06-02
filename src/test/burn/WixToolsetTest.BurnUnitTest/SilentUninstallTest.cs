@@ -17,13 +17,11 @@ namespace WixToolsetTest.BurnUnitTest
         /// <inheritdoc/>
         public override int OnCreate(IBootstrapperEngine pEngine, ref Command command)
         {
-            if (this.Command!.Action != LaunchAction.Uninstall)
-            {
-                this.SetException(new BurnBAAssertException(
-                    $"Expected LaunchAction.Uninstall for an uninstall test, got {this.Command.Action}."));
-            }
+            var uninstallCmd = new TestBaCommand(command);
+            uninstallCmd.Action = LaunchAction.Uninstall;
+            uninstallCmd.Display = Display.None;
 
-            return base.OnCreate(pEngine, ref command);
+            return base.OnCreate(pEngine, ref uninstallCmd.ToCommand());
         }
 
         /// <inheritdoc/>
