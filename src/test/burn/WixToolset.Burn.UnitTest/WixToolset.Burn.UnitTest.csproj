@@ -15,6 +15,7 @@
     <IncludeSomeVerInfo>true</IncludeSomeVerInfo>
     <IsWixTestSupportProject>true</IsWixTestSupportProject>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AssemblyName>WixToolset.Burn.UnitTest.TestAdapter</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
