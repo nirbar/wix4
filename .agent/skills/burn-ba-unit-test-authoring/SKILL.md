@@ -14,12 +14,39 @@ The host dispatches every BA message to a test class, which can inspect
 arguments, call assertions, or override the response before forwarding to the
 real BA (e.g. `wixstdba`).
 
+`WixToolset.Burn.UnitTest` implements both `ITestDiscoverer` and `ITestExecutor`
+from the Microsoft Test Platform — it **is** the test adapter.  No xUnit or
+other test framework is needed.  `dotnet test` discovers and runs
+`[BurnBATestClass]`-decorated classes directly.
+
 Key assemblies:
 
 | Assembly | Role |
 |---|---|
-| `WixToolset.Burn.UnitTest` | Framework (base class, dispatcher, runner) |
-| `WixToolsetTest.BurnUnitTest` | Example test classes |
+| `WixToolset.Burn.UnitTest` | Framework, MTP adapter, base class, dispatcher, runner |
+| `WixToolsetTest.BurnUnitTest` | Example test project |
+
+---
+
+## Setting up a test project
+
+1. Add a reference to `PanelSwWix4.Burn.UnitTest` (NuGet) or
+   `WixToolset.Burn.UnitTest` (project reference).
+2. Add a `.runsettings` file pointing to your bundle:  
+   ```xml
+   <RunSettings>
+     <RunConfiguration>
+       <TestAdaptersPaths>.</TestAdaptersPaths>
+     </RunConfiguration>
+     <BurnBATestFramework>
+       <BundlePath>$(OutputPath)MyBundle.exe</BundlePath>
+       <Password></Password>
+     </BurnBATestFramework>
+   </RunSettings>
+   ```
+3. Select the runsettings in Visual Studio (`Test › Configure Run Settings`) or
+   pass `--settings BurnBaTests.runsettings` to `dotnet test`.
+4. Write `[BurnBATestClass]`-decorated classes — no `[Fact]`, no fixture class.
 
 ---
 
@@ -307,11 +334,11 @@ public sealed class InstallFirstTest : BurnBATestBase { ... }
 ## Installing this skill into a project
 
 If your project references `PanelSwWix4.Burn.UnitTest` you can copy this skill
-to your repository's `.claude/skills/` directory by running:
+to your repository's `.agent/skills/` directory by running:
 
 ```
 dotnet build /p:CopyBurnTestSkill=true
 ```
 
-The skill is then available to Claude Code at
-`.claude/skills/burn-ba-unit-test-authoring/SKILL.md`.
+The skill is then available to the agent at
+`.agent/skills/burn-ba-unit-test-authoring/SKILL.md`.

@@ -2,9 +2,12 @@
 <!--
   Run settings for WixToolsetTest.BurnUnitTest.
   Customize BundlePath and Password to point at the bundle under test.
-  Tests are skipped unless RuntimeTestsEnabled=true (elevated process only).
 -->
 <RunSettings>
+  <RunConfiguration>
+    <!-- Tell vstest to look for the burn BA test adapter in the test output directory. -->
+    <TestAdaptersPaths>.</TestAdaptersPaths>
+  </RunConfiguration>
   <BurnBATestFramework>
     <!-- Path to the bundle executable to test. Override at CI or locally. -->
     <BundlePath>$(OutputPath)TestBundle.exe</BundlePath>

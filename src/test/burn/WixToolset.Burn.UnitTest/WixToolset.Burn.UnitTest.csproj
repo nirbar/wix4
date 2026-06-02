@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <None Include="..\..\..\..\.agent\skills\burn-ba-unit-test-authoring\SKILL.md" Pack="true" PackagePath="tools/skills/burn-ba-unit-test-authoring/SKILL.md" />
-    <None Include="build\WixToolset.Burn.UnitTest.targets" Pack="true"/>
+    <None Include="build\WixToolset.Burn.UnitTest.targets" Pack="true" PackagePath="build/" />
   </ItemGroup>
 
   <ItemGroup>

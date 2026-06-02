@@ -3,8 +3,8 @@
 
 <Project>
   <!--
-    Copies the burn BA unit-test authoring skill into the consuming project's .claude/skills/
-    directory so Claude Code can discover it automatically.
+    Copies the burn BA unit-test authoring skill into the consuming project's .agent/skills/
+    directory so the agent can discover it automatically.
 
     Usage (run once after adding the package reference):
 
@@ -12,7 +12,7 @@
 
     The skill is written to:
 
-        <SolutionDir>/.claude/skills/burn-ba-unit-test-authoring/SKILL.md
+        <SolutionDir>/.agent/skills/burn-ba-unit-test-authoring/SKILL.md
 
     (Falls back to the MSBuild project directory when SolutionDir is not set.)
   -->
@@ -27,7 +27,7 @@
       <_PSwBurnSkillRoot Condition="'$(SolutionDir)' != '' And '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)</_PSwBurnSkillRoot>
       <_PSwBurnSkillRoot Condition="'$(_PSwBurnSkillRoot)' == ''">$(MSBuildProjectDirectory)\</_PSwBurnSkillRoot>
 
-      <_PSwBurnSkillDir>$(_PSwBurnSkillRoot).claude\skills\burn-ba-unit-test-authoring\</_PSwBurnSkillDir>
+      <_PSwBurnSkillDir>$(_PSwBurnSkillRoot).agent\skills\burn-ba-unit-test-authoring\</_PSwBurnSkillDir>
       <_PSwBurnSkillDest>$(_PSwBurnSkillDir)SKILL.md</_PSwBurnSkillDest>
     </PropertyGroup>
 

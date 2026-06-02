@@ -16,11 +16,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WixToolset.Burn.UnitTest\WixToolset.Burn.UnitTest.csproj" />
-    <ProjectReference Include="..\WixToolset.TestTools\WixToolset.TestTools.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="PanelSwWix4.TestSupport" />
     <PackageReference Include="PanelSwWix4.BootstrapperApplicationApi" />
   </ItemGroup>
 
