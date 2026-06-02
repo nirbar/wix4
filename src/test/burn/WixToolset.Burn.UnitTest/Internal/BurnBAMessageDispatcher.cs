@@ -121,6 +121,9 @@ namespace WixToolset.Burn.UnitTest.Internal
             byte[] payload,
             RealBAPipeServer realBA)
         {
+            // Update phase-tracking flags before dispatch so autopilot checks see correct state.
+            TrackPhase(instance, (BurnApplicationMessage)msgType);
+
             var ctx = new BurnBAMessageContext(msgType, payload, realBA);
             instance._messageContext = ctx;
 
@@ -131,6 +134,22 @@ namespace WixToolset.Burn.UnitTest.Internal
             finally
             {
                 instance._messageContext = null;
+            }
+        }
+
+        /// <summary>
+        /// Updates phase-tracking state on <paramref name="instance"/> before the message is
+        /// dispatched, so autopilot and cancel-guard checks see the correct phase.
+        /// </summary>
+        private static void TrackPhase(BurnBATestBase instance, BurnApplicationMessage msg)
+        {
+            if (msg == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYBEGIN)
+            {
+                instance._executePackageBeginSeen = true;
+            }
+            else if (msg == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYCOMPLETE)
+            {
+                instance._applyCompleteSeen = true;
             }
         }
 
@@ -149,9 +168,9 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// </summary>
         private static int CallDispatch(BurnBATestBase instance, Func<int> action)
         {
-            if (instance.TestFailureException != null)
+            if (instance.TestFailureException != null || instance.EndTestAutoPilot)
             {
-                // Already failed â€” skip the override and let the caller return cancel defaults.
+                // Already failed or autopilot active- skip the override and let the caller return cancel defaults.
                 return 0;
             }
 
@@ -276,7 +295,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectBegin(fCached, registrationType, cPackages, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -311,7 +330,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectForwardCompatibleBundle(bundleCode, relationType, bundleTag, fPerMachine, version, fMissingFromCache, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -328,7 +347,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fSkip = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectUpdateBegin(updateLocation, ref fCancel, ref fSkip));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -354,7 +373,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fStopProcessingUpdates = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectUpdate(updateLocation, dw64Size, hash, hashAlgorithm, version, title, summary, contentType, content, ref fCancel, ref fStopProcessingUpdates));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -391,7 +410,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectRelatedBundle(bundleCode, relationType, bundleTag, fPerMachine, version, fMissingFromCache, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -407,7 +426,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectPackageBegin(packageId, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -441,7 +460,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectPatchTarget(packageId, productCode, patchState, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -462,7 +481,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectRelatedMsiPackage(packageId, upgradeCode, productCode, fPerMachine, version, operation, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -480,7 +499,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectMsiFeature(packageId, featureId, state, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -498,7 +517,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectCompatibleMsiPackage(packageId, compatiblePackageId, compatiblePackageVersion, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -518,7 +537,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnDetectRelatedBundlePackage(packageId, bundleCode, relationType, fPerMachine, version, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -538,7 +557,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanBegin(cPackages, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -569,7 +588,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanRelatedBundle(bundleCode, recommendedState, ref pRequestedState, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -594,7 +613,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanPackageBegin(packageId, state, fCached, installCondition, repairCondition, recommendedState, recommendedCacheType, ref pRequestedState, ref pRequestedCacheType, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -630,7 +649,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanPatchTarget(packageId, productCode, recommendedState, ref pRequestedState, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -650,7 +669,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanMsiFeature(packageId, featureId, recommendedState, ref pRequestedState, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -674,7 +693,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     var fileVersioning = recommendedFileVersioning;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanMsiPackage(packageId, fExecute, action, recommendedFileVersioning, ref fCancel, ref actionMsiProperty, ref uiLevel, ref fDisableExternalUiHandler, ref fileVersioning));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -698,7 +717,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanCompatibleMsiPackageBegin(packageId, compatiblePackageId, compatiblePackageVersion, fRecommendedRemove, ref fRequestRemove, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -769,7 +788,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fIgnoreBundle = fRecommendedIgnoreBundle;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanForwardCompatibleBundle(bundleCode, relationType, bundleTag, fPerMachine, version, fRecommendedIgnoreBundle, ref fCancel, ref fIgnoreBundle));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -788,7 +807,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanRestoreRelatedBundle(bundleCode, recommendedState, ref pRequestedState, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -807,7 +826,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanRelatedBundleType(bundleCode, recommendedType, ref pRequestedType, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -825,7 +844,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanMsiTransaction(transactionId, ref fTransaction, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -844,7 +863,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnPlanMsiTransactionComplete(transactionId, dwPackagesInTransaction, fPlanned, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -864,7 +883,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnApplyBegin(dwPhaseCount, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -877,7 +896,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnElevateBegin(ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -907,7 +926,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnProgress(dwProgressPercentage, dwOverallPercentage, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -947,7 +966,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     var pRegistrationType = recommendedRegistrationType;
 
                     int hr = CallDispatch(instance, () => instance.OnRegisterBegin(recommendedRegistrationType, ref fCancel, ref pRegistrationType));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -978,7 +997,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCacheBegin(ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -997,7 +1016,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCachePackageBegin(packageId, cCachePayloads, dw64PackageCacheSize, fVital, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1019,7 +1038,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCacheAcquireBegin(packageOrContainerId, payloadId, source, downloadUrl, payloadContainerId, recommendation, ref action, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1040,7 +1059,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCacheAcquireProgress(packageOrContainerId, payloadId, dw64Progress, dw64Total, dwOverallPercentage, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1068,7 +1087,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCacheAcquireResolving(packageOrContainerId, payloadId, searchPaths, cSearchPaths, fFoundLocal, fVital, dwRecommendedSearchPath, wzDownloadUrl, wzPayloadContainerId, recommendation, ref dwChosenSearchPath, ref action, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1105,7 +1124,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCacheVerifyBegin(packageOrContainerId, payloadId, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1126,7 +1145,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCacheVerifyProgress(packageOrContainerId, payloadId, dw64Progress, dw64Total, dwOverallPercentage, verifyStep, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1191,7 +1210,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCacheContainerOrPayloadVerifyBegin(packageId, payloadId, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1211,7 +1230,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCacheContainerOrPayloadVerifyProgress(packageOrContainerId, payloadId, dw64Progress, dw64Total, dwOverallPercentage, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1243,7 +1262,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCachePayloadExtractBegin(packageId, payloadId, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1263,7 +1282,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCachePayloadExtractProgress(packageOrContainerId, payloadId, dw64Progress, dw64Total, dwOverallPercentage, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1315,7 +1334,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnExecuteBegin(cExecutingPackages, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1335,7 +1354,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnExecutePackageBegin(packageId, fExecute, action, uiLevel, fDisableExternalUiHandler, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1352,7 +1371,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnExecutePatchTarget(packageId, targetProductCode, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1370,7 +1389,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnExecuteProgress(packageId, dwProgressPercentage, dwOverallPercentage, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1554,7 +1573,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnLaunchApprovedExeBegin(ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1588,7 +1607,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnBeginMsiTransactionBegin(transactionId, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
@@ -1622,7 +1641,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     bool fCancel = false;
 
                     int hr = CallDispatch(instance, () => instance.OnCommitMsiTransactionBegin(transactionId, ref fCancel));
-                    if (instance.TestFailureException != null) { fCancel = true; }
+                    if (instance.TestShouldCancel) { fCancel = true; }
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);

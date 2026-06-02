@@ -161,6 +161,10 @@ namespace WixToolset.Burn.UnitTest.Internal
             return Process.Start(psi);
         }
 
+        /// <returns>
+        /// Returns when the iteration completes (burn has shut down and the test instance has
+        /// been disposed).  Throws if the test instance recorded a failure exception.
+        /// </returns>
         private static async Task RunOneIterationAsync(
             TestRunEntry entry,
             string pipeName,

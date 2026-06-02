@@ -22,10 +22,16 @@ namespace WixToolsetTest.BurnUnitTest
             this._onCreateCalled = true;
 
             // Verify command-line values via the TestBaCommand wrapper.
-            BurnAssert.Equal(LaunchAction.Install, this.Command!.Action,
-                "Expected LaunchAction.Install for a silent install test.");
-            BurnAssert.Equal(Display.None, this.Command.Display,
-                "Expected Display.None for a silent install.");
+            if (this.Command!.Action != LaunchAction.Install)
+            {
+                this.SetException(new BurnBAAssertException(
+                    $"Expected LaunchAction.Install for a silent install test, got {this.Command.Action}."));
+            }
+            else if (this.Command.Display != Display.None)
+            {
+                this.SetException(new BurnBAAssertException(
+                    $"Expected Display.None for a silent install, got {this.Command.Display}."));
+            }
 
             return base.OnCreate(pEngine, ref command);
         }
@@ -40,8 +46,16 @@ namespace WixToolsetTest.BurnUnitTest
         /// <inheritdoc/>
         public override int OnShutdown(ref BOOTSTRAPPER_SHUTDOWN_ACTION action)
         {
-            BurnAssert.True(this._onCreateCalled, "OnCreate was never called before OnShutdown.");
-            BurnAssert.True(this._onStartupCalled, "OnStartup was never called before OnShutdown.");
+            if (!this._onCreateCalled)
+            {
+                this.SetException(new BurnBAAssertException(
+                    "OnCreate was never called before OnShutdown."), endAutoPilot: false);
+            }
+            else if (!this._onStartupCalled)
+            {
+                this.SetException(new BurnBAAssertException(
+                    "OnStartup was never called before OnShutdown."), endAutoPilot: false);
+            }
 
             return base.OnShutdown(ref action);
         }

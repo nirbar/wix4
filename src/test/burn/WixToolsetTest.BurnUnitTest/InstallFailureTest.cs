@@ -25,8 +25,14 @@ namespace WixToolsetTest.BurnUnitTest
             this._applyCompleteHr = hrStatus;
 
             // In a failure scenario we expect a non-zero HRESULT.
-            BurnAssert.NotEqual(0, hrStatus,
-                "Expected a failure HRESULT from the engine, but got S_OK.");
+            if (hrStatus == 0)
+            {
+                // Record the failure but do NOT engage autopilot — we are already in
+                // OnApplyComplete so burn will proceed to shutdown on its own.
+                this.SetException(new BurnBAAssertException(
+                    "Expected a failure HRESULT from the engine, but got S_OK."),
+                    endAutoPilot: false);
+            }
 
             // Allow burn to proceed normally (no custom override of the action).
             return base.OnApplyComplete(hrStatus, restart, recommendation, ref action);
@@ -36,8 +42,12 @@ namespace WixToolsetTest.BurnUnitTest
         public override int OnShutdown(ref BOOTSTRAPPER_SHUTDOWN_ACTION action)
         {
             // Confirm the failure was seen.
-            BurnAssert.NotEqual(0, this._applyCompleteHr,
-                "OnApplyComplete should have been called with a failure code before shutdown.");
+            if (this._applyCompleteHr == 0)
+            {
+                this.SetException(new BurnBAAssertException(
+                    "OnApplyComplete should have been called with a failure code before shutdown."),
+                    endAutoPilot: false);
+            }
 
             return base.OnShutdown(ref action);
         }

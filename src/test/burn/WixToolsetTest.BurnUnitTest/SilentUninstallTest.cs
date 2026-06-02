@@ -17,8 +17,11 @@ namespace WixToolsetTest.BurnUnitTest
         /// <inheritdoc/>
         public override int OnCreate(IBootstrapperEngine pEngine, ref Command command)
         {
-            BurnAssert.Equal(LaunchAction.Uninstall, this.Command!.Action,
-                "Expected LaunchAction.Uninstall for an uninstall test.");
+            if (this.Command!.Action != LaunchAction.Uninstall)
+            {
+                this.SetException(new BurnBAAssertException(
+                    $"Expected LaunchAction.Uninstall for an uninstall test, got {this.Command.Action}."));
+            }
 
             return base.OnCreate(pEngine, ref command);
         }
@@ -29,7 +32,11 @@ namespace WixToolsetTest.BurnUnitTest
             this._detectCompleteCalled = true;
 
             // S_OK == 0 means detection succeeded.
-            BurnAssert.Equal(0, hrStatus, $"DetectComplete reported failure: 0x{hrStatus:X8}");
+            if (hrStatus != 0)
+            {
+                this.SetException(new BurnBAAssertException(
+                    $"DetectComplete reported failure: 0x{hrStatus:X8}"));
+            }
 
             return base.OnDetectComplete(hrStatus, fEligibleForCleanup);
         }
@@ -41,8 +48,18 @@ namespace WixToolsetTest.BurnUnitTest
             BOOTSTRAPPER_APPLYCOMPLETE_ACTION recommendation,
             ref BOOTSTRAPPER_APPLYCOMPLETE_ACTION action)
         {
-            BurnAssert.True(this._detectCompleteCalled, "OnDetectComplete should have been called before OnApplyComplete.");
-            BurnAssert.Equal(0, hrStatus, $"ApplyComplete reported failure: 0x{hrStatus:X8}");
+            if (!this._detectCompleteCalled)
+            {
+                this.SetException(new BurnBAAssertException(
+                    "OnDetectComplete should have been called before OnApplyComplete."),
+                    endAutoPilot: false);
+            }
+            else if (hrStatus != 0)
+            {
+                this.SetException(new BurnBAAssertException(
+                    $"ApplyComplete reported failure: 0x{hrStatus:X8}"),
+                    endAutoPilot: false);
+            }
 
             return base.OnApplyComplete(hrStatus, restart, recommendation, ref action);
         }
