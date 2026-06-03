@@ -649,6 +649,12 @@ namespace WixToolset.Test.BA
             this.ShutdownUiThread(args.Status);
         }
 
+        protected override void OnShutdown(ShutdownEventArgs args)
+        {
+            base.OnShutdown(args);
+            this.ShutdownUiThread();
+        }
+
         protected override void OnUnregisterBegin(UnregisterBeginEventArgs args)
         {
             if (this.forceKeepRegistration && args.RegistrationType == RegistrationType.None)
