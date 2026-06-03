@@ -3,6 +3,7 @@
 namespace WixToolset.Burn.UnitTest
 {
     using System;
+    using System.Security.Principal;
 
     /// <summary>
     /// Marks a class as a burn bootstrapper application unit test.
@@ -33,5 +34,37 @@ namespace WixToolset.Burn.UnitTest
         /// Defaults to <see langword="false"/>.
         /// </summary>
         public bool StopTestsOnError { get; init; } = false;
+
+        /// <summary>
+        /// If set, skips this test with a message.
+        /// </summary>
+        public string Skip { get; set; } = null;
+
+        /// <summary>
+        /// If set, this test will run only if the process is executed with admin privileges
+        /// </summary>
+        public bool RequireAdmin { get; set; } = false;
+
+        const string RequiredEnvironmentVariableName = "RuntimeTestsEnabled";
+        public static bool RuntimeTestsEnabled { get; }
+        public static bool RunningAsAdministrator { get; }
+
+        static BurnBATestClassAttribute()
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            RunningAsAdministrator = principal.IsInRole(WindowsBuiltInRole.Administrator);
+
+            var testsEnabledString = Environment.GetEnvironmentVariable(RequiredEnvironmentVariableName);
+            RuntimeTestsEnabled = Boolean.TryParse(testsEnabledString, out var testsEnabled) && testsEnabled;
+        }
+
+        public BurnBATestClassAttribute()
+        {
+            if (RequireAdmin && (!RuntimeTestsEnabled || !RunningAsAdministrator))
+            {
+                this.Skip = $"These tests must run elevated ({(RunningAsAdministrator ? "passed" : "failed")}). These tests affect machine state. To accept the consequences, set the {RequiredEnvironmentVariableName} environment variable to true ({(RuntimeTestsEnabled ? "passed" : "failed")}).";
+            }
+        }
     }
 }

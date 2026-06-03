@@ -9,7 +9,7 @@ namespace WixToolsetTest.BurnUnitTest
     /// Example burn BA unit test that simulates a silent uninstall.
     /// Verifies that burn sends LaunchAction.Uninstall and that the bundle shuts down cleanly.
     /// </summary>
-    [BurnBATestClass(Order = 2)]
+    [BurnBATestClass(Order = 2, RequireAdmin = true)]
     public sealed class SilentUninstallTest : BurnBATestBase
     {
         private bool _detectCompleteCalled;

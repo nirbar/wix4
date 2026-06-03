@@ -6,6 +6,8 @@ namespace WixToolset.Burn.UnitTest.Internal
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
+    using System.Reflection;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -74,6 +76,16 @@ namespace WixToolset.Burn.UnitTest.Internal
                     {
                         StartTime = DateTimeOffset.UtcNow,
                     };
+
+                    var classAttr = entry.TestClassType.GetCustomAttribute<BurnBATestClassAttribute>(inherit: false);
+                    if (!string.IsNullOrEmpty(classAttr?.Skip))
+                    {
+                        result.Outcome = TestOutcome.Skipped;
+                        result.ErrorMessage = classAttr.Skip;
+                        result.EndTime = DateTimeOffset.UtcNow;
+                        frameworkHandle.RecordResult(result);
+                        continue;
+                    }
 
                     if (stopRemaining)
                     {

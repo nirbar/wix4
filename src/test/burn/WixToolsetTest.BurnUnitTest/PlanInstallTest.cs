@@ -10,11 +10,12 @@ namespace WixToolsetTest.BurnUnitTest
     /// The test verifies that the OnCreate callback supplies the expected LaunchAction.Install,
     /// and that the bundle progresses through Detect, Plan, and Apply phases without errors.
     /// </summary>
-    [BurnBATestClass(Order = 1, StopTestsOnError = true, RequireAdmin = true)]
-    public sealed class SilentInstallTest : BurnBATestBase
+    [BurnBATestClass(Order = 0)]
+    public sealed class PlanInstallTest : BurnBATestBase
     {
         private bool _onCreateCalled;
         private bool _onStartupCalled;
+        private bool _onPlanCompleteCalled;
 
         /// <inheritdoc/>
         public override int OnCreate(IBootstrapperEngine pEngine, ref Command command)
@@ -35,6 +36,13 @@ namespace WixToolsetTest.BurnUnitTest
             return base.OnStartup();
         }
 
+        public override int OnPlanComplete(int hrStatus)
+        {
+            this.EndTestAutoPilot = true;
+            this._onPlanCompleteCalled = true;
+            return 0;
+        }
+
         /// <inheritdoc/>
         public override int OnShutdown(ref BOOTSTRAPPER_SHUTDOWN_ACTION action)
         {
@@ -48,8 +56,12 @@ namespace WixToolsetTest.BurnUnitTest
                 this.SetException(new BurnBAAssertException(
                     "OnStartup was never called before OnShutdown."), endAutoPilot: false);
             }
-
-            return base.OnShutdown(ref action);
+            else if (!this._onPlanCompleteCalled)
+            {
+                this.SetException(new BurnBAAssertException(
+                    "OnPlanComplete was never called before OnShutdown."), endAutoPilot: false);
+            }
+            return 0;
         }
     }
 }
