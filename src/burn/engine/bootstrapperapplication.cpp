@@ -148,6 +148,9 @@ EXTERN_C HRESULT BootstrapperApplicationStart(
 
     if (pEngineState->unitTestContext.fUnitTest)
     {
+        hr = UnittestValidatePassword(&pEngineState->unitTestContext);
+        ExitOnFailure(hr, "Unittest failed password validation");
+
         hr = StrAllocString(&sczBasePipeName, pEngineState->unitTestContext.unittestConnection.sczName, 0);
         ExitOnFailure(hr, "Failed to copy string");
 
@@ -156,6 +159,7 @@ EXTERN_C HRESULT BootstrapperApplicationStart(
 
         pUserExperience->hBAProcess = ::OpenProcess(SYNCHRONIZE, FALSE, pEngineState->unitTestContext.unittestConnection.dwProcessId);
         ExitOnNullWithLastError(pUserExperience->hBAProcess, hr, "Failed to open unit test process");
+        LogId(REPORT_STANDARD, MSG_UNITTEST_START);
     }
     else
     {
@@ -209,6 +213,7 @@ LExit:
     ReleasePipeHandle(hBAPipe);
     ReleaseNullStrSecure(sczSecret);
     ReleaseStr(sczBasePipeName);
+    ReleaseNullStrSecure(pEngineState->unitTestContext.wzCmdLinePassword); // Dump ASAP
 
     return hr;
 }

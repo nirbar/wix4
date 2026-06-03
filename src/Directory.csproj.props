@@ -14,4 +14,7 @@
   <PropertyGroup>
     <AcceptEula>abc;wix7;xyz;123</AcceptEula>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(DebuggableRelease)'=='true'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
 </Project>

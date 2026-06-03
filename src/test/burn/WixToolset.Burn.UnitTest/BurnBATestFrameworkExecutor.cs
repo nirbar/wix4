@@ -30,6 +30,7 @@ namespace WixToolset.Burn.UnitTest
         private CancellationTokenSource _cts;
 
         /// <inheritdoc/>
+        // To debug, set environment variable VSTEST_HOST_DEBUG=1 before launching `dotnet test`
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
             if (sources == null || frameworkHandle == null)
@@ -47,6 +48,7 @@ namespace WixToolset.Burn.UnitTest
         }
 
         /// <inheritdoc/>
+        // To debug, set environment variable VSTEST_HOST_DEBUG=1 before launching `dotnet test`
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
             if (tests == null || frameworkHandle == null)

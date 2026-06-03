@@ -59,7 +59,10 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         public void SetException(Exception ex, bool endAutoPilot = true)
         {
-            if (ex == null) throw new ArgumentNullException(nameof(ex));
+            if (ex == null)
+            {
+                throw new ArgumentNullException(nameof(ex));
+            }
             this.TestFailureException ??= ex;
             if (endAutoPilot)
             {

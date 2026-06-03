@@ -139,6 +139,7 @@ typedef struct _BURN_REDIRECTED_LOGGING_CONTEXT
 
 typedef struct _BURN_UNIT_TEST_CONTEXT
 {
+    LPWSTR wzCmdLinePassword;
     LPWSTR wzUnittestPasswordHash;
     BOOL fUnitTest;
     BOOL fUnitTestQuit;

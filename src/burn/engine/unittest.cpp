@@ -20,8 +20,7 @@ LExit:
 }
 
 HRESULT UnittestValidatePassword(
-    __in BURN_UNIT_TEST_CONTEXT* pUnittestContext,
-    __in LPCWSTR wzPassword
+    __in BURN_UNIT_TEST_CONTEXT* pUnittestContext
 )
 {
     HRESULT hr = S_OK;
@@ -35,7 +34,7 @@ HRESULT UnittestValidatePassword(
     }
 
     // Hash the provided password using SHA-512, matching the bytes of the wide string (no null terminator).
-    hr = CrypHashBuffer(reinterpret_cast<LPCBYTE>(wzPassword), wcslen(wzPassword) * sizeof(WCHAR), PROV_RSA_AES, CALG_SHA_512, rgbHash, sizeof(rgbHash));
+    hr = CrypHashBuffer(reinterpret_cast<LPCBYTE>(pUnittestContext->wzCmdLinePassword), wcslen(pUnittestContext->wzCmdLinePassword) * sizeof(WCHAR), PROV_RSA_AES, CALG_SHA_512, rgbHash, sizeof(rgbHash));
     ExitOnFailure(hr, "Failed to hash unit test password.");
 
     // Encode the hash to uppercase hex so it can be compared to the stored string.

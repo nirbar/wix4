@@ -238,13 +238,13 @@ namespace WixToolset.Core
                             break;
                         case "UnittestPassword":
                         {
-                            this.Core.Write(WarningMessages.PlaintextUnittestPassword(sourceLineNumbers, node.Name.LocalName));
                             var password = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             using (var sha512 = SHA512.Create())
                             {
                                 var passwordBytes = Encoding.Unicode.GetBytes(password);
                                 var hashBytes = sha512.ComputeHash(passwordBytes);
                                 unittestPasswordHash = BitConverter.ToString(hashBytes).Replace("-", "");
+                            	this.Core.Write(WarningMessages.PlaintextUnittestPassword(sourceLineNumbers, node.Name.LocalName, unittestPasswordHash));
                             }
                             break;
                         }

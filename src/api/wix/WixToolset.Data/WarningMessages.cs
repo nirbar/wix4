@@ -113,9 +113,9 @@ namespace WixToolset.Data
             return Message(sourceLineNumbers, Ids.AlreadyWiX3CompatibleGuid, "Components with KeyPath type {0} have WiX3-compatible GUID by default. Attribute WiX3CompatibleGuid is redundant.", keyPathType);
         }
 
-        public static Message PlaintextUnittestPassword(SourceLineNumber sourceLineNumbers, string elementName)
+        public static Message PlaintextUnittestPassword(SourceLineNumber sourceLineNumbers, string elementName, string sha512)
         {
-            return Message(sourceLineNumbers, Ids.PlaintextUnittestPassword, "The {0}/@UnittestPassword attribute stores a plaintext password that will be hashed at build time. Consider using @UnittestPasswordHash to supply a pre-hashed value and avoid embedding the plaintext password in source files.", elementName);
+            return Message(sourceLineNumbers, Ids.PlaintextUnittestPassword, "The {0}/@UnittestPassword attribute stores a plaintext password that will be hashed at build time. Consider using @UnittestPasswordHash with value '{1}' to avoid embedding the plaintext password in source files.", elementName, sha512);
         }
 
         private static Message Message(SourceLineNumber sourceLineNumber, Ids id, string format, params object[] args)

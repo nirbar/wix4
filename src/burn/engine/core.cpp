@@ -1743,8 +1743,8 @@ extern "C" HRESULT CoreParseCommandLine(
                 }
 
                 ++i;
-                hr = UnittestValidatePassword(pUnittestContext, argv[i]);
-                ExitOnFailure(hr, "Unittest failed password validation");
+                hr = StrAllocStringSecure(&pUnittestContext->wzCmdLinePassword, argv[i], 0);
+                ExitOnFailure(hr, "Failed to copy string");
 
                 ++i;
                 hr = ParsePipeConnection(argv + i, &pUnittestContext->unittestConnection);
@@ -1755,7 +1755,6 @@ extern "C" HRESULT CoreParseCommandLine(
                     hr = S_OK;
                 }
                 pUnittestContext->fUnitTest = TRUE;
-                LogId(REPORT_STANDARD, MSG_UNITTEST_START);
 
                 i += 2;
             }

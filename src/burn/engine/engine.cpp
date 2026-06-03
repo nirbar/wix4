@@ -464,6 +464,7 @@ static void UninitializeEngineState(
     BurnPipeConnectionUninitialize(&pEngineState->embeddedConnection);
     BurnPipeConnectionUninitialize(&pEngineState->companionConnection);
     BurnPipeConnectionUninitialize(&pEngineState->unitTestContext.unittestConnection);
+    ReleaseNullStrSecure(pEngineState->unitTestContext.wzCmdLinePassword);
     ReleaseStr(pEngineState->unitTestContext.wzUnittestPasswordHash);
 
     ReleaseHandle(pEngineState->hMessageWindowThread);

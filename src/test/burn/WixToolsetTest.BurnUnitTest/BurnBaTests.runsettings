@@ -9,9 +9,7 @@
     <TestAdaptersPaths>.</TestAdaptersPaths>
   </RunConfiguration>
   <BurnBATestFramework>
-    <!-- Path to the bundle executable to test. Override at CI or locally. -->
-    <BundlePath>$(OutputPath)TestBundle.exe</BundlePath>
-    <!-- Optional password; leave empty to use the default. -->
-    <Password></Password>
+    <BundlePath>..\..\..\IntegrationBurn\Release\net8.0-windows\TestData\BasicFunctionalityTests\BundleA.exe</BundlePath>
+    <Password>123456</Password>
   </BurnBATestFramework>
 </RunSettings>

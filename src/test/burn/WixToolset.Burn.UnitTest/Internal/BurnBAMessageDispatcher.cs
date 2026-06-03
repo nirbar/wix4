@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
+// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
 
 namespace WixToolset.Burn.UnitTest.Internal
 {
@@ -180,7 +180,7 @@ namespace WixToolset.Burn.UnitTest.Internal
             }
             catch (Exception ex)
             {
-                instance.TestFailureException ??= ex;
+                instance.SetException(ex);
                 TryDispose(instance);
                 return 0;
             }

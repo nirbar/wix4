@@ -52,8 +52,7 @@ HRESULT UnittestParseFromXml(
     );
 
 HRESULT UnittestValidatePassword(
-    __in BURN_UNIT_TEST_CONTEXT* pUnittestContext,
-    __in LPCWSTR wzPassword
+    __in BURN_UNIT_TEST_CONTEXT* pUnittestContext
     );
 
 HRESULT UnittestQuit(
