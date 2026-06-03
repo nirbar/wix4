@@ -188,6 +188,7 @@ namespace WixToolset.Burn.UnitTest.Internal
             Task engineRelayTask = null;
 
             // Pump messages until disconnect.
+            bool engineQuitSent = false;
             while (!ct.IsCancellationRequested)
             {
                 var (msgType, payload) = conn.ReadBAMessage();
@@ -213,11 +214,39 @@ namespace WixToolset.Burn.UnitTest.Internal
                 bool isShutdown = msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN;
                 var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(instance, msgType, payload, realBAServer);
 
-                if (isShutdown && isLastIteration)
+                if (isShutdown && isLastIteration && !engineQuitSent)
                 {
                     // Write the OnShutdown response first, then send EngineMessageQuit.
                     conn.WriteBAResponse(hr, responseData);
                     await SendQuitAsync(conn, bundleProcess, ct).ConfigureAwait(false);
+                    engineQuitSent = true;
+                }
+                else if (instance._pendingEngineQuit && !engineQuitSent)
+                {
+                    // Autopilot reached OnDetectComplete or OnPlanComplete or OnApplyComplete: burn is now
+                    // parked waiting.  Write the response, shut the real BA down cleanly, then send Engine.Quit().
+                    instance._pendingEngineQuit = false;
+                    conn.WriteBAResponse(hr, responseData);
+
+                    if (realBAServer != null)
+                    {
+                        // Send synthetic OnShutdown so the real BA terminates cleanly
+                        // instead of hanging on its next pipe-read.
+                        SendShutdownToRealBA(realBAServer);
+
+                        // Drain any engine messages the real BA sends during its shutdown.
+                        if (engineRelayTask != null)
+                        {
+                            await engineRelayTask.ConfigureAwait(false);
+                            engineRelayTask = null;
+                        }
+
+                        realBAServer.Dispose();
+                        realBAServer = null;
+                    }
+
+                    await SendQuitAsync(conn, bundleProcess, ct).ConfigureAwait(false);
+                    engineQuitSent = true;
                 }
                 else
                 {
@@ -310,6 +339,32 @@ namespace WixToolset.Burn.UnitTest.Internal
                     conn.EnginePipeLock.Release();
                 }
             }
+        }
+
+        /// <summary>
+        /// Sends a synthetic <c>OnShutdown</c> message to the real BA so it exits cleanly
+        /// rather than hanging on its next pipe-read after the test autopilot stops
+        /// forwarding messages.
+        /// </summary>
+        /// <remarks>
+        /// Wire format (from bacallback.cpp BACallbackOnShutdown):
+        ///   payload = [cbArgs=4][uint32 apiVersion][cbResults=8][uint32 apiVersion][uint32 action=0 (Quit)]
+        /// </remarks>
+        private static void SendShutdownToRealBA(RealBAPipeServer realBAServer)
+        {
+            var w = new BurnBufferWriter();
+            w.WriteUInt32(4u);                            // cbArgs (4 bytes for apiVersion)
+            w.WriteUInt32(BurnProtocolConstants.ApiVersion); // args.apiVersion
+            w.WriteUInt32(8u);                            // cbResults (8 bytes)
+            w.WriteUInt32(BurnProtocolConstants.ApiVersion); // results.apiVersion
+            w.WriteUInt32(0u);                            // results.action = BOOTSTRAPPER_SHUTDOWN_ACTION_QUIT
+
+            realBAServer.SendBAMessage(
+                (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN,
+                w.ToArray());
+
+            // Discard the real BA's response; we are not acting on its action value.
+            realBAServer.ReadBAResponse();
         }
 
         private static async Task SendQuitAsync(BurnPipeConnection conn, Process bundleProcess, CancellationToken ct)

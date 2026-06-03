@@ -1,4 +1,4 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
+﻿// Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information.
 
 namespace WixToolset.Burn.UnitTest.Internal
 {
@@ -143,13 +143,30 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// </summary>
         private static void TrackPhase(BurnBATestBase instance, BurnApplicationMessage msg)
         {
-            if (msg == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYBEGIN)
+            switch (msg)
             {
-                instance._applyBeginSeen = true;
-            }
-            else if (msg == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYCOMPLETE)
-            {
-                instance._applyCompleteSeen = true;
+                case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYBEGIN:
+                    instance._applyBeginSeen = true;
+                    break;
+
+                case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYCOMPLETE:
+                    instance._applyCompleteSeen = true;
+                    if (instance.EndTestAutoPilot || instance.TestFailureException != null)
+                    {
+                        instance._pendingEngineQuit = true;
+                    }
+                    break;
+
+                // After these phase-completion callbacks burn parks waiting for the BA to
+                // call Plan() or Apply().  When autopilot is active there is no test code
+                // to do that, so signal the runner to send Engine.Quit() instead.
+                case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONDETECTCOMPLETE:
+                case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONPLANCOMPLETE:
+                    if (instance.EndTestAutoPilot || instance.TestFailureException != null)
+                    {
+                        instance._pendingEngineQuit = true;
+                    }
+                    break;
             }
         }
 

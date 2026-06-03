@@ -41,13 +41,18 @@ namespace WixToolset.Burn.UnitTest
         /// When set to <see langword="true"/> the dispatcher skips all further test-BA and
         /// real-BA callbacks and drives burn to a clean shutdown without test involvement.
         ///
-        /// Before the apply phase (before <c>OnApplyBegin</c>) or after <c>OnApplyComplete</c>:
-        /// burn is allowed to proceed normally (no cancel flags set), so detect and plan
-        /// complete without test involvement.
+        /// Before the apply phase: detect and plan complete with default (non-cancel) values.
+        /// At <c>OnDetectComplete</c> and <c>OnPlanComplete</c> the dispatcher sets a flag that
+        /// causes the runner to call <c>Engine.Quit()</c> so burn shuts down instead of
+        /// waiting indefinitely for the BA to call <c>Plan()</c> or <c>Apply()</c>.
         ///
         /// During the apply phase (from <c>OnApplyBegin</c> up to but not including
         /// <c>OnApplyComplete</c>): every cancellable message gets <c>fCancel = true</c> so
-        /// burn stops executing packages and eventually sends <c>OnApplyComplete</c>.
+        /// burn stops executing packages and eventually sends <c>OnApplyComplete</c>, after
+        /// which burn calls <c>OnShutdown</c> on its own.
+        ///
+        /// In all cases, if a real BA is connected it receives a synthetic <c>OnShutdown</c>
+        /// before <c>Engine.Quit()</c> is sent so it terminates cleanly.
         /// </summary>
         public bool EndTestAutoPilot { get; set; }
 
@@ -94,6 +99,13 @@ namespace WixToolset.Burn.UnitTest
 
         /// <summary>Set to <see langword="true"/> the moment <c>OnApplyComplete</c> is received.</summary>
         internal bool _applyCompleteSeen;
+
+        /// <summary>
+        /// Set by the dispatcher when <c>OnDetectComplete</c> or <c>OnPlanComplete</c> is
+        /// received while autopilot is active.  The runner checks this after writing the BA
+        /// response and calls <c>Engine.Quit()</c> to avoid live-locking the burn engine.
+        /// </summary>
+        internal bool _pendingEngineQuit;
 
         /// <summary>
         /// Per-dispatch context.  Set by the runner/dispatcher before each virtual method call.
