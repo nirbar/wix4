@@ -14,7 +14,12 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// Message sent by testhost to burn on the .BAEngine pipe to stop the restart loop after the last iteration.
         /// Value = 0x0FFFFFFF (BOOTSTRAPPER_ENGINE_MESSAGE_UNKNOWN).
         /// </summary>
-        internal const uint EngineMessageQuit = 0x0FFFFFFFu;
+        internal const uint EngineMessageQuitAll = 0x0FFFFFFFu;
+
+        /// <summary>
+        /// Message sent by testhost to burn on the .BAEngine pipe to quit this test.
+        /// </summary>
+        internal const uint EngineMessageQuit = 0x17u;
 
         /// <summary>
         /// Pipe message type indicating client disconnect.

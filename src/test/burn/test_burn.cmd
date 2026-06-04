@@ -30,6 +30,7 @@ mt.exe -manifest "WixToolsetTest.BurnE2E\testhost.longpathaware.manifest" -updat
 @if not "%RuntimeTestsEnabled%"=="true" goto :LExit
 
 dotnet test -c %_C% WixToolsetTest.BurnE2E --nologo --no-build -l "trx;LogFileName=%_L%\TestResults\WixToolsetTest.BurnE2E.trx" || exit /b
+dotnet test ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\WixToolsetTest.BurnUnitTest.dll --settings ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\BurnBaTests.runsettings --nologo --no-build -l "trx;LogFileName=%_L%\TestResults\WixToolsetTest.BurnUnitTests.trx" || exit /b
 
 @goto :LExit
 

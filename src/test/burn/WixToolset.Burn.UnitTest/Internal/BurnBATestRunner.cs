@@ -201,12 +201,17 @@ namespace WixToolset.Burn.UnitTest.Internal
 
             // Pump messages until disconnect.
             bool engineQuitSent = false;
+            bool engineQuitAllSent = false;
             while (!ct.IsCancellationRequested)
             {
                 var (msgType, payload) = conn.ReadBAMessage();
 
                 if (msgType == BurnProtocolConstants.PipeMessageDisconnect)
                 {
+                    if (!instance.EndTestAutoPilot)
+                    {
+                        realBAServer?.SendBAMessage((uint)BurnProtocolConstants.PipeMessageDisconnect, null);
+                    }
                     break;
                 }
 
@@ -226,11 +231,12 @@ namespace WixToolset.Burn.UnitTest.Internal
                 bool isShutdown = msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN;
                 var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(instance, msgType, payload, realBAServer);
 
-                if (isShutdown && isLastIteration && !engineQuitSent)
+                if ((instance._pendingEngineQuit || isShutdown) && isLastIteration && !engineQuitAllSent)
                 {
                     // Write the OnShutdown response first, then send EngineMessageQuit.
                     conn.WriteBAResponse(hr, responseData);
-                    await SendQuitAsync(conn, bundleProcess, ct).ConfigureAwait(false);
+                    await SendQuitAllAsync(conn, ct).ConfigureAwait(false);
+                    engineQuitAllSent = true;
                     engineQuitSent = true;
                 }
                 else if (instance._pendingEngineQuit && !engineQuitSent)
@@ -246,18 +252,11 @@ namespace WixToolset.Burn.UnitTest.Internal
                         // instead of hanging on its next pipe-read.
                         SendShutdownToRealBA(realBAServer);
 
-                        // Drain any engine messages the real BA sends during its shutdown.
-                        if (engineRelayTask != null)
-                        {
-                            await engineRelayTask.ConfigureAwait(false);
-                            engineRelayTask = null;
-                        }
-
                         realBAServer.Dispose();
                         realBAServer = null;
                     }
 
-                    await SendQuitAsync(conn, bundleProcess, ct).ConfigureAwait(false);
+                    await SendQuitAsync(conn, ct).ConfigureAwait(false);
                     engineQuitSent = true;
                 }
                 else
@@ -377,18 +376,59 @@ namespace WixToolset.Burn.UnitTest.Internal
 
             // Discard the real BA's response; we are not acting on its action value.
             realBAServer.ReadBAResponse();
+
+            // Now a destroy message
+            w = new BurnBufferWriter();
+            w.WriteUInt32(8u);                            // cbArgs (8 bytes for apiVersion, fReload)
+            w.WriteUInt32(BurnProtocolConstants.ApiVersion); // args.apiVersion
+            w.WriteBool(false);                           // args.fReload
+            w.WriteUInt32(4u);                            // cbResults (4 bytes)
+            w.WriteUInt32(BurnProtocolConstants.ApiVersion); // results.apiVersion
+
+            realBAServer.SendBAMessage(
+                (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONDESTROY,
+                w.ToArray());
+
+            // Discard the real BA's response
+            realBAServer.ReadBAResponse();
+
+            // Now a disconnect message
+            realBAServer.SendBAMessage((uint)BurnProtocolConstants.PipeMessageDisconnect, null);
         }
 
-        private static async Task SendQuitAsync(BurnPipeConnection conn, Process bundleProcess, CancellationToken ct)
+        private static async Task SendQuitAsync(BurnPipeConnection conn, CancellationToken ct)
         {
             await conn.EnginePipeLock.WaitAsync(ct).ConfigureAwait(false);
             try
             {
                 // BAENGINE_UNITTESTQUIT_ARGS: [uint32 apiVersion][uint32 exitCode]
                 var w = new BurnBufferWriter();
+                w.WriteUInt32(8u);                            // cbArgs (8 bytes for apiVersion, exit code)
                 w.WriteUInt32(BurnProtocolConstants.ApiVersion);
                 w.WriteUInt32(0u); // exitCode = 0
+                w.WriteUInt32(4u); // cbResults
+                w.WriteUInt32(BurnProtocolConstants.ApiVersion);
                 conn.SendEngineMessage(BurnProtocolConstants.EngineMessageQuit, w.ToArray());
+            }
+            finally
+            {
+                conn.EnginePipeLock.Release();
+            }
+        }
+
+        private static async Task SendQuitAllAsync(BurnPipeConnection conn, CancellationToken ct)
+        {
+            await conn.EnginePipeLock.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                // BAENGINE_UNITTESTQUIT_ARGS: [uint32 apiVersion][uint32 exitCode]
+                var w = new BurnBufferWriter();
+                w.WriteUInt32(8u);                            // cbArgs (8 bytes for apiVersion, exit code)
+                w.WriteUInt32(BurnProtocolConstants.ApiVersion);
+                w.WriteUInt32(0u); // exitCode = 0
+                w.WriteUInt32(4u); // cbResults
+                w.WriteUInt32(BurnProtocolConstants.ApiVersion);
+                conn.SendEngineMessage(BurnProtocolConstants.EngineMessageQuitAll, w.ToArray());
             }
             finally
             {
