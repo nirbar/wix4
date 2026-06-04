@@ -70,7 +70,6 @@ namespace WixToolset.Burn.UnitTest.Internal
                 for (int i = 0; i < entries.Count; i++)
                 {
                     var entry = entries[i];
-                    bool isLast = i == entries.Count - 1;
 
                     var result = new TestResult(entry.TestCase)
                     {
@@ -98,7 +97,7 @@ namespace WixToolset.Burn.UnitTest.Internal
 
                     try
                     {
-                        await RunOneIterationAsync(entry, pipeName, i == 0, isLast, bundleProcess, frameworkHandle, ct)
+                        await RunOneIterationAsync(entry, pipeName, i == 0, bundleProcess, frameworkHandle, ct)
                             .ConfigureAwait(false);
 
                         result.Outcome = TestOutcome.Passed;
@@ -145,6 +144,10 @@ namespace WixToolset.Burn.UnitTest.Internal
                         break;
                     }
                 }
+
+                // Always connect for a final ghost iteration so burn can exit cleanly,
+                // regardless of how many entries ran or whether the run was cancelled.
+                await RunGhostIterationAsync(pipeName, ct).ConfigureAwait(false);
             }
             finally
             {
@@ -182,7 +185,6 @@ namespace WixToolset.Burn.UnitTest.Internal
             TestRunEntry entry,
             string pipeName,
             bool firstIteration,
-            bool isLastIteration,
             Process bundleProcess,
             IFrameworkHandle frameworkHandle,
             CancellationToken ct)
@@ -224,11 +226,6 @@ namespace WixToolset.Burn.UnitTest.Internal
                     var resp = new BurnBufferWriter();
                     resp.WriteUInt32(BurnProtocolConstants.ApiVersion);
                     conn.WriteBAResponse(0 /* S_OK */, resp.ToArray());
-
-                    if (isLastIteration)
-                    {
-                        await SendLastTestAsync(conn, ct).ConfigureAwait(false);
-                    }
                     continue;
                 }
 
@@ -245,6 +242,15 @@ namespace WixToolset.Burn.UnitTest.Internal
 
                     if (realBAServer != null)
                     {
+                        // Disconnect the engine pipe first so the real BA cannot forward its
+                        // own Engine.Quit() call through our relay after receiving OnShutdown.
+                        realBAServer.DisconnectEnginePipe();
+                        if (engineRelayTask != null)
+                        {
+                            await engineRelayTask.ConfigureAwait(false);
+                            engineRelayTask = null;
+                        }
+
                         // Send synthetic OnShutdown so the real BA terminates cleanly
                         // instead of hanging on its next pipe-read.
                         SendShutdownToRealBA(realBAServer);
@@ -329,7 +335,23 @@ namespace WixToolset.Burn.UnitTest.Internal
         {
             while (!ct.IsCancellationRequested)
             {
-                var (msgType, data) = realBA.ReadEngineMessage();
+                uint msgType;
+                byte[] data;
+                try
+                {
+                    (msgType, data) = realBA.ReadEngineMessage();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Engine pipe was disconnected (e.g. during autopilot shutdown). Exit relay cleanly.
+                    break;
+                }
+                catch (IOException)
+                {
+                    // Pipe was broken by the remote side.
+                    break;
+                }
+
                 if (msgType == BurnProtocolConstants.PipeMessageDisconnect)
                 {
                     break;
@@ -346,6 +368,44 @@ namespace WixToolset.Burn.UnitTest.Internal
                 {
                     conn.EnginePipeLock.Release();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Connects to burn's current cycle and drives it to a clean shutdown in full autopilot
+        /// mode without associating any real test instance.  Always called after all real test
+        /// iterations so burn can exit cleanly even when trailing entries are skipped.
+        /// </summary>
+        private static async Task RunGhostIterationAsync(string pipeName, CancellationToken ct)
+        {
+            using var conn = await BurnPipeConnection.ConnectAsync(pipeName, _pipePassword, false, ct)
+                .ConfigureAwait(false);
+            using var ghost = new BurnBATestBase();
+            ghost.EndTestAutoPilot = true;
+
+            while (!ct.IsCancellationRequested)
+            {
+                var (msgType, payload) = conn.ReadBAMessage();
+
+                if (msgType == BurnProtocolConstants.PipeMessageDisconnect)
+                {
+                    break;
+                }
+
+                if (msgType == BurnProtocolConstants.BaMessageStartRealBA)
+                {
+                    // Ghost iteration: no real BA. Respond with success, mark as last test, quit.
+                    var resp = new BurnBufferWriter();
+                    resp.WriteUInt32(BurnProtocolConstants.ApiVersion);
+                    conn.WriteBAResponse(0, resp.ToArray());
+                    await SendLastTestAsync(conn, ct).ConfigureAwait(false);
+                    await SendQuitAsync(conn, ct).ConfigureAwait(false);
+                    continue;
+                }
+
+                // Drain any remaining messages (e.g. ONSHUTDOWN) with default autopilot responses.
+                var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(ghost, msgType, payload, null);
+                conn.WriteBAResponse(hr, responseData);
             }
         }
 

@@ -95,6 +95,13 @@ namespace WixToolset.Burn.UnitTest.Internal
         internal void WriteEngineResponse(int hr, byte[] data)
             => BurnPipeIO.WriteResponse(_baEngineServer, hr, data);
 
+        /// <summary>
+        /// Closes the real BA's engine pipe so it can no longer send engine messages.
+        /// Safe to call before <see cref="Dispose"/>; <see cref="System.IO.Stream.Dispose"/> is idempotent.
+        /// </summary>
+        internal void DisconnectEnginePipe()
+            => _baEngineServer.Dispose();
+
         public void Dispose()
         {
             if (!_disposed)
