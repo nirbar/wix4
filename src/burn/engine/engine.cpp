@@ -305,7 +305,7 @@ LExit:
         LogId(REPORT_STANDARD, MSG_EXITING_ELEVATED, FAILED(hr) ? (int)hr : *pdwExitCode);
     }
 
-    if (engineState.unitTestContext.fUnitTest && !engineState.unitTestContext.fUnitTestQuit)
+    if (engineState.unitTestContext.fUnitTest && !engineState.unitTestContext.fLastTest)
     {
         UnitTestUninitializeEngineState(&engineState);
     }
@@ -353,7 +353,7 @@ LExit:
     }
 
     // On unit-test restart, close the current log so each test gets a fresh log file.
-    if (engineState.unitTestContext.fUnitTest && !engineState.unitTestContext.fUnitTestQuit)
+    if (engineState.unitTestContext.fUnitTest && !engineState.unitTestContext.fLastTest)
     {
         if (fLogInitialized)
         {
@@ -425,10 +425,6 @@ static void UnitTestUninitializeEngineState(
     __in BURN_ENGINE_STATE* pEngineState
 )
 {
-    // fUnitTestQuit controls whether the engine restarts for the next test; it is not
-    // derived from the command line so it must survive the reinitialize.
-    BOOL fUnitTestQuit = pEngineState->unitTestContext.fUnitTestQuit;
-
     // Preserve the BA temp directory so already-extracted payloads are not re-extracted.
     LPWSTR sczTempDirectory = pEngineState->userExperience.sczTempDirectory;
     pEngineState->userExperience.sczTempDirectory = NULL;
@@ -438,8 +434,6 @@ static void UnitTestUninitializeEngineState(
 
     // Restore only the fields that the command-line reparse cannot recover.
     pEngineState->command.cbSize = sizeof(BOOTSTRAPPER_COMMAND);
-    pEngineState->unitTestContext.fUnitTestQuit = fUnitTestQuit;
-
     pEngineState->userExperience.sczTempDirectory = sczTempDirectory;
 }
 

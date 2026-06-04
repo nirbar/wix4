@@ -169,6 +169,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
+            psi.Environment["DEBUG_BURN"] = "1";
 
             return Process.Start(psi);
         }
@@ -201,7 +202,6 @@ namespace WixToolset.Burn.UnitTest.Internal
 
             // Pump messages until disconnect.
             bool engineQuitSent = false;
-            bool engineQuitAllSent = false;
             while (!ct.IsCancellationRequested)
             {
                 var (msgType, payload) = conn.ReadBAMessage();
@@ -224,6 +224,11 @@ namespace WixToolset.Burn.UnitTest.Internal
                     var resp = new BurnBufferWriter();
                     resp.WriteUInt32(BurnProtocolConstants.ApiVersion);
                     conn.WriteBAResponse(0 /* S_OK */, resp.ToArray());
+
+                    if (isLastIteration)
+                    {
+                        await SendLastTestAsync(conn, ct).ConfigureAwait(false);
+                    }
                     continue;
                 }
 
@@ -231,15 +236,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                 bool isShutdown = msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN;
                 var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(instance, msgType, payload, realBAServer);
 
-                if ((instance._pendingEngineQuit || isShutdown) && isLastIteration && !engineQuitAllSent)
-                {
-                    // Write the OnShutdown response first, then send EngineMessageQuit.
-                    conn.WriteBAResponse(hr, responseData);
-                    await SendQuitAllAsync(conn, ct).ConfigureAwait(false);
-                    engineQuitAllSent = true;
-                    engineQuitSent = true;
-                }
-                else if (instance._pendingEngineQuit && !engineQuitSent)
+                if (instance._pendingEngineQuit && !engineQuitSent)
                 {
                     // Autopilot reached OnDetectComplete or OnPlanComplete or OnApplyComplete: burn is now
                     // parked waiting.  Write the response, shut the real BA down cleanly, then send Engine.Quit().
@@ -416,19 +413,18 @@ namespace WixToolset.Burn.UnitTest.Internal
             }
         }
 
-        private static async Task SendQuitAllAsync(BurnPipeConnection conn, CancellationToken ct)
+        private static async Task SendLastTestAsync(BurnPipeConnection conn, CancellationToken ct)
         {
             await conn.EnginePipeLock.WaitAsync(ct).ConfigureAwait(false);
             try
             {
-                // BAENGINE_UNITTESTQUIT_ARGS: [uint32 apiVersion][uint32 exitCode]
+                // BAENGINE_UNITTESTLASTTEST_ARGS: [uint32 apiVersion]
                 var w = new BurnBufferWriter();
-                w.WriteUInt32(8u);                            // cbArgs (8 bytes for apiVersion, exit code)
+                w.WriteUInt32(4u);                            // cbArgs
                 w.WriteUInt32(BurnProtocolConstants.ApiVersion);
-                w.WriteUInt32(0u); // exitCode = 0
                 w.WriteUInt32(4u); // cbResults
                 w.WriteUInt32(BurnProtocolConstants.ApiVersion);
-                conn.SendEngineMessage(BurnProtocolConstants.EngineMessageQuitAll, w.ToArray());
+                conn.SendEngineMessage(BurnProtocolConstants.EngineMessageMarkLastTest, w.ToArray());
             }
             finally
             {

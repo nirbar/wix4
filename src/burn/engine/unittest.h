@@ -25,15 +25,14 @@ struct BA_ONUNITTESTAPPLICATIONSTARTREALBA_RESULTS
 
 // Test host → engine (BAEngine pipe direction): sent by the test host when all unit tests have completed.
 // High value to avoid collision with any future public BOOTSTRAPPER_ENGINE_MESSAGE values.
-const DWORD UNITTEST_ENGINE_MESSAGE_QUIT = 0x0FFFFFFF - BOOTSTRAPPER_ENGINE_MESSAGE_UNKNOWN;
+const DWORD UNITTEST_ENGINE_MESSAGE_LASTTEST = 0x0FFFFFFF - BOOTSTRAPPER_ENGINE_MESSAGE_UNKNOWN;
 
-struct BAENGINE_UNITTESTQUIT_ARGS
+struct BAENGINE_UNITTESTLASTTEST_ARGS
 {
     DWORD dwApiVersion;
-    DWORD dwExitCode;
 };
 
-struct BAENGINE_UNITTESTQUIT_RESULTS
+struct BAENGINE_UNITTESTLASTTEST_RESULTS
 {
     DWORD dwApiVersion;
 };
@@ -55,7 +54,7 @@ HRESULT UnittestValidatePassword(
     __in BURN_UNIT_TEST_CONTEXT* pUnittestContext
     );
 
-HRESULT UnittestQuit(
+void UnittestLastTest(
     __in BURN_ENGINE_STATE* pEngineState
     );
 

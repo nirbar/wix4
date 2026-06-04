@@ -54,10 +54,9 @@ LExit:
     return hr;
 }
 
-HRESULT UnittestQuit(
+void UnittestLastTest(
     __in BURN_ENGINE_STATE* pEngineState
 )
 {
-    pEngineState->unitTestContext.fUnitTestQuit = TRUE;
-    return S_OK;
+    pEngineState->unitTestContext.fLastTest = TRUE;
 }
