@@ -1742,6 +1742,14 @@ extern "C" HRESULT CoreParseCommandLine(
                     ExitWithRootFailure(hr, E_INVALIDARG, "Must specify the unit test password, pipe name, token and parent process id.");
                 }
 
+                hr = MemEnsureArraySizeForNewItems(reinterpret_cast<LPVOID*>(&pInternalCommand->rgSecretArgs), pInternalCommand->cSecretArgs, 2, sizeof(int), 2);
+                ExitOnFailure(hr, "Failed to ensure size for secret args.");
+
+                pInternalCommand->rgSecretArgs[pInternalCommand->cSecretArgs] = i + 1; // Unittest password
+                pInternalCommand->cSecretArgs += 1;
+                pInternalCommand->rgSecretArgs[pInternalCommand->cSecretArgs] = i + 3; // Unittest pipe password
+                pInternalCommand->cSecretArgs += 1;
+
                 ++i;
                 hr = StrAllocStringSecure(&pUnittestContext->wzCmdLinePassword, argv[i], 0);
                 ExitOnFailure(hr, "Failed to copy string");

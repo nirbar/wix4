@@ -172,7 +172,6 @@ namespace WixToolset.Burn.UnitTest.Internal
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
-            psi.Environment["DEBUG_BURN"] = "1";
 
             return Process.Start(psi);
         }
@@ -245,11 +244,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                         // Disconnect the engine pipe first so the real BA cannot forward its
                         // own Engine.Quit() call through our relay after receiving OnShutdown.
                         realBAServer.DisconnectEnginePipe();
-                        if (engineRelayTask != null)
-                        {
-                            await engineRelayTask.ConfigureAwait(false);
-                            engineRelayTask = null;
-                        }
+                        engineRelayTask = null;
 
                         // Send synthetic OnShutdown so the real BA terminates cleanly
                         // instead of hanging on its next pipe-read.
@@ -261,6 +256,7 @@ namespace WixToolset.Burn.UnitTest.Internal
 
                     await SendQuitAsync(conn, ct).ConfigureAwait(false);
                     engineQuitSent = true;
+                    continue;
                 }
                 else
                 {

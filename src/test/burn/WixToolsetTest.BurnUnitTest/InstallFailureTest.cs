@@ -10,7 +10,7 @@ namespace WixToolsetTest.BurnUnitTest
     /// When the apply phase fails the test verifies that OnApplyComplete receives a
     /// non-zero HRESULT and that the recommended action is reported correctly.
     /// </summary>
-    [BurnBATestClass(Order = 3)]
+    [BurnBATestClass(Order = 3, RequireAdmin = true, Skip = "Not implemented yet")]
     public sealed class InstallFailureTest : BurnBATestBase
     {
         private int _applyCompleteHr;

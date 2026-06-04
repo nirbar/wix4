@@ -353,18 +353,22 @@ LExit:
     }
 
     // On unit-test restart, close the current log so each test gets a fresh log file.
-    if (engineState.unitTestContext.fUnitTest && !engineState.unitTestContext.fLastTest)
+    if (engineState.unitTestContext.fUnitTest)
     {
-        if (fLogInitialized)
+        if (!engineState.unitTestContext.fLastTest)
         {
-            DutilUninitialize();
-            LogUninitialize(FALSE);
-            fLogInitialized = FALSE;
+            if (fLogInitialized)
+            {
+                DutilUninitialize();
+                LogUninitialize(FALSE);
+                fLogInitialized = FALSE;
+            }
+            fRunNormal = FALSE;
+            fRunElevated = FALSE;
+            fRunRunOnce = FALSE;
+            goto LUnittestRestart;
         }
-        fRunNormal = FALSE;
-        fRunElevated = FALSE;
-        fRunRunOnce = FALSE;
-        goto LUnittestRestart;
+        LogId(REPORT_STANDARD, MSG_UNITTEST_LAST);
     }
 
     if (fLogInitialized)
@@ -425,16 +429,15 @@ static void UnitTestUninitializeEngineState(
     __in BURN_ENGINE_STATE* pEngineState
 )
 {
-    // Preserve the BA temp directory so already-extracted payloads are not re-extracted.
-    LPWSTR sczTempDirectory = pEngineState->userExperience.sczTempDirectory;
-    pEngineState->userExperience.sczTempDirectory = NULL;
+    BOOL fLastTest = pEngineState->unitTestContext.fLastTest;
+    BOOL fUnitTest = pEngineState->unitTestContext.fUnitTest;
 
-    // Full cleanup — this zeros pEngineState via memset.
+    // Full cleanup- this zeros pEngineState via memset.
     UninitializeEngineState(pEngineState);
-
-    // Restore only the fields that the command-line reparse cannot recover.
     pEngineState->command.cbSize = sizeof(BOOTSTRAPPER_COMMAND);
-    pEngineState->userExperience.sczTempDirectory = sczTempDirectory;
+
+    pEngineState->unitTestContext.fUnitTest = fUnitTest;
+    pEngineState->unitTestContext.fLastTest = fLastTest;
 }
 
 static void UninitializeEngineState(
@@ -831,10 +834,7 @@ LExit:
         ReleaseHandle(pEngineState->userExperience.hBAProcess);
         *pfReloadApp = FALSE;
     }
-    else
-    {
-        BootstrapperApplicationStop(&pEngineState->userExperience, pfReloadApp);
-    }
+    BootstrapperApplicationStop(&pEngineState->userExperience, pfReloadApp);
 
     if (*pfReloadApp && !pEngineState->userExperience.pSecondaryExePayload)
     {

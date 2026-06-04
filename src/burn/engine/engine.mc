@@ -1401,3 +1401,10 @@ Language=English
 Unit test starting.
 .
 
+
+MessageId=715
+Severity=Success
+SymbolicName=MSG_UNITTEST_LAST
+Language=English
+Last unit test ends.
+.

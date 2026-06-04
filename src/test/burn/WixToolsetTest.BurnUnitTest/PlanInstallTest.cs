@@ -11,6 +11,8 @@ namespace WixToolsetTest.BurnUnitTest
     /// and that the bundle progresses through Detect, Plan, and Apply phases without errors.
     /// </summary>
     [BurnBATestClass(Order = 0)]
+    [BurnBAInlineData("a", "b")]
+    [BurnBAInlineData("c", "d")]
     public sealed class PlanInstallTest : BurnBATestBase
     {
         private bool _onCreateCalled;

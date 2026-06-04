@@ -97,7 +97,7 @@ namespace WixToolset.Burn.UnitTest.Internal
 
         /// <summary>
         /// Closes the real BA's engine pipe so it can no longer send engine messages.
-        /// Safe to call before <see cref="Dispose"/>; <see cref="System.IO.Stream.Dispose"/> is idempotent.
+        /// Safe to call before <see cref="Dispose"/>; <see cref="System.IO.Stream.Dispose()"/> is idempotent.
         /// </summary>
         internal void DisconnectEnginePipe()
             => _baEngineServer.Dispose();

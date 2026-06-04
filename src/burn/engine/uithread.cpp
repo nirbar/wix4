@@ -114,7 +114,9 @@ static DWORD WINAPI ThreadProc(
 
     if (!::RegisterClassW(&wc))
     {
-        ExitWithLastError(hr, "Failed to register window.");
+        // Might happen in unit tests
+        DWORD dwLastError = ::GetLastError();
+        ExitOnNullWithLastError((dwLastError == ERROR_CLASS_ALREADY_EXISTS), hr, "Failed to register window.");
     }
 
     fRegistered = TRUE;
@@ -148,6 +150,10 @@ static DWORD WINAPI ThreadProc(
     }
 
 LExit:
+    if (hWnd)
+    {
+        ::DestroyWindow(hWnd);
+    }
     if (fRegistered)
     {
         ::UnregisterClassW(BURN_UITHREAD_CLASS_WINDOW, pContext->hInstance);

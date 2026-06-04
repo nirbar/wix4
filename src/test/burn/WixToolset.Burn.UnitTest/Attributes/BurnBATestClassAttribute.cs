@@ -35,17 +35,31 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         public bool StopTestsOnError { get; init; } = false;
 
+        private string _Skip = null;
         /// <summary>
         /// If set, skips this test with a message.
         /// </summary>
-        public string Skip { get; set; } = null;
+        public string Skip
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_Skip) && RequireAdmin && (!RuntimeTestsEnabled || !RunningAsAdministrator))
+                {
+                    this.Skip = $"This test must run elevated and with environment variable '{nameof(RuntimeTestsEnabled)}' set to true.";
+                }
+                return _Skip;
+            }
+            set
+            {
+                _Skip = value;
+            }
+        }
 
         /// <summary>
         /// If set, this test will run only if the process is executed with admin privileges
         /// </summary>
         public bool RequireAdmin { get; set; } = false;
 
-        const string RequiredEnvironmentVariableName = "RuntimeTestsEnabled";
         public static bool RuntimeTestsEnabled { get; }
         public static bool RunningAsAdministrator { get; }
 
@@ -55,16 +69,8 @@ namespace WixToolset.Burn.UnitTest
             var principal = new WindowsPrincipal(identity);
             RunningAsAdministrator = principal.IsInRole(WindowsBuiltInRole.Administrator);
 
-            var testsEnabledString = Environment.GetEnvironmentVariable(RequiredEnvironmentVariableName);
+            var testsEnabledString = Environment.GetEnvironmentVariable(nameof(RuntimeTestsEnabled));
             RuntimeTestsEnabled = Boolean.TryParse(testsEnabledString, out var testsEnabled) && testsEnabled;
-        }
-
-        public BurnBATestClassAttribute()
-        {
-            if (RequireAdmin && (!RuntimeTestsEnabled || !RunningAsAdministrator))
-            {
-                this.Skip = $"These tests must run elevated ({(RunningAsAdministrator ? "passed" : "failed")}). These tests affect machine state. To accept the consequences, set the {RequiredEnvironmentVariableName} environment variable to true ({(RuntimeTestsEnabled ? "passed" : "failed")}).";
-            }
         }
     }
 }
