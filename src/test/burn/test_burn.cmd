@@ -28,6 +28,7 @@ msbuild -Restore TestData6\TestData6.proj -p:Configuration=%_C% -tl -nologo -m -
 mt.exe -manifest "WixToolsetTest.BurnE2E\testhost.longpathaware.manifest" -updateresource:"%_B%\net8.0-windows\testhost.exe"
 
 dotnet test ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\WixToolsetTest.BurnUnitTest.dll --settings ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\BurnBaTests.runsettings --nologo -l "trx;LogFileName=%_L%\TestResults\WixToolsetTest.BurnUnitTests.trx" || exit /b
+dotnet test ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\WixToolsetTest.BurnUnitTest.BundleC_x64.dll --settings ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\WixToolsetTest.BurnUnitTest.BundleC_x64.runsettings --nologo -l "trx;LogFileName=%_L%\TestResults\WixToolsetTest.BurnUnitTests.BundleC_x64.trx" || exit /b
 
 @if not "%RuntimeTestsEnabled%"=="true" goto :LExit
 

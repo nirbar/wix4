@@ -67,7 +67,7 @@ files listed in the **C++ sources** column.
       block to `DispatchCore` in `BurnBAMessageDispatcher.cs` that:
       - Reads args in the exact order `bacallback.cpp` writes them.
       - Calls `int hr = CallDispatch(instance, () => instance.OnXxx(...));`
-      - After `CallDispatch`, adds `if (instance.TestFailureException != null) { fCancel = true; }`
+      - After `CallDispatch`, adds `if (instance.HasException) { fCancel = true; }`
         when the message has a cancellable `fCancel` output parameter.
       - Writes results in the exact order `bacallback.cpp` reads them back.
 - [ ] If the message has a `fCancel` output, declare `bool fCancel = false;` **before**

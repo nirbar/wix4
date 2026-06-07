@@ -79,7 +79,7 @@ public sealed class SilentInstallTest : BurnBATestBase
     {
         if (hrStatus != 0)
         {
-            this.SetException(new BurnBAAssertException(
+            this.AddException(new BurnBAAssertException(
                 $"Apply failed: 0x{hrStatus:X8}"), endAutoPilot: false);
         }
         return base.OnApplyComplete(hrStatus, restart, recommendation, ref action);
@@ -147,19 +147,19 @@ dispatcher before each `OnCreate` call) for read access in later callbacks.
 
 ---
 
-## Recording failures: `SetException`
+## Recording failures: `AddException`
 
 Never `throw` directly from a BA callback override — exceptions are caught by
-the dispatcher and recorded.  Use `SetException` instead:
+the dispatcher and recorded.  Use `AddException` instead:
 
 ```csharp
-this.SetException(new BurnBAAssertException("Expected X but got Y."));
+this.AddException(new BurnBAAssertException("Expected X but got Y."));
 ```
 
 Signature:
 
 ```csharp
-public void SetException(Exception ex, bool endAutoPilot = true);
+public void AddException(Exception ex, bool endAutoPilot = true);
 ```
 
 * **First call wins** — subsequent calls while a failure is already recorded are
@@ -175,7 +175,7 @@ public void SetException(Exception ex, bool endAutoPilot = true);
 public override int OnDetectComplete(int hrStatus, bool fEligibleForCleanup)
 {
     if (hrStatus != 0)
-        this.SetException(new BurnBAAssertException($"0x{hrStatus:X8}"));
+        this.AddException(new BurnBAAssertException($"0x{hrStatus:X8}"));
     return base.OnDetectComplete(hrStatus, fEligibleForCleanup);
 }
 
@@ -183,7 +183,7 @@ public override int OnDetectComplete(int hrStatus, bool fEligibleForCleanup)
 public override int OnApplyComplete(int hrStatus, ...)
 {
     if (hrStatus != 0)
-        this.SetException(new BurnBAAssertException("Apply failed."), endAutoPilot: false);
+        this.AddException(new BurnBAAssertException("Apply failed."), endAutoPilot: false);
     return base.OnApplyComplete(hrStatus, ...);
 }
 ```
@@ -192,7 +192,7 @@ public override int OnApplyComplete(int hrStatus, ...)
 
 ## Autopilot: `EndTestAutoPilot`
 
-Set `this.EndTestAutoPilot = true` (or call `SetException`) to tell the
+Set `this.EndTestAutoPilot = true` (or call `AddException`) to tell the
 framework: *"the test is done; let burn shut down cleanly without my
 involvement."*
 
@@ -279,7 +279,7 @@ Dispose must be **idempotent** (safe to call multiple times).
 | Type | Purpose |
 |---|---|
 | `BurnBAAssertException` | Carries a human-readable assertion message through the framework |
-| `BurnAssert` (static) | Convenience wrappers — prefer `SetException` over `BurnAssert.X` |
+| `BurnAssert` (static) | Convenience wrappers — prefer `AddException` over `BurnAssert.X` |
 
 ---
 
@@ -292,7 +292,7 @@ public override int OnCreate(IBootstrapperEngine pEngine, ref Command command)
 {
     if (command.action != LaunchAction.Install)
     {
-        this.SetException(new BurnBAAssertException(
+        this.AddException(new BurnBAAssertException(
             $"Expected Install but got {command.action}.")); // autopilot on by default
     }
     var tc = new TestBaCommand(command);
@@ -316,7 +316,7 @@ public override int OnApplyComplete(int hrStatus, ...)
 public override int OnShutdown(ref BOOTSTRAPPER_SHUTDOWN_ACTION action)
 {
     if (!this._applyCompleteCalled)
-        this.SetException(new BurnBAAssertException(
+        this.AddException(new BurnBAAssertException(
             "OnApplyComplete was not called."), endAutoPilot: false);
     return base.OnShutdown(ref action);
 }

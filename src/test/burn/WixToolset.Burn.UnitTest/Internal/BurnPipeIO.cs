@@ -58,7 +58,7 @@ namespace WixToolset.Burn.UnitTest.Internal
         internal static void WriteResponse(PipeStream pipe, int hr, byte[] data)
         {
             var header = new byte[8];
-            BitConverter.TryWriteBytes(new Span<byte>(header, 0, 4), (uint)hr);
+            BitConverter.TryWriteBytes(new Span<byte>(header, 0, 4), hr);
             BitConverter.TryWriteBytes(new Span<byte>(header, 4, 4), (uint)(data?.Length ?? 0));
             pipe.Write(header, 0, 8);
             if (data != null && data.Length > 0)

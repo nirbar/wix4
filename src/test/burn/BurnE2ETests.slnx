@@ -10,6 +10,7 @@
   <Project Path="WixToolset.TestTools/WixToolset.TestTools.csproj" />
   <Project Path="WixToolset.Burn.UnitTest/WixToolset.Burn.UnitTest.csproj" />
   <Project Path="WixToolsetTest.BurnUnitTest/WixToolsetTest.BurnUnitTest.csproj" />
+  <Project Path="WixToolsetTest.BurnUnitTest.BundleC_x64/WixToolsetTest.BurnUnitTest.BundleC_x64.csproj" />
   <Project Path="WixTestToolsFirewall/WixInternal.TestTools.Firewall.csproj" />
   <Project Path="WixToolset.WixBA/WixToolset.WixBA.csproj" />
   <Project Path="WixToolsetTest.BurnE2E/WixToolsetTest.BurnE2E.csproj" />

@@ -37,22 +37,29 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// Forwards the current message to the real BA and caches its response.
         /// Idempotent: subsequent calls return the cached response.
         /// </summary>
-        internal void ForwardToRealBA()
+        internal void ForwardToRealBA(BurnBATestBase testInstance)
         {
-            if (this.WasForwarded)
+            try
             {
-                return;
+                if (this.WasForwarded)
+                {
+                    return;
+                }
+                if (this.RealBA == null)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot forward to real BA: no real BA server is available for this iteration.");
+                }
+                this.RealBA.SendBAMessage(this.MessageType, this.RawPayload);
+                var (hr, data) = this.RealBA.ReadBAResponse();
+                this.ResponseHr = hr;
+                this.ResponseData = data ?? Array.Empty<byte>();
+                this.WasForwarded = true;
             }
-            if (this.RealBA == null)
+            catch (Exception ex)
             {
-                throw new InvalidOperationException(
-                    "Cannot forward to real BA: no real BA server is available for this iteration.");
+                testInstance.AddException(ex);
             }
-            this.RealBA.SendBAMessage(this.MessageType, this.RawPayload);
-            var (hr, data) = this.RealBA.ReadBAResponse();
-            this.ResponseHr = hr;
-            this.ResponseData = data ?? Array.Empty<byte>();
-            this.WasForwarded = true;
         }
 
         /// <summary>
@@ -62,49 +69,56 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// <see cref="WixToolset.BootstrapperApplicationApi.Display"/>) before the real BA sees them.
         /// Idempotent: subsequent calls return the cached response.
         /// </summary>
-        internal void ForwardOnCreateToRealBA(TestBaCommand cmd)
+        internal void ForwardOnCreateToRealBA(BurnBATestBase testInstance, TestBaCommand cmd)
         {
-            if (this.WasForwarded)
+            try
             {
-                return;
+                if (this.WasForwarded)
+                {
+                    return;
+                }
+                if (this.RealBA == null)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot forward to real BA: no real BA server is available for this iteration.");
+                }
+
+                // Re-serialize the (possibly modified) command into the wire format that the real BA expects.
+                var argsWriter = new BurnBufferWriter();
+                argsWriter.WriteUInt32(BurnProtocolConstants.ApiVersion);
+                argsWriter.WriteUInt32(0u);                          // cbSize — unused by managed BAs
+                argsWriter.WriteUInt32((uint)cmd.Action);
+                argsWriter.WriteUInt32((uint)cmd.Display);
+                argsWriter.WriteString(cmd.CommandLine);
+                argsWriter.WriteInt32(cmd.CmdShow);
+                argsWriter.WriteUInt32((uint)cmd.Resume);
+                argsWriter.WriteUInt64(0UL);                         // hwndSplashScreen
+                argsWriter.WriteUInt32((uint)cmd.Relation);
+                argsWriter.WriteBool(cmd.Passthrough);
+                argsWriter.WriteString(cmd.LayoutDirectory);
+                argsWriter.WriteString(cmd.BootstrapperWorkingFolder);
+                argsWriter.WriteString(cmd.BootstrapperApplicationDataPath);
+
+                var argsBytes = argsWriter.ToArray();
+                var defaultResults = this.ExtractDefaultResultsBytes();
+
+                // Reconstruct full payload: [cbArgs][argsBytes][cbResults][defaultResultsBytes]
+                var newPayload = new byte[4 + argsBytes.Length + 4 + defaultResults.Length];
+                Buffer.BlockCopy(BitConverter.GetBytes((uint)argsBytes.Length), 0, newPayload, 0, 4);
+                Buffer.BlockCopy(argsBytes, 0, newPayload, 4, argsBytes.Length);
+                Buffer.BlockCopy(BitConverter.GetBytes((uint)defaultResults.Length), 0, newPayload, 4 + argsBytes.Length, 4);
+                Buffer.BlockCopy(defaultResults, 0, newPayload, 4 + argsBytes.Length + 4, defaultResults.Length);
+
+                this.RealBA.SendBAMessage(this.MessageType, newPayload);
+                var (hr, data) = this.RealBA.ReadBAResponse();
+                this.ResponseHr = hr;
+                this.ResponseData = data ?? Array.Empty<byte>();
+                this.WasForwarded = true;
             }
-            if (this.RealBA == null)
+            catch (Exception ex)
             {
-                throw new InvalidOperationException(
-                    "Cannot forward to real BA: no real BA server is available for this iteration.");
+                testInstance.AddException(ex);
             }
-
-            // Re-serialize the (possibly modified) command into the wire format that the real BA expects.
-            var argsWriter = new BurnBufferWriter();
-            argsWriter.WriteUInt32(BurnProtocolConstants.ApiVersion);
-            argsWriter.WriteUInt32(0u);                          // cbSize — unused by managed BAs
-            argsWriter.WriteUInt32((uint)cmd.Action);
-            argsWriter.WriteUInt32((uint)cmd.Display);
-            argsWriter.WriteString(cmd.CommandLine);
-            argsWriter.WriteInt32(cmd.CmdShow);
-            argsWriter.WriteUInt32((uint)cmd.Resume);
-            argsWriter.WriteUInt64(0UL);                         // hwndSplashScreen
-            argsWriter.WriteUInt32((uint)cmd.Relation);
-            argsWriter.WriteBool(cmd.Passthrough);
-            argsWriter.WriteString(cmd.LayoutDirectory);
-            argsWriter.WriteString(cmd.BootstrapperWorkingFolder);
-            argsWriter.WriteString(cmd.BootstrapperApplicationDataPath);
-
-            var argsBytes = argsWriter.ToArray();
-            var defaultResults = this.ExtractDefaultResultsBytes();
-
-            // Reconstruct full payload: [cbArgs][argsBytes][cbResults][defaultResultsBytes]
-            var newPayload = new byte[4 + argsBytes.Length + 4 + defaultResults.Length];
-            Buffer.BlockCopy(BitConverter.GetBytes((uint)argsBytes.Length), 0, newPayload, 0, 4);
-            Buffer.BlockCopy(argsBytes, 0, newPayload, 4, argsBytes.Length);
-            Buffer.BlockCopy(BitConverter.GetBytes((uint)defaultResults.Length), 0, newPayload, 4 + argsBytes.Length, 4);
-            Buffer.BlockCopy(defaultResults, 0, newPayload, 4 + argsBytes.Length + 4, defaultResults.Length);
-
-            this.RealBA.SendBAMessage(this.MessageType, newPayload);
-            var (hr, data) = this.RealBA.ReadBAResponse();
-            this.ResponseHr = hr;
-            this.ResponseData = data ?? Array.Empty<byte>();
-            this.WasForwarded = true;
         }
 
         private byte[] ExtractDefaultResultsBytes()
@@ -141,7 +155,6 @@ namespace WixToolset.Burn.UnitTest.Internal
             {
                 return new BurnBufferReader(Array.Empty<byte>());
             }
-            var cbArgs = BitConverter.ToUInt32(this.RawPayload, 0);
             return new BurnBufferReader(this.RawPayload, startOffset: 4);
             // Caller reads up to cbArgs bytes from offset 4.
             // We pass the whole buffer; the caller is responsible for reading the right count.

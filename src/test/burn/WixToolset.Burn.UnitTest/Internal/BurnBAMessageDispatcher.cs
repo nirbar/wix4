@@ -155,7 +155,7 @@ namespace WixToolset.Burn.UnitTest.Internal
 
                 case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYCOMPLETE:
                     instance._applyCompleteSeen = true;
-                    if (instance.EndTestAutoPilot || instance.TestFailureException != null)
+                    if (instance.EndTestAutoPilot || instance.HasExceptions)
                     {
                         instance._pendingEngineQuit = true;
                     }
@@ -166,7 +166,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                 // to do that, so signal the runner to send Engine.Quit() instead.
                 case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONDETECTCOMPLETE:
                 case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONPLANCOMPLETE:
-                    if (instance.EndTestAutoPilot || instance.TestFailureException != null)
+                    if (instance.EndTestAutoPilot || instance.HasExceptions)
                     {
                         instance._pendingEngineQuit = true;
                     }
@@ -180,16 +180,16 @@ namespace WixToolset.Burn.UnitTest.Internal
         ///   <item>If the test is already in a failed state the call is skipped entirely (the
         ///   caller will use the locally-declared default values for all output parameters,
         ///   which keeps the pipe from hanging and lets subsequent messages cancel burn).</item>
-        ///   <item>If the call throws â€” including <see cref="OperationCanceledException"/>
-        ///   which has no special meaning in a burn BA lifecycle â€” the exception is recorded as
-        ///   <see cref="BurnBATestBase.TestFailureException"/> (first failure wins) and
+        ///   <item>If the call throws- including <see cref="OperationCanceledException"/>
+        ///   which has no special meaning in a burn BA lifecycle- the exception is recorded in
+        ///   <see cref="BurnBATestBase.Exceptions"/> (first failure wins) and
         ///   <see cref="BurnBATestBase.Dispose"/> is called for test-class cleanup, then 0 is
         ///   returned so the caller can build a valid response from its default values.</item>
         /// </list>
         /// </summary>
         private static int CallDispatch(BurnBATestBase instance, Func<int> action)
         {
-            if (instance.TestFailureException != null || instance.EndTestAutoPilot)
+            if (instance.HasExceptions || instance.EndTestAutoPilot)
             {
                 // Already failed or autopilot active- skip the override and let the caller return cancel defaults.
                 return 0;
@@ -201,7 +201,7 @@ namespace WixToolset.Burn.UnitTest.Internal
             }
             catch (Exception ex)
             {
-                instance.SetException(ex);
+                instance.AddException(ex);
                 TryDispose(instance);
                 return 0;
             }
@@ -1771,7 +1771,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                     // Unknown message: forward if possible, otherwise return E_NOTIMPL.
                     if (ctx.RealBA != null)
                     {
-                        ctx.ForwardToRealBA();
+                        ctx.ForwardToRealBA(instance);
                         return (ctx.ResponseHr, ctx.ResponseData);
                     }
                     return (unchecked((int)0x80004001u) /* E_NOTIMPL */, Array.Empty<byte>());

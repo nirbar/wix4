@@ -12,6 +12,7 @@
     <Log Prefix="$(var.BundleLogDirectory)\~$(var.TestGroupName)_$(var.BundleName)" />
 
     <Variable Name="TestGroupName" Value="$(var.TestGroupName)" />
+    <Variable Name="throwOnDetectComplete" bal:Overridable="yes" />
 
     <?ifdef SoftwareTag?>
     <SoftwareTag Regid="regid.1995-08.com.example" InstallPath="[CommonAppDataFolder]TestingSwidTags" />

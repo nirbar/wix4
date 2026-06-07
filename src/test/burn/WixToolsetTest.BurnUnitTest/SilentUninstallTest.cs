@@ -33,7 +33,7 @@ namespace WixToolsetTest.BurnUnitTest
             // S_OK == 0 means detection succeeded.
             if (hrStatus != 0)
             {
-                this.SetException(new BurnBAAssertException(
+                this.AddException(new BurnBAAssertException(
                     $"DetectComplete reported failure: 0x{hrStatus:X8}"));
             }
 
@@ -49,13 +49,13 @@ namespace WixToolsetTest.BurnUnitTest
         {
             if (!this._detectCompleteCalled)
             {
-                this.SetException(new BurnBAAssertException(
+                this.AddException(new BurnBAAssertException(
                     "OnDetectComplete should have been called before OnApplyComplete."),
                     endAutoPilot: false);
             }
             else if (hrStatus != 0)
             {
-                this.SetException(new BurnBAAssertException(
+                this.AddException(new BurnBAAssertException(
                     $"ApplyComplete reported failure: 0x{hrStatus:X8}"),
                     endAutoPilot: false);
             }

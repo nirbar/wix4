@@ -193,96 +193,96 @@ namespace WixToolset.Burn.UnitTest.Internal
                 .ConfigureAwait(false);
 
             // Create the test instance and set its iteration data.
-            var instance = (BurnBATestBase)Activator.CreateInstance(entry.TestClassType)!;
-            instance.TestData = entry.TestData;
-            instance.TestIteration = entry.IterationIndex;
-
-            // Start the engine relay: forward engine RPC calls from the real BA back to burn.
-            RealBAPipeServer realBAServer = null;
-            Task engineRelayTask = null;
-
-            // Pump messages until disconnect.
-            bool engineQuitSent = false;
-            while (!ct.IsCancellationRequested)
+            using (var instance = (BurnBATestBase)Activator.CreateInstance(entry.TestClassType))
             {
-                var (msgType, payload) = conn.ReadBAMessage();
+                instance.TestData = entry.TestData;
+                instance.TestIteration = entry.IterationIndex;
 
-                if (msgType == BurnProtocolConstants.PipeMessageDisconnect)
+                // Start the engine relay: forward engine RPC calls from the real BA back to burn.
+                RealBAPipeServer realBAServer = null;
+                Task engineRelayTask = null;
+
+                // Pump messages until disconnect.
+                bool engineQuitSent = false;
+                while (!ct.IsCancellationRequested)
                 {
-                    if (!instance.EndTestAutoPilot)
+                    try
                     {
-                        realBAServer?.SendBAMessage((uint)BurnProtocolConstants.PipeMessageDisconnect, null);
+                        var (msgType, payload) = conn.ReadBAMessage();
+
+                        if (msgType == BurnProtocolConstants.PipeMessageDisconnect)
+                        {
+                            if (!instance.EndTestAutoPilot)
+                            {
+                                realBAServer?.SendBAMessage((uint)BurnProtocolConstants.PipeMessageDisconnect, null);
+                            }
+                            break;
+                        }
+
+                        // StartRealBA is a special message: burn wants us to launch the real BA.
+                        if (msgType == BurnProtocolConstants.BaMessageStartRealBA)
+                        {
+                            (realBAServer, engineRelayTask) = await HandleStartRealBAAsync(payload, conn, ct).ConfigureAwait(false);
+
+                            // Respond to burn with a simple [apiVersion] result.
+                            var resp = new BurnBufferWriter();
+                            resp.WriteUInt32(BurnProtocolConstants.ApiVersion);
+                            conn.WriteBAResponse(0 /* S_OK */, resp.ToArray());
+                            continue;
+                        }
+
+                        // Dispatch the message to the test instance.
+                        bool isShutdown = msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN;
+                        var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(instance, msgType, payload, realBAServer);
+
+                        if (instance._pendingEngineQuit && !engineQuitSent)
+                        {
+                            // Autopilot reached OnDetectComplete or OnPlanComplete or OnApplyComplete: burn is now
+                            // parked waiting.  Write the response, shut the real BA down cleanly, then send Engine.Quit().
+                            instance._pendingEngineQuit = false;
+                            conn.WriteBAResponse(hr, responseData);
+
+                            if (realBAServer != null)
+                            {
+                                // Disconnect the engine pipe first so the real BA cannot forward its
+                                // own Engine.Quit() call through our relay after receiving OnShutdown.
+                                realBAServer.DisconnectEnginePipe();
+                                engineRelayTask = null;
+
+                                // Send synthetic OnShutdown so the real BA terminates cleanly
+                                // instead of hanging on its next pipe-read.
+                                SendShutdownToRealBA(instance, realBAServer);
+
+                                realBAServer.Dispose();
+                                realBAServer = null;
+                            }
+
+                            await SendQuitAsync(conn, ct).ConfigureAwait(false);
+                            engineQuitSent = true;
+                            continue;
+                        }
+                        else
+                        {
+                            conn.WriteBAResponse(hr, responseData);
+                        }
                     }
-                    break;
-                }
-
-                // StartRealBA is a special message: burn wants us to launch the real BA.
-                if (msgType == BurnProtocolConstants.BaMessageStartRealBA)
-                {
-                    (realBAServer, engineRelayTask) = await HandleStartRealBAAsync(payload, conn, ct).ConfigureAwait(false);
-
-                    // Respond to burn with a simple [apiVersion] result.
-                    var resp = new BurnBufferWriter();
-                    resp.WriteUInt32(BurnProtocolConstants.ApiVersion);
-                    conn.WriteBAResponse(0 /* S_OK */, resp.ToArray());
-                    continue;
-                }
-
-                // Dispatch the message to the test instance.
-                bool isShutdown = msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN;
-                var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(instance, msgType, payload, realBAServer);
-
-                if (instance._pendingEngineQuit && !engineQuitSent)
-                {
-                    // Autopilot reached OnDetectComplete or OnPlanComplete or OnApplyComplete: burn is now
-                    // parked waiting.  Write the response, shut the real BA down cleanly, then send Engine.Quit().
-                    instance._pendingEngineQuit = false;
-                    conn.WriteBAResponse(hr, responseData);
-
-                    if (realBAServer != null)
+                    catch (Exception ex)
                     {
-                        // Disconnect the engine pipe first so the real BA cannot forward its
-                        // own Engine.Quit() call through our relay after receiving OnShutdown.
-                        realBAServer.DisconnectEnginePipe();
-                        engineRelayTask = null;
-
-                        // Send synthetic OnShutdown so the real BA terminates cleanly
-                        // instead of hanging on its next pipe-read.
-                        SendShutdownToRealBA(realBAServer);
-
-                        realBAServer.Dispose();
-                        realBAServer = null;
+                        instance.AddException(ex);
                     }
-
-                    await SendQuitAsync(conn, ct).ConfigureAwait(false);
-                    engineQuitSent = true;
-                    continue;
                 }
-                else
+
+                // Wait for the engine relay to finish.
+                if (engineRelayTask != null)
                 {
-                    conn.WriteBAResponse(hr, responseData);
+                    await engineRelayTask.ConfigureAwait(false);
                 }
-            }
 
-            // Wait for the engine relay to finish.
-            if (engineRelayTask != null)
-            {
-                await engineRelayTask.ConfigureAwait(false);
-            }
+                // Stop the real BA server.
+                realBAServer?.Dispose();
 
-            // Stop the real BA server.
-            realBAServer?.Dispose();
-
-            // Dispose the test instance (normal end-of-iteration cleanup).
-            instance.Dispose();
-
-            // If a test override threw an assertion or other exception, rethrow it now so the
-            // runner records this iteration as failed.
-            if (instance.TestFailureException != null)
-            {
-                System.Runtime.ExceptionServices.ExceptionDispatchInfo
-                    .Capture(instance.TestFailureException)
-                    .Throw();
+                // Finalize the result. Throws on errors.
+                instance.FinalizeResult();
             }
         }
 
@@ -414,39 +414,46 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// Wire format (from bacallback.cpp BACallbackOnShutdown):
         ///   payload = [cbArgs=4][uint32 apiVersion][cbResults=8][uint32 apiVersion][uint32 action=0 (Quit)]
         /// </remarks>
-        private static void SendShutdownToRealBA(RealBAPipeServer realBAServer)
+        private static void SendShutdownToRealBA(BurnBATestBase testInstance, RealBAPipeServer realBAServer)
         {
-            var w = new BurnBufferWriter();
-            w.WriteUInt32(4u);                            // cbArgs (4 bytes for apiVersion)
-            w.WriteUInt32(BurnProtocolConstants.ApiVersion); // args.apiVersion
-            w.WriteUInt32(8u);                            // cbResults (8 bytes)
-            w.WriteUInt32(BurnProtocolConstants.ApiVersion); // results.apiVersion
-            w.WriteUInt32(0u);                            // results.action = BOOTSTRAPPER_SHUTDOWN_ACTION_QUIT
+            try
+            {
+                var w = new BurnBufferWriter();
+                w.WriteUInt32(4u);                            // cbArgs (4 bytes for apiVersion)
+                w.WriteUInt32(BurnProtocolConstants.ApiVersion); // args.apiVersion
+                w.WriteUInt32(8u);                            // cbResults (8 bytes)
+                w.WriteUInt32(BurnProtocolConstants.ApiVersion); // results.apiVersion
+                w.WriteUInt32(0u);                            // results.action = BOOTSTRAPPER_SHUTDOWN_ACTION_QUIT
 
-            realBAServer.SendBAMessage(
-                (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN,
-                w.ToArray());
+                realBAServer.SendBAMessage(
+                    (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN,
+                    w.ToArray());
 
-            // Discard the real BA's response; we are not acting on its action value.
-            realBAServer.ReadBAResponse();
+                // Discard the real BA's response; we are not acting on its action value.
+                realBAServer.ReadBAResponse();
 
-            // Now a destroy message
-            w = new BurnBufferWriter();
-            w.WriteUInt32(8u);                            // cbArgs (8 bytes for apiVersion, fReload)
-            w.WriteUInt32(BurnProtocolConstants.ApiVersion); // args.apiVersion
-            w.WriteBool(false);                           // args.fReload
-            w.WriteUInt32(4u);                            // cbResults (4 bytes)
-            w.WriteUInt32(BurnProtocolConstants.ApiVersion); // results.apiVersion
+                // Now a destroy message
+                w = new BurnBufferWriter();
+                w.WriteUInt32(8u);                            // cbArgs (8 bytes for apiVersion, fReload)
+                w.WriteUInt32(BurnProtocolConstants.ApiVersion); // args.apiVersion
+                w.WriteBool(false);                           // args.fReload
+                w.WriteUInt32(4u);                            // cbResults (4 bytes)
+                w.WriteUInt32(BurnProtocolConstants.ApiVersion); // results.apiVersion
 
-            realBAServer.SendBAMessage(
-                (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONDESTROY,
-                w.ToArray());
+                realBAServer.SendBAMessage(
+                    (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONDESTROY,
+                    w.ToArray());
 
-            // Discard the real BA's response
-            realBAServer.ReadBAResponse();
+                // Discard the real BA's response
+                realBAServer.ReadBAResponse();
 
-            // Now a disconnect message
-            realBAServer.SendBAMessage((uint)BurnProtocolConstants.PipeMessageDisconnect, null);
+                // Now a disconnect message
+                realBAServer.SendBAMessage((uint)BurnProtocolConstants.PipeMessageDisconnect, null);
+            }
+            catch (Exception e)
+            {
+                testInstance.AddException(e);
+            }
         }
 
         private static async Task SendQuitAsync(BurnPipeConnection conn, CancellationToken ct)

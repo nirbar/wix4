@@ -40,7 +40,7 @@ namespace WixToolsetTest.BurnUnitTest
             {
                 // Record the failure but do NOT engage autopilot — we are already in
                 // OnApplyComplete so burn will proceed to shutdown on its own.
-                this.SetException(new BurnBAAssertException(
+                this.AddException(new BurnBAAssertException(
                     "Expected a failure HRESULT from the engine, but got S_OK."),
                     endAutoPilot: false);
             }
@@ -55,7 +55,7 @@ namespace WixToolsetTest.BurnUnitTest
             // Confirm the failure was seen.
             if (this._applyCompleteHr == 0)
             {
-                this.SetException(new BurnBAAssertException(
+                this.AddException(new BurnBAAssertException(
                     "OnApplyComplete should have been called with a failure code before shutdown."),
                     endAutoPilot: false);
             }

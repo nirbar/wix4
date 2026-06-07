@@ -3,6 +3,9 @@
 namespace WixToolset.Burn.UnitTest
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
     using WixToolset.BootstrapperApplicationApi;
     using WixToolset.Burn.UnitTest.Internal;
 
@@ -57,18 +60,17 @@ namespace WixToolset.Burn.UnitTest
         public bool EndTestAutoPilot { get; set; }
 
         /// <summary>
-        /// Records <paramref name="ex"/> as the first test failure (subsequent calls are
-        /// no-ops if a failure is already recorded) and, when <paramref name="endAutoPilot"/>
+        /// Add and exception and, when <paramref name="endAutoPilot"/>
         /// is <see langword="true"/> (the default), also sets
         /// <see cref="EndTestAutoPilot"/> to drive burn to a clean shutdown automatically.
         /// </summary>
-        public void SetException(Exception ex, bool endAutoPilot = true)
+        public void AddException(Exception ex, bool endAutoPilot = true)
         {
             if (ex == null)
             {
                 throw new ArgumentNullException(nameof(ex));
             }
-            this.TestFailureException ??= ex;
+            this.Exceptions.Add(ex);
             if (endAutoPilot)
             {
                 this.EndTestAutoPilot = true;
@@ -76,10 +78,14 @@ namespace WixToolset.Burn.UnitTest
         }
 
         /// <summary>
-        /// Stores the first unhandled exception thrown by a test override so the runner can
-        /// surface it as a test failure.
+        /// Unhandled exceptions store
         /// </summary>
-        internal Exception TestFailureException { get; set; }
+        public List<Exception> Exceptions { get; set; } = new List<Exception>();
+
+        /// <summary>
+        /// Whether or not any unhandled exceptions occured.
+        /// </summary>
+        public bool HasExceptions => this.Exceptions.Count > 0;
 
         /// <summary>
         /// <see langword="true"/> when the dispatcher should set <c>fCancel = true</c> on any
@@ -89,7 +95,7 @@ namespace WixToolset.Burn.UnitTest
         /// and before <c>OnApplyComplete</c>); messages outside that window are not cancelled.
         /// </summary>
         internal bool TestShouldCancel
-            => this.TestFailureException != null
+            => this.HasExceptions
             || (this.EndTestAutoPilot && this._applyBeginSeen && !this._applyCompleteSeen);
 
         // ---- Phase-tracking fields (written by the dispatcher) ----
@@ -111,6 +117,21 @@ namespace WixToolset.Burn.UnitTest
         /// Per-dispatch context.  Set by the runner/dispatcher before each virtual method call.
         /// </summary>
         internal BurnBAMessageContext _messageContext;
+
+        /// <summary>
+        /// Finalize the test result. Override to ignore specific exceptions or impose any other
+        /// test result functionality.
+        /// Throw on test failure.
+        /// By default, throws the first exception, or if no exception has been recorded, do nothing.
+        /// </summary>
+        public virtual void FinalizeResult()
+        {
+            var ex = this.Exceptions.FirstOrDefault();
+            if (ex != null)
+            {
+                throw ex;
+            }
+        }
 
         /// <summary>
         /// Called by the test framework when an exception is thrown by any BA callback override,
@@ -142,7 +163,7 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         public virtual int OnCreate(IBootstrapperEngine engine, ref Command command)
         {
-            _messageContext!.ForwardOnCreateToRealBA(new TestBaCommand(command));
+            _messageContext!.ForwardOnCreateToRealBA(this, new TestBaCommand(command));
             return _messageContext.ResponseHr;
         }
 
@@ -152,7 +173,7 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         public virtual int OnDestroy(bool reload)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
@@ -162,7 +183,7 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         public virtual int OnStartup()
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
@@ -172,7 +193,7 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         public virtual int OnShutdown(ref BOOTSTRAPPER_SHUTDOWN_ACTION action)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             action = (BOOTSTRAPPER_SHUTDOWN_ACTION)r.ReadUInt32();
@@ -186,7 +207,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectBegin(bool fCached, RegistrationType registrationType, int cPackages, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -196,7 +217,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectForwardCompatibleBundle(string wzBundleCode, RelationType relationType, string wzBundleTag, bool fPerMachine, string wzVersion, bool fMissingFromCache, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -206,7 +227,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectUpdateBegin(string wzUpdateLocation, ref bool fCancel, ref bool fSkip)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -217,7 +238,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectUpdate(string wzUpdateLocation, long dw64Size, string wzHash, UpdateHashType hashAlgorithm, string wzVersion, string wzTitle, string wzSummary, string wzContentType, string wzContent, ref bool fCancel, ref bool fStopProcessingUpdates)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -228,7 +249,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectUpdateComplete(int hrStatus, ref bool fIgnoreError)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fIgnoreError = r.ReadBool();
@@ -238,7 +259,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectRelatedBundle(string wzBundleCode, RelationType relationType, string wzBundleTag, bool fPerMachine, string wzVersion, bool fMissingFromCache, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -248,7 +269,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectPackageBegin(string wzPackageId, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -258,7 +279,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectCompatibleMsiPackage(string wzPackageId, string wzCompatiblePackageId, string wzCompatiblePackageVersion, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -268,7 +289,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectRelatedMsiPackage(string wzPackageId, string wzUpgradeCode, string wzProductCode, bool fPerMachine, string wzVersion, RelatedOperation operation, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -278,7 +299,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectPatchTarget(string wzPackageId, string wzProductCode, PackageState patchState, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -288,7 +309,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectMsiFeature(string wzPackageId, string wzFeatureId, FeatureState state, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -298,21 +319,21 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnDetectPackageComplete(string wzPackageId, int hrStatus, PackageState state, bool fCached)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnDetectComplete(int hrStatus, bool fEligibleForCleanup)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnDetectRelatedBundlePackage(string wzPackageId, string wzBundleCode, RelationType relationType, bool fPerMachine, string wzVersion, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -326,7 +347,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanBegin(int cPackages, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -336,7 +357,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanRelatedBundle(string wzBundleCode, RequestState recommendedState, ref RequestState pRequestedState, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -347,7 +368,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanMsiTransaction(string wzTransactionId, ref bool fTransaction, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fTransaction = r.ReadBool();
@@ -358,7 +379,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanMsiTransactionComplete(string wzTransactionId, uint dwPackagesInTransaction, bool fPlanned, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -368,7 +389,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanPackageBegin(string wzPackageId, PackageState state, bool fCached, BOOTSTRAPPER_PACKAGE_CONDITION_RESULT installCondition, BOOTSTRAPPER_PACKAGE_CONDITION_RESULT repairCondition, RequestState recommendedState, BOOTSTRAPPER_CACHE_TYPE recommendedCacheType, ref RequestState pRequestedState, ref BOOTSTRAPPER_CACHE_TYPE pRequestedCacheType, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -380,7 +401,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanCompatibleMsiPackageBegin(string wzPackageId, string wzCompatiblePackageId, string wzCompatiblePackageVersion, bool fRecommendedRemove, ref bool fRequestRemove, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -391,14 +412,14 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanCompatibleMsiPackageComplete(string wzPackageId, string wzCompatiblePackageId, int hrStatus, bool fRequestedRemove)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnPlanPatchTarget(string wzPackageId, string wzProductCode, RequestState recommendedState, ref RequestState pRequestedState, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -409,7 +430,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanMsiFeature(string wzPackageId, string wzFeatureId, FeatureState recommendedState, ref FeatureState pRequestedState, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pRequestedState = (FeatureState)r.ReadUInt32();
@@ -420,7 +441,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanMsiPackage(string wzPackageId, bool fExecute, ActionState action, BOOTSTRAPPER_MSI_FILE_VERSIONING recommendedFileVersioning, ref bool fCancel, ref BURN_MSI_PROPERTY actionMsiProperty, ref INSTALLUILEVEL uiLevel, ref bool fDisableExternalUiHandler, ref BOOTSTRAPPER_MSI_FILE_VERSIONING fileVersioning)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -434,35 +455,35 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanPackageComplete(string wzPackageId, int hrStatus, RequestState requested)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnPlannedCompatiblePackage(string wzPackageId, string wzCompatiblePackageId, bool fRemove)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnPlannedPackage(string wzPackageId, ActionState execute, ActionState rollback, bool fPlannedCache, bool fPlannedUncache)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnPlanComplete(int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnPlanForwardCompatibleBundle(string wzBundleCode, RelationType relationType, string wzBundleTag, bool fPerMachine, string wzVersion, bool fRecommendedIgnoreBundle, ref bool fCancel, ref bool fIgnoreBundle)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -473,7 +494,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanRestoreRelatedBundle(string wzBundleCode, RequestState recommendedState, ref RequestState pRequestedState, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -484,7 +505,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPlanRelatedBundleType(string wzBundleCode, RelatedBundlePlanType recommendedType, ref RelatedBundlePlanType pRequestedType, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -499,7 +520,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnApplyBegin(int dwPhaseCount, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -509,7 +530,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnElevateBegin(ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -519,14 +540,14 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnElevateComplete(int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnProgress(int dwProgressPercentage, int dwOverallPercentage, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -536,7 +557,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnError(ErrorType errorType, string wzPackageId, int dwCode, string wzError, int dwUIHint, int cData, string[] rgwzData, Result nRecommendation, ref Result pResult)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pResult = (Result)r.ReadInt32();
@@ -546,7 +567,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnRegisterBegin(RegistrationType recommendedRegistrationType, ref bool fCancel, ref RegistrationType pRegistrationType)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -557,7 +578,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnRegisterComplete(int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
@@ -568,7 +589,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheBegin(ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -578,7 +599,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCachePackageBegin(string wzPackageId, int cCachePayloads, long dw64PackageCacheSize, bool fVital, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -588,7 +609,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheAcquireBegin(string wzPackageOrContainerId, string wzPayloadId, string wzSource, string wzDownloadUrl, string wzPayloadContainerId, CacheOperation recommendation, ref CacheOperation action, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -599,7 +620,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheAcquireProgress(string wzPackageOrContainerId, string wzPayloadId, long dw64Progress, long dw64Total, int dwOverallPercentage, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -609,7 +630,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheAcquireResolving(string wzPackageOrContainerId, string wzPayloadId, string[] searchPaths, int cSearchPaths, bool fFoundLocal, bool fVital, int dwRecommendedSearchPath, string wzDownloadUrl, string wzPayloadContainerId, CacheResolveOperation recommendation, ref int dwChosenSearchPath, ref CacheResolveOperation action, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             dwChosenSearchPath = (int)r.ReadUInt32();
@@ -621,7 +642,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheAcquireComplete(string wzPackageOrContainerId, string wzPayloadId, int hrStatus, BOOTSTRAPPER_CACHEACQUIRECOMPLETE_ACTION recommendation, ref BOOTSTRAPPER_CACHEACQUIRECOMPLETE_ACTION pAction)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pAction = (BOOTSTRAPPER_CACHEACQUIRECOMPLETE_ACTION)r.ReadUInt32();
@@ -631,7 +652,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheVerifyBegin(string wzPackageOrContainerId, string wzPayloadId, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -641,7 +662,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheVerifyProgress(string wzPackageOrContainerId, string wzPayloadId, long dw64Progress, long dw64Total, int dwOverallPercentage, CacheVerifyStep verifyStep, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -651,7 +672,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheVerifyComplete(string wzPackageOrContainerId, string wzPayloadId, int hrStatus, BOOTSTRAPPER_CACHEVERIFYCOMPLETE_ACTION recommendation, ref BOOTSTRAPPER_CACHEVERIFYCOMPLETE_ACTION action)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             action = (BOOTSTRAPPER_CACHEVERIFYCOMPLETE_ACTION)r.ReadUInt32();
@@ -661,7 +682,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCachePackageComplete(string wzPackageId, int hrStatus, BOOTSTRAPPER_CACHEPACKAGECOMPLETE_ACTION recommendation, ref BOOTSTRAPPER_CACHEPACKAGECOMPLETE_ACTION action)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             action = (BOOTSTRAPPER_CACHEPACKAGECOMPLETE_ACTION)r.ReadUInt32();
@@ -671,14 +692,14 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheComplete(int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnCacheContainerOrPayloadVerifyBegin(string wzPackageId, string wzPayloadId, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -688,7 +709,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheContainerOrPayloadVerifyProgress(string wzPackageOrContainerId, string wzPayloadId, long dw64Progress, long dw64Total, int dwOverallPercentage, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -698,14 +719,14 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCacheContainerOrPayloadVerifyComplete(string wzPackageId, string wzPayloadId, int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnCachePayloadExtractBegin(string wzPackageId, string wzPayloadId, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -715,7 +736,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCachePayloadExtractProgress(string wzPackageOrContainerId, string wzPayloadId, long dw64Progress, long dw64Total, int dwOverallPercentage, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -725,14 +746,14 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCachePayloadExtractComplete(string wzPackageId, string wzPayloadId, int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnCachePackageNonVitalValidationFailure(string wzPackageId, int hrStatus, BOOTSTRAPPER_CACHEPACKAGENONVITALVALIDATIONFAILURE_ACTION recommendation, ref BOOTSTRAPPER_CACHEPACKAGENONVITALVALIDATIONFAILURE_ACTION action)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             action = (BOOTSTRAPPER_CACHEPACKAGENONVITALVALIDATIONFAILURE_ACTION)r.ReadUInt32();
@@ -746,7 +767,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnExecuteBegin(int cExecutingPackages, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -756,7 +777,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnExecutePackageBegin(string wzPackageId, bool fExecute, ActionState action, INSTALLUILEVEL uiLevel, bool fDisableExternalUiHandler, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -766,7 +787,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnExecutePatchTarget(string wzPackageId, string wzTargetProductCode, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -776,7 +797,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnExecuteProgress(string wzPackageId, int dwProgressPercentage, int dwOverallPercentage, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -786,7 +807,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnExecuteMsiMessage(string wzPackageId, InstallMessage messageType, int dwUIHint, string wzMessage, int cData, string[] rgwzData, Result nRecommendation, ref Result pResult)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pResult = (Result)r.ReadInt32();
@@ -796,7 +817,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnExecuteFilesInUse(string wzPackageId, int cFiles, string[] rgwzFiles, Result nRecommendation, FilesInUseType source, ref Result pResult)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pResult = (Result)r.ReadInt32();
@@ -806,7 +827,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnEmbeddedCustomMessage(string wzPackageId, int dwCode, string wzMessage, ref Result pResult)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pResult = (Result)r.ReadInt32();
@@ -816,7 +837,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnExecutePackageComplete(string wzPackageId, int hrStatus, ApplyRestart restart, BOOTSTRAPPER_EXECUTEPACKAGECOMPLETE_ACTION recommendation, ref BOOTSTRAPPER_EXECUTEPACKAGECOMPLETE_ACTION pAction)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pAction = (BOOTSTRAPPER_EXECUTEPACKAGECOMPLETE_ACTION)r.ReadUInt32();
@@ -826,14 +847,14 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnExecuteComplete(int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnExecuteProcessCancel(string wzPackageId, int processId, BOOTSTRAPPER_EXECUTEPROCESSCANCEL_ACTION recommendation, ref BOOTSTRAPPER_EXECUTEPROCESSCANCEL_ACTION pAction)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pAction = (BOOTSTRAPPER_EXECUTEPROCESSCANCEL_ACTION)r.ReadUInt32();
@@ -847,7 +868,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnUnregisterBegin(RegistrationType recommendedRegistrationType, ref RegistrationType pRegistrationType)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pRegistrationType = (RegistrationType)r.ReadUInt32();
@@ -857,14 +878,14 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnUnregisterComplete(int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnApplyComplete(int hrStatus, ApplyRestart restart, BOOTSTRAPPER_APPLYCOMPLETE_ACTION recommendation, ref BOOTSTRAPPER_APPLYCOMPLETE_ACTION pAction)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pAction = (BOOTSTRAPPER_APPLYCOMPLETE_ACTION)r.ReadUInt32();
@@ -874,7 +895,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnApplyDowngrade(int hrRecommended, ref int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             hrStatus = r.ReadInt32();
@@ -884,7 +905,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnLaunchApprovedExeBegin(ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -894,7 +915,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnLaunchApprovedExeComplete(int hrStatus, int processId)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
@@ -905,7 +926,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnBeginMsiTransactionBegin(string wzTransactionId, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -915,7 +936,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnBeginMsiTransactionComplete(string wzTransactionId, int hrStatus, ApplyRestart restart, BOOTSTRAPPER_BEGINMSITRANSACTIONCOMPLETE_ACTION recommendation, ref BOOTSTRAPPER_BEGINMSITRANSACTIONCOMPLETE_ACTION pAction)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pAction = (BOOTSTRAPPER_BEGINMSITRANSACTIONCOMPLETE_ACTION)r.ReadUInt32();
@@ -925,7 +946,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCommitMsiTransactionBegin(string wzTransactionId, ref bool fCancel)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             fCancel = r.ReadBool();
@@ -935,7 +956,7 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnCommitMsiTransactionComplete(string wzTransactionId, int hrStatus, ApplyRestart restart, BOOTSTRAPPER_EXECUTEMSITRANSACTIONCOMPLETE_ACTION recommendation, ref BOOTSTRAPPER_EXECUTEMSITRANSACTIONCOMPLETE_ACTION pAction)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pAction = (BOOTSTRAPPER_EXECUTEMSITRANSACTIONCOMPLETE_ACTION)r.ReadUInt32();
@@ -945,14 +966,14 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnRollbackMsiTransactionBegin(string wzTransactionId)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnRollbackMsiTransactionComplete(string wzTransactionId, int hrStatus, ApplyRestart restart, BOOTSTRAPPER_EXECUTEMSITRANSACTIONCOMPLETE_ACTION recommendation, ref BOOTSTRAPPER_EXECUTEMSITRANSACTIONCOMPLETE_ACTION pAction)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             var r = new BurnBufferReader(_messageContext.ResponseData);
             r.ReadUInt32(); // apiVersion
             pAction = (BOOTSTRAPPER_EXECUTEMSITRANSACTIONCOMPLETE_ACTION)r.ReadUInt32();
@@ -966,28 +987,28 @@ namespace WixToolset.Burn.UnitTest
         /// <inheritdoc/>
         public virtual int OnPauseAutomaticUpdatesBegin()
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnPauseAutomaticUpdatesComplete(int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnSystemRestorePointBegin()
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
 
         /// <inheritdoc/>
         public virtual int OnSystemRestorePointComplete(int hrStatus)
         {
-            _messageContext!.ForwardToRealBA();
+            _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
     }

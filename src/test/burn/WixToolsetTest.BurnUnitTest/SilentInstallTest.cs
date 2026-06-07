@@ -40,12 +40,12 @@ namespace WixToolsetTest.BurnUnitTest
         {
             if (!this._onCreateCalled)
             {
-                this.SetException(new BurnBAAssertException(
+                this.AddException(new BurnBAAssertException(
                     "OnCreate was never called before OnShutdown."), endAutoPilot: false);
             }
             else if (!this._onStartupCalled)
             {
-                this.SetException(new BurnBAAssertException(
+                this.AddException(new BurnBAAssertException(
                     "OnStartup was never called before OnShutdown."), endAutoPilot: false);
             }
 
