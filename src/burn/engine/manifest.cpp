@@ -76,6 +76,9 @@ static HRESULT ParseFromXml(
     hr = LoggingParseFromXml(&pEngineState->log, pixeBundle);
     ExitOnFailure(hr, "Failed to parse logging.");
 
+    hr = UnittestParseFromXml(&pEngineState->unitTestContext, pixeBundle);
+    ExitOnFailure(hr, "Failed to parse unittest.");
+
     // get the chain element
     hr = XmlSelectSingleNode(pixeBundle, L"Chain", &pixnChain);
     ExitOnFailure(hr, "Failed to get chain element.");

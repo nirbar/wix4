@@ -4,11 +4,10 @@ namespace WixToolsetTest.BurnE2E
 {
     using System;
     using System.IO;
-    using WixTestTools;
+    using WixToolset.TestTools;
     using WixToolset.BootstrapperApplicationApi;
     using Xunit;
-    using Xunit.Abstractions;
-
+    
     public class BundlePackageTests : BurnE2ETests
     {
         public BundlePackageTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }
@@ -32,11 +31,11 @@ namespace WixToolsetTest.BurnE2E
 
             Assert.True(LogVerifier.MessageInLogFile(installLogPath, "\"NotInstallFolder=1 2 3\" \"InstallFolder=C:\\Program Files\\*****\" UnquotedInstallFolder=123 \"InstallFolder2=C:\\Program Files\\***** 2\\\\\""));
 
-            var bundleELogPath = Path.Combine(Path.GetDirectoryName(installLogPath), Path.GetFileNameWithoutExtension(installLogPath) + "_000_BundleE.log");
-            Assert.True(LogVerifier.MessageInLogFile(bundleELogPath, "Setting string variable 'InstallFolder' to value 'C:\\Program Files\\Test Folder'"));
-            Assert.True(LogVerifier.MessageInLogFile(bundleELogPath, "Setting string variable 'InstallFolder2' to value 'C:\\Program Files\\Test Folder 2\\'"));
-            Assert.True(LogVerifier.MessageInLogFile(bundleELogPath, "Setting string variable 'UnquotedInstallFolder' to value '123'"));
-            Assert.True(LogVerifier.MessageInLogFile(bundleELogPath, "Setting string variable 'NotInstallFolder' to value '1 2 3'"));
+            var bundleLogVerifier = new BundleLogVerifier(bundlePackageWithCommandLineArguments);
+            bundleLogVerifier.AssertContains("Setting string variable 'InstallFolder' to value 'C:\\Program Files\\Test Folder'", "BundleE");
+            bundleLogVerifier.AssertContains("Setting string variable 'InstallFolder2' to value 'C:\\Program Files\\Test Folder 2\\'", "BundleE");
+            bundleLogVerifier.AssertContains("Setting string variable 'UnquotedInstallFolder' to value '123'", "BundleE");
+            bundleLogVerifier.AssertContains("Setting string variable 'NotInstallFolder' to value '1 2 3'", "BundleE");
         }
 
         [RuntimeFact]

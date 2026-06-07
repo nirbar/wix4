@@ -2,7 +2,7 @@
 
 namespace WixToolsetTest.BuildTasks
 {
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixToolset.BuildTasks;
     using Xunit;
 

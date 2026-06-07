@@ -8,10 +8,11 @@
 <?endif?>
 
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
-  <Bundle Name="~$(var.TestGroupName) - $(var.BundleName)" Version="$(var.TestVersion)" UpgradeCode="$(var.UpgradeCode)" Compressed="yes">
+  <Bundle Name="~$(var.TestGroupName) - $(var.BundleName)" Version="$(var.TestVersion)" UpgradeCode="$(var.UpgradeCode)" Compressed="yes" UnittestPasswordHash="0A47151A074E633AB7B6BED6AAB724ABBDDCD3250F80A06BC612A233A907805101F2441B5B2926E54CE8AC8CFBC074BB7A56748830487DF09591DBE167E800F6">
     <Log Prefix="$(var.BundleLogDirectory)\~$(var.TestGroupName)_$(var.BundleName)" />
 
     <Variable Name="TestGroupName" Value="$(var.TestGroupName)" />
+    <Variable Name="throwOnDetectComplete" bal:Overridable="yes" />
 
     <?ifdef SoftwareTag?>
     <SoftwareTag Regid="regid.1995-08.com.example" InstallPath="[CommonAppDataFolder]TestingSwidTags" />

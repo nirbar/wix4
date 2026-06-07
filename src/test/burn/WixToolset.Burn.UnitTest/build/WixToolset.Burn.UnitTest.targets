@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+
+<Project>
+  <!--
+    Copies the burn BA unit-test authoring skill into the consuming project's .agent/skills/
+    directory so the agent can discover it automatically.
+
+    Usage (run once after adding the package reference):
+
+        dotnet build /p:CopyBurnTestSkill=true
+
+    The skill is written to:
+
+        <SolutionDir>/.agent/skills/burn-ba-unit-test-authoring/SKILL.md
+
+    (Falls back to the MSBuild project directory when SolutionDir is not set.)
+  -->
+  <Target Name="PanelSwCopyBurnTestSkill" AfterTargets="Build"
+          Condition="'$(CopyBurnTestSkill)' == 'true'">
+
+    <PropertyGroup>
+      <!-- Prefer the solution root; fall back to the project directory. -->
+      <_PSwBurnSkillRoot Condition="'$(SolutionDir)' != '' And '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)</_PSwBurnSkillRoot>
+      <_PSwBurnSkillRoot Condition="'$(_PSwBurnSkillRoot)' == ''">$(MSBuildProjectDirectory)\</_PSwBurnSkillRoot>
+
+      <_PSwBurnSkillDir>$(_PSwBurnSkillRoot).agent\skills\burn-ba-unit-test-authoring\</_PSwBurnSkillDir>
+    </PropertyGroup>
+
+    <!-- Skill lives at tools/skills/ relative to this targets file (build/ folder). -->
+    <ItemGroup>
+      <_PSwBurnSkillSrc>$(MSBuildThisFileDirectory)..\tools\skills\**</_PSwBurnSkillSrc>
+    </ItemGroup>
+
+    <MakeDir Directories="$(_PSwBurnSkillDir)" />
+    <Copy SourceFiles="@(_PSwBurnSkillSrc)" DestinationFolder="$(_PSwBurnSkillDir)" />
+    <Message Text="Burn test skill installed → $(_PSwBurnSkillDir)" Importance="high" />
+  </Target>
+</Project>

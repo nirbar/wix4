@@ -35,6 +35,7 @@ namespace WixToolset.Data
                 new IntermediateFieldDefinition(nameof(WixBundleSymbolFields.ProviderKey), IntermediateFieldType.String),
                 new IntermediateFieldDefinition(nameof(WixBundleSymbolFields.InProgressName), IntermediateFieldType.String),
                 new IntermediateFieldDefinition(nameof(WixBundleSymbolFields.DisableModify), IntermediateFieldType.String),
+                new IntermediateFieldDefinition(nameof(WixBundleSymbolFields.UnittestPasswordHash), IntermediateFieldType.String),
             },
             typeof(WixBundleSymbol));
     }
@@ -74,6 +75,7 @@ namespace WixToolset.Data.Symbols
         ProviderKey,
         InProgressName,
         DisableModify,
+        UnittestPasswordHash,
     }
 
     [Flags]
@@ -297,6 +299,12 @@ namespace WixToolset.Data.Symbols
                 return WixBundleModifyType.Allowed;
             }
             set => this.Set((int)WixBundleSymbolFields.DisableModify, value.ToString().ToLowerInvariant());
+        }
+
+        public string UnittestPasswordHash
+        {
+            get => (string)this.Fields[(int)WixBundleSymbolFields.UnittestPasswordHash];
+            set => this.Set((int)WixBundleSymbolFields.UnittestPasswordHash, value);
         }
 
         public PackagingType DefaultPackagingType => (this.Compressed.HasValue && !this.Compressed.Value) ? PackagingType.External : PackagingType.Embedded;

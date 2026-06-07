@@ -99,6 +99,7 @@
 #include "manifest.h"
 #include "splashscreen.h"
 #include "uithread.h"
+#include "unittest.h"
 #include "netfxchainer.h"
 
 #include "externalengine.h"

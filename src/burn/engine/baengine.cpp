@@ -1299,6 +1299,36 @@ LExit:
     return hr;
 }
 
+static HRESULT BAEngineUnittestLastTest(
+    __in BAENGINE_CONTEXT* pContext,
+    __in BUFF_READER* pReaderArgs,
+    __in BUFF_READER* pReaderResults,
+    __in BUFF_BUFFER* pBuffer
+    )
+{
+    HRESULT hr = S_OK;
+    BAENGINE_UNITTESTLASTTEST_ARGS args = { };
+    BAENGINE_UNITTESTLASTTEST_RESULTS results = { };
+
+    // Read args.
+    hr = BuffReaderReadNumber(pReaderArgs, &args.dwApiVersion);
+    ExitOnFailure(hr, "Failed to read API version of BAEngineUnittestLastTest args.");
+
+    // Read results.
+    hr = BuffReaderReadNumber(pReaderResults, &results.dwApiVersion);
+    ExitOnFailure(hr, "Failed to read API version of BAEngineUnittestLastTest results.");
+
+    // Mark this as the last unit test.
+    UnittestLastTest(pContext->pEngineState);
+
+    // Pack result.
+    hr = BuffWriteNumberToBuffer(pBuffer, sizeof(results));
+    ExitOnFailure(hr, "Failed to write size of BAEngineUnittestLastTest struct.");
+
+LExit:
+    return hr;
+}
+
 static HRESULT BAEngineLaunchApprovedExe(
     __in BAENGINE_CONTEXT* pContext,
     __in BUFF_READER* pReaderArgs,
@@ -1445,7 +1475,7 @@ HRESULT WINAPI EngineForApplicationProc(
     hr = ParseArgsAndResults(pbData, cbData, &readerArgs, &readerResults);
     if (SUCCEEDED(hr))
     {
-        switch (message)
+        switch ((DWORD)message)
         {
         case BOOTSTRAPPER_ENGINE_MESSAGE_GETPACKAGECOUNT:
             hr = BAEngineGetPackageCount(pContext, &readerArgs, &readerResults, &bufferResponse);
@@ -1527,6 +1557,9 @@ HRESULT WINAPI EngineForApplicationProc(
             break;
         case BOOTSTRAPPER_ENGINE_MESSAGE_GETRELATEDBUNDLEVARIABLE:
             hr = BAEngineGetRelatedBundleVariable(pContext, &readerArgs, &readerResults, &bufferResponse);
+            break;
+        case UNITTEST_ENGINE_MESSAGE_LASTTEST:
+            hr = BAEngineUnittestLastTest(pContext, &readerArgs, &readerResults, &bufferResponse);
             break;
         default:
             hr = E_NOTIMPL;

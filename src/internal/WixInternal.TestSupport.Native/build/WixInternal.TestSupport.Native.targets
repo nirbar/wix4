@@ -9,8 +9,8 @@
 
   <!-- Include these references only when not referenced by the WixInternal.TestSupport.Native.vcxproj -->
   <ItemGroup Condition="'$(MSBuildProjectName)'!='$(MSBuildThisFileName)'">
-    <Reference Include="WixInternal.TestSupport">
-      <HintPath>$(RootBuildFolder)internal\$(Configuration)\$(PlatformTarget)\WixInternal.TestSupport.dll</HintPath>
+    <Reference Include="WixToolset.TestSupport">
+      <HintPath>$(RootBuildFolder)internal\$(Configuration)\$(PlatformTarget)\WixToolset.TestSupport.dll</HintPath>
     </Reference>
     <Reference Include="WixInternal.TestSupport.Native">
       <HintPath>$(RootBuildFolder)internal\$(Configuration)\$(PlatformTarget)\WixInternal.TestSupport.Native.dll</HintPath>

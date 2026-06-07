@@ -86,6 +86,7 @@
     <ClCompile Include="section.cpp" />
     <ClCompile Include="splashscreen.cpp" />
     <ClCompile Include="uithread.cpp" />
+    <ClCompile Include="unittest.cpp" />
     <ClCompile Include="update.cpp" />
     <ClCompile Include="variable.cpp" />
     <ClCompile Include="variant.cpp" />
@@ -135,6 +136,7 @@
     <ClInclude Include="section.h" />
     <ClInclude Include="splashscreen.h" />
     <ClInclude Include="uithread.h" />
+    <ClInclude Include="unittest.h" />
     <ClInclude Include="update.h" />
     <ClInclude Include="variable.h" />
     <ClInclude Include="variant.h" />

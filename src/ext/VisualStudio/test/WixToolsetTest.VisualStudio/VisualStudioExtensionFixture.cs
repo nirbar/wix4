@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace WixToolsetTest.VisualStudio
 {
-    using WixInternal.MSTestSupport;
+    using WixToolset.MSTestSupport;
     using WixInternal.Core.MSTestPackage;
     using WixToolset.VisualStudio;
     using System.Linq;

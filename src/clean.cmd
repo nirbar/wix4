@@ -18,10 +18,12 @@ if exist ..\Directory.Packages.props (del ..\Directory.Packages.props)
 if exist ..\global.json (del ..\global.json)
 
 if exist "%_NUGET_CACHE%\wixinternal.basebuildtasks.sources" rd /s/q "%_NUGET_CACHE%\wixinternal.basebuildtasks.sources"
-if exist "%_NUGET_CACHE%\wixinternal.testsupport" rd /s/q "%_NUGET_CACHE%\wixinternal.testsupport"
-if exist "%_NUGET_CACHE%\wixinternal.mstestsupport" rd /s/q "%_NUGET_CACHE%\wixinternal.mstestsupport"
-if exist "%_NUGET_CACHE%\wixinternal.core.testpackage" rd /s/q "%_NUGET_CACHE%\wixinternal.core.testpackage"
-if exist "%_NUGET_CACHE%\wixinternal.core.mstestpackage" rd /s/q "%_NUGET_CACHE%\wixinternal.core.mstestpackage"
+if exist "%_NUGET_CACHE%\PanelSwWix4.TestSupport" rd /s/q "%_NUGET_CACHE%\PanelSwWix4.TestSupport"
+if exist "%_NUGET_CACHE%\PanelSwWix4.MSTestSupport" rd /s/q "%_NUGET_CACHE%\PanelSwWix4.MSTestSupport"
+if exist "%_NUGET_CACHE%\PanelSwWix4.TestTools" rd /s/q "%_NUGET_CACHE%\PanelSwWix4.TestTools"
+if exist "%_NUGET_CACHE%\WixInternal.Core.TestPackage" rd /s/q "%_NUGET_CACHE%\WixInternal.Core.TestPackage"
+if exist "%_NUGET_CACHE%\WixInternal.Core.MSTestPackage" rd /s/q "%_NUGET_CACHE%\WixInternal.Core.MSTestPackage"
+if exist "%_NUGET_CACHE%\WixInternal.TestTools.Firewall" rd /s/q "%_NUGET_CACHE%\WixInternal.TestTools.Firewall"
 if exist "%_NUGET_CACHE%\panelswwix4.bal.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.bal.wixext"
 if exist "%_NUGET_CACHE%\panelswwix4.bootstrapperapplications.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.bootstrapperapplications.wixext"
 if exist "%_NUGET_CACHE%\panelswwix4.bootstrapperextensionapi" rd /s/q "%_NUGET_CACHE%\panelswwix4.bootstrapperextensionapi"

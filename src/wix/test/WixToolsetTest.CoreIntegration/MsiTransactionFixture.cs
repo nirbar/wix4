@@ -4,7 +4,7 @@ namespace WixToolsetTest.CoreIntegration
 {
     using System.Collections.Generic;
     using System.IO;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixInternal.Core.TestPackage;
     using Xunit;
 

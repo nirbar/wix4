@@ -4,9 +4,8 @@ namespace WixToolsetTest.BurnE2E
 {
     using System;
     using System.IO;
-    using WixTestTools;
+    using WixToolset.TestTools;
     using Xunit;
-    using Xunit.Abstractions;
 
     public class MsiTransactionTests : BurnE2ETests
     {

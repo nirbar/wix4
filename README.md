@@ -27,3 +27,8 @@ This repository contains the PanelSwWix4: A custom WiX Toolset codebase
 - Payload/@Vital: Payloads may be non-vital.
 - MSBuild property BuildTimer=true: print some build time measurements
 - CommandLine/@Quote: Support escaping command line argument.
+
+Testing framework nugets: 
+- PanelSwWix4.TestSupport, PanelSwWix4.MSTestSupport: xUnit/MSTest assertion library
+- PanelSwWix4.TestTools: Utility classes to apply bundles and inspect log files
+- PanelSwWix4.Burn.UnitTest: MTP TestAdapter for BA unit tests

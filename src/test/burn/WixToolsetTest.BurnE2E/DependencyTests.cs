@@ -3,11 +3,10 @@
 namespace WixToolsetTest.BurnE2E
 {
     using System.Text.RegularExpressions;
-    using WixTestTools;
+    using WixToolset.TestTools;
     using WixToolset.BootstrapperApplicationApi;
     using Xunit;
-    using Xunit.Abstractions;
-
+    
     public class DependencyTests : BurnE2ETests
     {
         public DependencyTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }

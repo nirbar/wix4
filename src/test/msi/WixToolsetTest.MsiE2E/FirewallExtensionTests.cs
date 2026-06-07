@@ -7,10 +7,9 @@ namespace WixToolsetTest.MsiE2E
     using System.Linq;
     using System.Net.NetworkInformation;
     using NetFwTypeLib;
-    using WixTestTools;
-    using WixTestTools.Firewall;
-    using Xunit;
-    using Xunit.Abstractions;
+    using WixToolset.TestTools;
+    using WixInternal.TestTools.Firewall;
+    using Xunit;    
 
     public class FirewallExtensionTests : MsiE2ETests
     {

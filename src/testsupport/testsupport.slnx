@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+  </Configurations>
+  <Project Path="WixToolset.MSTestSupport/WixToolset.MSTestSupport.csproj" />
+  <Project Path="WixToolset.TestSupport/WixToolset.TestSupport.csproj" />
+</Solution>

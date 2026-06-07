@@ -8,6 +8,7 @@ namespace TestSupport {
     using namespace System;
     using namespace System::Collections::Generic;
     using namespace System::Linq;
+    using namespace WixToolset::TestSupport;
     using namespace Xunit;
 
     public ref class NativeAssert : WixAssert

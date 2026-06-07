@@ -5,7 +5,7 @@ namespace WixToolsetTest.CoreIntegration
     using System.IO;
     using System.Linq;
     using WixInternal.Core.TestPackage;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using Xunit;
 
     public class StandardActionFixture

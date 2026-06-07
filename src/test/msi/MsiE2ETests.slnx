@@ -4,6 +4,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="../burn/WixTestTools/WixTestTools.csproj" />
+  <Project Path="../burn/WixToolset.TestTools/WixToolset.TestTools.csproj" />
   <Project Path="WixToolsetTest.MsiE2E/WixToolsetTest.MsiE2E.csproj" />
 </Solution>

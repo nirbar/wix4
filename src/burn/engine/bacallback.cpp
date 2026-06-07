@@ -5938,6 +5938,52 @@ LExit:
     return hr;
 }
 
+EXTERN_C HRESULT BACallbackOnUnittestStartRealBA(
+    __in BURN_USER_EXPERIENCE* pUserExperience,
+    __in_z LPCWSTR wzBootstrapperApplicationPath,
+    __in int nCmdShow
+    )
+{
+    HRESULT hr = S_OK;
+    BA_ONUNITTESTAPPLICATIONSTARTREALBA_ARGS args = { };
+    BA_ONUNITTESTAPPLICATIONSTARTREALBA_RESULTS results = { };
+    BUFF_BUFFER bufferArgs = { };
+    BUFF_BUFFER bufferResults = { };
+    PIPE_RPC_RESULT rpc = { };
+
+    // Init structs.
+    args.dwApiVersion = WIX_5_BOOTSTRAPPER_APPLICATION_API_VERSION;
+    args.wzBootstrapperApplicationPath = wzBootstrapperApplicationPath;
+    args.nCmdShow = nCmdShow;
+
+    results.dwApiVersion = WIX_5_BOOTSTRAPPER_APPLICATION_API_VERSION;
+
+    // Send args.
+    hr = BuffWriteNumberToBuffer(&bufferArgs, args.dwApiVersion);
+    ExitOnFailure(hr, "Failed to write API version of OnUnittestStartRealBA args.");
+
+    hr = BuffWriteStringToBuffer(&bufferArgs, args.wzBootstrapperApplicationPath);
+    ExitOnFailure(hr, "Failed to write real BA path of OnUnittestStartRealBA args.");
+
+    hr = BuffWriteNumberToBuffer(&bufferArgs, args.nCmdShow);
+    ExitOnFailure(hr, "Failed to write show command of OnUnittestStartRealBA args.");
+
+    // Send results.
+    hr = BuffWriteNumberToBuffer(&bufferResults, results.dwApiVersion);
+    ExitOnFailure(hr, "Failed to write API version of OnUnittestStartRealBA results.");
+
+    // Callback.
+    hr = SendBAMessage(pUserExperience, (BOOTSTRAPPER_APPLICATION_MESSAGE)UNITTEST_APPLICATION_MESSAGE_START_REAL_BA, &bufferArgs, &bufferResults, &rpc);
+    ExitOnFailure(hr, "BA OnUnittestStartRealBA failed.");
+
+LExit:
+    PipeFreeRpcResult(&rpc);
+    ReleaseBuffer(bufferResults);
+    ReleaseBuffer(bufferArgs);
+
+    return hr;
+}
+
 // internal functions
 
 // This filters the BA's responses to events during apply.

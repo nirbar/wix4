@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Run settings for WixToolsetTest.BurnUnitTest.
+  Customize BundlePath and Password to point at the bundle under test.
+-->
+<RunSettings>
+  <RunConfiguration>
+    <!-- Tell vstest to look for the burn BA test adapter in the test output directory. -->
+    <TestAdaptersPaths>.</TestAdaptersPaths>
+  </RunConfiguration>
+  <BurnBATestFramework>
+    <BundlePath>..\..\..\IntegrationBurn\Release\net8.0-windows\TestData\BasicFunctionalityTests\BundleA.exe</BundlePath>
+    <Password>123456</Password>
+  </BurnBATestFramework>
+</RunSettings>

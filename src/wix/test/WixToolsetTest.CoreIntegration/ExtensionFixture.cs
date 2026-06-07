@@ -7,7 +7,7 @@ namespace WixToolsetTest.CoreIntegration
     using System.Linq;
     using System.Text.RegularExpressions;
     using Example.Extension;
-    using WixInternal.TestSupport;
+    using WixToolset.TestSupport;
     using WixInternal.Core.TestPackage;
     using WixToolset.Data;
     using WixToolset.Data.Symbols;

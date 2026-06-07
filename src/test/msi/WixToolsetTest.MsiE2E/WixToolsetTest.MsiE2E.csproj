@@ -24,11 +24,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\burn\WixTestTools\WixTestTools.csproj" />
+    <ProjectReference Include="..\..\burn\WixToolset.TestTools\WixToolset.TestTools.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WixInternal.TestSupport" />
+    <PackageReference Include="PanelSwWix4.TestSupport" />
     <PackageReference Include="PanelSwWix4.Data" />
+    <PackageReference Include="WixInternal.TestTools.Firewall" />
   </ItemGroup>
 </Project>

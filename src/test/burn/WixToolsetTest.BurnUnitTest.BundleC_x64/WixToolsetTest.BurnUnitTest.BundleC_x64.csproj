@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+
+<!-- Example project demonstrating how to write burn BA unit tests using WixToolset.Burn.UnitTest. -->
+<!-- Tests in this project are gated behind the RuntimeTestsEnabled=true environment variable and -->
+<!-- must run elevated (see RuntimeFactAttribute for details). -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <IsPackable>false</IsPackable>
+    <RunSettingsFilePath>$(MSBuildProjectDirectory)\WixToolsetTest.BurnUnitTest.BundleC_x64.runsettings"</RunSettingsFilePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WixToolset.Burn.UnitTest\WixToolset.Burn.UnitTest.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="PanelSwWix4.BootstrapperApplicationApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Copy the runsettings file to the output directory so vstest can find it. -->
+    <Content Include="WixToolsetTest.BurnUnitTest.BundleC_x64.runsettings" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

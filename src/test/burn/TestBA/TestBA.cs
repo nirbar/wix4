@@ -31,6 +31,7 @@ namespace WixToolset.Test.BA
         private bool forceKeepRegistration;
         private bool immediatelyQuit;
         private bool quitAfterDetect;
+        private bool throwOnDetectComplete;
         private bool explicitlyElevateAndPlanFromOnElevateBegin;
         private int redetectRemaining;
         private int sleepDuringCache;
@@ -167,6 +168,8 @@ namespace WixToolset.Test.BA
                 this.bundleScope = BundleScope.Default;
             }
 
+            this.throwOnDetectComplete = this.engine.ContainsVariable(nameof(this.throwOnDetectComplete)) && !string.IsNullOrEmpty(this.engine.GetVariableString(nameof(this.throwOnDetectComplete)));
+
             this.ImportContainerSources();
             this.ImportPayloadSources();
 
@@ -293,6 +296,11 @@ namespace WixToolset.Test.BA
                 else if (this.quitAfterDetect)
                 {
                     this.ShutdownUiThread();
+                }
+                else if (this.throwOnDetectComplete)
+                {
+                    Environment.Exit(0);
+                    return;
                 }
                 else if (this.explicitlyElevateAndPlanFromOnElevateBegin)
                 {
@@ -647,6 +655,12 @@ namespace WixToolset.Test.BA
             this.Log("After elevation: WixBundleElevated = {0}", this.Engine.GetVariableNumeric("WixBundleElevated"));
 
             this.ShutdownUiThread(args.Status);
+        }
+
+        protected override void OnShutdown(ShutdownEventArgs args)
+        {
+            base.OnShutdown(args);
+            this.ShutdownUiThread();
         }
 
         protected override void OnUnregisterBegin(UnregisterBeginEventArgs args)

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.Build.Traversal">
+  <ItemGroup>
+    <ProjectReference Include="ForTestingUseOnlyExtension/ForTestingUseOnly.wixext.csproj" />
+    <ProjectReference Include="TestBA/TestBA.csproj" />
+    <ProjectReference Include="TestExe/TestExe.csproj" />
+    <ProjectReference Include="WixToolset.TestTools/WixToolset.TestTools.csproj" Targets="Pack" />
+    <ProjectReference Include="WixToolset.Burn.UnitTest\WixToolset.Burn.UnitTest.csproj" Targets="Pack" />
+    <ProjectReference Include="WixToolsetTest.BurnUnitTest\WixToolsetTest.BurnUnitTest.csproj" />
+    <ProjectReference Include="WixToolsetTest.BurnUnitTest.BundleC_x64\WixToolsetTest.BurnUnitTest.BundleC_x64.csproj" />
+    <ProjectReference Include="WixTestToolsFirewall/WixInternal.TestTools.Firewall.csproj" Targets="Pack" />
+    <ProjectReference Include="WixToolset.WixBA/WixToolset.WixBA.csproj" />
+    <ProjectReference Include="WixToolsetTest.BurnE2E/WixToolsetTest.BurnE2E.csproj" />
+  </ItemGroup>
+</Project>

@@ -3,9 +3,12 @@
 <Project>
   <PropertyGroup>
     <SegmentName>IntegrationBurn</SegmentName>
-    <SignOutput>false</SignOutput>
+    <SegmentName Condition=" '$(MSBuildProjectFile)' == 'WixToolset.Burn.UnitTest.csproj' ">BurnUnitTest</SegmentName>
+    <SegmentName Condition=" '$(MSBuildProjectFile)' == 'WixToolsetTest.BurnUnitTest.csproj' ">BurnUnitTest</SegmentName>
+    <SegmentName Condition=" '$(MSBuildProjectFile)' == 'WixToolsetTest.BurnUnitTest.BundleC_x64.csproj' ">BurnUnitTest</SegmentName>
+  <SignOutput>false</SignOutput>
   </PropertyGroup>
-  
+
   <Import Project="..\..\Directory.Build.props" />
   <Import Project="Directory$(MSBuildProjectExtension).props" Condition=" Exists('Directory$(MSBuildProjectExtension).props') " />
 </Project>

@@ -3,7 +3,7 @@
 namespace WixToolsetTest.MsiE2E
 {
     using Xunit;
-    using Xunit.Abstractions;
+    
 
     public class UIExtensionTests : MsiE2ETests
     {

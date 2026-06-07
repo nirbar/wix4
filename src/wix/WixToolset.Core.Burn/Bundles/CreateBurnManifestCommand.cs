@@ -82,6 +82,11 @@ namespace WixToolset.Core.Burn.Bundles
                 writer.WriteAttributeString("ProtocolVersion", BurnCommon.BURN_PROTOCOL_VERSION.ToString());
                 writer.WriteAttributeString("Win64", this.BundleSymbol.Platform == Platform.X86 ? "no" : "yes");
 
+                if (!String.IsNullOrEmpty(this.BundleSymbol.UnittestPasswordHash))
+                {
+                    writer.WriteAttributeString("UnittestPasswordHash", this.BundleSymbol.UnittestPasswordHash);
+                }
+
                 // Write the condition, if there is one
                 if (null != this.BundleSymbol.Condition)
                 {

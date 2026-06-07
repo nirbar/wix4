@@ -183,7 +183,9 @@ static DWORD WINAPI ThreadProc(
     wc.lpszClassName = BURN_SPLASHSCREEN_CLASS_WINDOW;
     if (!::RegisterClassW(&wc))
     {
-        ExitWithLastError(hr, "Failed to register window.");
+        // Might happen in unit tests
+        DWORD dwLastError = ::GetLastError();
+        ExitOnNullWithLastError((dwLastError == ERROR_CLASS_ALREADY_EXISTS), hr, "Failed to register window.");
     }
 
     fRegistered = TRUE;
@@ -211,6 +213,11 @@ static DWORD WINAPI ThreadProc(
     }
 
 LExit:
+    if (splashScreenInfo.hWnd)
+    {
+        ::DestroyWindow(splashScreenInfo.hWnd);
+        splashScreenInfo.hWnd = NULL;
+    }
     if (fRegistered)
     {
         ::UnregisterClassW(BURN_SPLASHSCREEN_CLASS_WINDOW, pContext->hInstance);

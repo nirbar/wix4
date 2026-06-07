@@ -7,6 +7,8 @@ namespace WixToolset.Core
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Xml.Linq;
     using WixToolset.Data;
     using WixToolset.Data.Burn;
@@ -138,6 +140,7 @@ namespace WixToolset.Core
             string logVariablePrefixAndExtension;
             string iconSourceFile = null;
             string splashScreenSourceFile = null;
+            string unittestPasswordHash = null;
 
             // Process only standard attributes until the active section is initialized.
             foreach (var attrib in node.Attributes())
@@ -232,6 +235,21 @@ namespace WixToolset.Core
                             break;
                         case "Version":
                             version = this.Core.GetAttributeVersionValue(sourceLineNumbers, attrib);
+                            break;
+                        case "UnittestPassword":
+                        {
+                            var password = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
+                            using (var sha512 = SHA512.Create())
+                            {
+                                var passwordBytes = Encoding.Unicode.GetBytes(password);
+                                var hashBytes = sha512.ComputeHash(passwordBytes);
+                                unittestPasswordHash = BitConverter.ToString(hashBytes).Replace("-", "");
+                            	this.Core.Write(WarningMessages.PlaintextUnittestPassword(sourceLineNumbers, node.Name.LocalName, unittestPasswordHash));
+                            }
+                            break;
+                        }
+                        case "UnittestPasswordHash":
+                            unittestPasswordHash = this.Core.GetAttributeValue(sourceLineNumbers, attrib);
                             break;
                         default:
                             this.Core.UnexpectedAttribute(node, attrib);
@@ -447,6 +465,7 @@ namespace WixToolset.Core
                     Platform = this.CurrentPlatform,
                     ParentName = parentName,
                     RunAsAdmin = (runAsAdmin == YesNoType.Yes),
+                    UnittestPasswordHash = unittestPasswordHash,
                 });
 
                 if (!String.IsNullOrEmpty(logVariablePrefixAndExtension))

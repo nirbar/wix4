@@ -214,6 +214,22 @@
           </documentation>
         </annotation>
       </attribute>
+      <attribute name="UnittestPasswordHash" type="xs:string">
+        <annotation>
+          <documentation>When set, the burn engine will enable connections from a unit test BA.
+          See nuget package
+          </documentation>
+        </annotation>
+      </attribute>
+      <attribute name="UnittestPassword" type="xs:string">
+        <annotation>
+          <documentation>See documentation of `UnittestPasswordHash`.
+          When using this attribute, the plain password is exposed in source file.
+          It is recommended to use `UnittestPasswordHash` instead.
+          If using the `UnittestPassword`, a warning message will intruct you of the hash value to use in `UnittestPasswordHash`
+          </documentation>
+        </annotation>
+      </attribute>
       <anyAttribute namespace="##other" processContents="lax">
         <annotation>
           <documentation>

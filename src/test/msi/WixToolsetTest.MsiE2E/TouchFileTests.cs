@@ -4,9 +4,9 @@ namespace WixToolsetTest.MsiE2E;
 
 using System;
 using System.IO;
-using WixTestTools;
+using WixToolset.TestTools;
 using Xunit;
-using Xunit.Abstractions;
+
 
 public class TouchFileTests : MsiE2ETests
 {

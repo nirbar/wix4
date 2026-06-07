@@ -274,6 +274,10 @@ public: // IBootstrapperApplication
         // wait for UI thread to terminate
         if (m_hUiThread)
         {
+            if (m_hWnd) // Handle premature shutdown message from engine
+            {
+                ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
+            }
             ::WaitForSingleObject(m_hUiThread, INFINITE);
             ReleaseHandle(m_hUiThread);
         }

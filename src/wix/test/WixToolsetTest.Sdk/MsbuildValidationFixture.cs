@@ -6,7 +6,7 @@ namespace WixToolsetTest.Sdk
     using System.IO;
     using System.Linq;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using WixInternal.MSTestSupport;
+    using WixToolset.MSTestSupport;
 
     // When these tests are run repeatedly, they will expose an issue
     // in the Windows Installer where ICE validations will occasionally

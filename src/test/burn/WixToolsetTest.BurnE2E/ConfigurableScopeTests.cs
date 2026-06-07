@@ -2,11 +2,10 @@
 
 namespace WixToolsetTest.BurnE2E
 {
-    using WixTestTools;
+    using WixToolset.TestTools;
     using WixToolset.BootstrapperApplicationApi;
     using Xunit;
-    using Xunit.Abstractions;
-
+    
     public class ConfigurableScopeTests : BurnE2ETests
     {
         public ConfigurableScopeTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }

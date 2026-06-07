@@ -24,13 +24,12 @@
   <ItemGroup>
     <PackageReference Include="PanelSwWix4.Data" />
     <PackageReference Include="PanelSwWix4.Extensibility" />
+    <PackageReference Include="PanelSwWix4.TestSupport" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="WixInternal.TestSupport" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="xunit.assert" />
+    <PackageReference Include="xunit.v3.extensibility.core">
+      <PrivateAssets>build;buildTransitive</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 </Project>

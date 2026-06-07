@@ -6,12 +6,11 @@ namespace WixToolsetTest.BurnE2E
     using System.Collections.Generic;
     using System.IO;
     using Microsoft.Win32;
-    using WixInternal.TestSupport;
-    using WixTestTools;
+    using WixToolset.TestSupport;
+    using WixToolset.TestTools;
     using WixToolset.BootstrapperApplicationApi;
     using Xunit;
-    using Xunit.Abstractions;
-
+    
     public class CacheTests : BurnE2ETests
     {
         public CacheTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }
@@ -28,7 +27,7 @@ namespace WixToolsetTest.BurnE2E
             var drive = new DriveInfo(targetFilePath.Substring(0, 1));
             if (drive.AvailableFreeSpace < FiveGB + OneGB)
             {
-                WixAssert.Skip($"Skipping {this.TestContext.TestName} because there is not enough disk space available to run the test.");
+                Assert.Skip($"Skipping {this.TestContext.TestName} because there is not enough disk space available to run the test.");
             }
 
             if (!File.Exists(targetFilePath))
