@@ -3,6 +3,8 @@
 Use this skill when the user asks to write, extend, or fix tests in the
 `WixToolsetTest.BurnUnitTest` project (or any project that references
 `PanelSwWix4.Burn.UnitTest`).
+See `./assets/PlanInstallTest.cs` for an example test that terminates cleanly
+after `OnPlanComplete()`.
 
 ---
 
@@ -31,7 +33,7 @@ Key assemblies:
 ## Setting up a test project
 
 1. Add a reference to `PanelSwWix4.Burn.UnitTest` (NuGet) or
-   `WixToolset.Burn.UnitTest` (project reference).
+   `WixToolset.Burn.UnitTest` (project reference within wix code base).
 2. Add a `.runsettings` file pointing to your bundle:  
    ```xml
    <RunSettings>
@@ -39,8 +41,8 @@ Key assemblies:
        <TestAdaptersPaths>.</TestAdaptersPaths>
      </RunConfiguration>
      <BurnBATestFramework>
-       <BundlePath>$(OutputPath)MyBundle.exe</BundlePath>
-       <Password></Password>
+       <BundlePath>Path\To\MyBundle.exe</BundlePath>
+       <Password>UnitTests password ******</Password>
      </BurnBATestFramework>
    </RunSettings>
    ```
@@ -119,7 +121,7 @@ public override int OnCreate(IBootstrapperEngine pEngine, ref Command command)
     var tc = new TestBaCommand(command); // copy original values
     tc.Action      = LaunchAction.Install;
     tc.Display     = Display.None;
-    tc.CommandLine = "/quiet PROPERTY=Value";
+    tc.CommandLine = "/quiet VARIABLE=Value";
 
     var modified = tc.ToCommand();       // convert back to Command struct
     return base.OnCreate(pEngine, ref modified);
@@ -149,8 +151,9 @@ dispatcher before each `OnCreate` call) for read access in later callbacks.
 
 ## Recording failures: `AddException`
 
-Never `throw` directly from a BA callback override — exceptions are caught by
-the dispatcher and recorded.  Use `AddException` instead:
+Tests can either `throw` directly from a BA callback override, or be recorded with  `AddException()`.
+When exceptions are thrown, the test Framework will catch them and call `AddException()` with 
+Auto-Pilot mode set to `true`
 
 ```csharp
 this.AddException(new BurnBAAssertException("Expected X but got Y."));
@@ -162,8 +165,6 @@ Signature:
 public void AddException(Exception ex, bool endAutoPilot = true);
 ```
 
-* **First call wins** — subsequent calls while a failure is already recorded are
-  no-ops.
 * `endAutoPilot = true` (default) — also sets `EndTestAutoPilot` so burn drives
   itself to a clean shutdown without further test involvement.
 * Use `endAutoPilot: false` when the test is already past the point where
@@ -241,10 +242,12 @@ The engine-quit message is sent only on the last iteration's `OnShutdown`.
 
 ---
 
-## Reporting failures from `Dispose`
+## Reporting failures from `FinalizeResult()`
 
-`BurnBATestBase.Dispose()` is called both on exception and at the end of each
-iteration.  Override it to release per-iteration resources:
+`BurnBATestBase.FinalizeResult()` is called at the end of each
+iteration.  Override it to release per-iteration resources, and throw to mark the test
+as failing. Default implementation throws an exception if the `BurnBATestBase.Exceptions` collection
+is not empty:
 
 ```csharp
 private IDisposable _resource;
@@ -255,9 +258,6 @@ public override void Dispose()
     _resource = null;
 }
 ```
-
-Dispose must be **idempotent** (safe to call multiple times).
-
 ---
 
 ## Quick reference: useful callbacks to override

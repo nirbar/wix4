@@ -20,19 +20,20 @@
           Condition="'$(CopyBurnTestSkill)' == 'true'">
 
     <PropertyGroup>
-      <!-- Skill lives at tools/skills/ relative to this targets file (build/ folder). -->
-      <_PSwBurnSkillSrc>$(MSBuildThisFileDirectory)..\tools\skills\burn-ba-unit-test-authoring\SKILL.md</_PSwBurnSkillSrc>
-
       <!-- Prefer the solution root; fall back to the project directory. -->
       <_PSwBurnSkillRoot Condition="'$(SolutionDir)' != '' And '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)</_PSwBurnSkillRoot>
       <_PSwBurnSkillRoot Condition="'$(_PSwBurnSkillRoot)' == ''">$(MSBuildProjectDirectory)\</_PSwBurnSkillRoot>
 
       <_PSwBurnSkillDir>$(_PSwBurnSkillRoot).agent\skills\burn-ba-unit-test-authoring\</_PSwBurnSkillDir>
-      <_PSwBurnSkillDest>$(_PSwBurnSkillDir)SKILL.md</_PSwBurnSkillDest>
     </PropertyGroup>
 
+    <!-- Skill lives at tools/skills/ relative to this targets file (build/ folder). -->
+    <ItemGroup>
+      <_PSwBurnSkillSrc>$(MSBuildThisFileDirectory)..\tools\skills\**</_PSwBurnSkillSrc>
+    </ItemGroup>
+
     <MakeDir Directories="$(_PSwBurnSkillDir)" />
-    <Copy SourceFiles="$(_PSwBurnSkillSrc)" DestinationFiles="$(_PSwBurnSkillDest)" />
-    <Message Text="Burn test skill installed → $(_PSwBurnSkillDest)" Importance="high" />
+    <Copy SourceFiles="@(_PSwBurnSkillSrc)" DestinationFolder="$(_PSwBurnSkillDir)" />
+    <Message Text="Burn test skill installed → $(_PSwBurnSkillDir)" Importance="high" />
   </Target>
 </Project>
