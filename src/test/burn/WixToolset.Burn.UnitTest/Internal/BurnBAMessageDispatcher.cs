@@ -114,15 +114,25 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// <param name="msgType">The message type from burn.</param>
         /// <param name="payload">Raw [cbArgs][argsBytes][cbResults][defaultResultsBytes] payload.</param>
         /// <param name="realBA">Active real BA pipe server, or null if there is no real BA this iteration.</param>
+        /// <param name="conn">The burn pipe connection, used to create a <see cref="TestEngine"/> for <c>OnCreate</c>.</param>
         /// <returns>(hr, responseBytes) to be written back to burn.</returns>
         internal static (int hr, byte[] responseData) Dispatch(
             BurnBATestBase instance,
             uint msgType,
             byte[] payload,
-            RealBAPipeServer realBA)
+            RealBAPipeServer realBA,
+            BurnPipeConnection conn)
         {
             // Update phase-tracking flags before dispatch so autopilot checks see correct state.
             TrackPhase(instance, (BurnApplicationMessage)msgType);
+
+            // Set the TestEngine on the instance before dispatching ONCREATE so that test
+            // overrides can call engine methods (get/set variables, log, etc.) from OnCreate onward.
+            if ((BurnApplicationMessage)msgType == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONCREATE
+                && conn != null)
+            {
+                instance.Engine = new TestEngine(conn);
+            }
 
             var ctx = new BurnBAMessageContext(msgType, payload, realBA);
             instance._messageContext = ctx;

@@ -41,6 +41,15 @@ namespace WixToolset.Burn.UnitTest
         public TestBaCommand Command { get; internal set; }
 
         /// <summary>
+        /// Gets the engine interface that forwards calls to the burn engine through the
+        /// .BAEngine named pipe.  Available inside any BA callback after
+        /// <see cref="OnCreate"/> has been called.
+        /// Use this instead of the <see cref="IBootstrapperEngine"/> parameter of
+        /// <see cref="OnCreate"/>, which is always <see langword="null"/> in test mode.
+        /// </summary>
+        public IEngine Engine { get; internal set; }
+
+        /// <summary>
         /// When set to <see langword="true"/> the dispatcher skips all further test-BA and
         /// real-BA callbacks and drives burn to a clean shutdown without test involvement.
         ///
@@ -163,6 +172,7 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         public virtual int OnCreate(IBootstrapperEngine engine, ref Command command)
         {
+            this.Engine.Log(LogLevel.Standard, $"Strting unit test {this.GetType().Name}");
             _messageContext!.ForwardOnCreateToRealBA(this, new TestBaCommand(command));
             return _messageContext.ResponseHr;
         }

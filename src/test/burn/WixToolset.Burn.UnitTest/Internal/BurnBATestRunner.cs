@@ -233,7 +233,7 @@ namespace WixToolset.Burn.UnitTest.Internal
 
                         // Dispatch the message to the test instance.
                         bool isShutdown = msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN;
-                        var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(instance, msgType, payload, realBAServer);
+                        var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(instance, msgType, payload, realBAServer, conn);
 
                         if (instance._pendingEngineQuit && !engineQuitSent)
                         {
@@ -400,7 +400,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                 }
 
                 // Drain any remaining messages (e.g. ONSHUTDOWN) with default autopilot responses.
-                var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(ghost, msgType, payload, null);
+                var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(ghost, msgType, payload, null, conn);
                 conn.WriteBAResponse(hr, responseData);
             }
         }
