@@ -85,7 +85,7 @@ namespace WixToolset.Burn.UnitTest
                     frameworkHandle.RecordStart(tc);
                     var result = new TestResult(tc)
                     {
-                        Outcome = TestOutcome.Skipped,
+                        Outcome = TestOutcome.Failed,
                         ErrorMessage = "BundlePath is not configured.  Add <BurnBATestFramework><BundlePath>...</BundlePath></BurnBATestFramework> to your .runsettings file.",
                     };
                     frameworkHandle.RecordResult(result);

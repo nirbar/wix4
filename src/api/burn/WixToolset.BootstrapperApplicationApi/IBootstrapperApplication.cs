@@ -63,6 +63,12 @@ namespace WixToolset.BootstrapperApplicationApi
         int OnShutdown(ref BOOTSTRAPPER_SHUTDOWN_ACTION action);
 
         /// <summary>
+        /// Called by the unit test framework to request graceful shutdown of the bootstrapper application.
+        /// Do NOT call any engine methods during this callback; the engine pipe has already been disconnected.
+        /// </summary>
+        void OnUnitTestShutdown();
+
+        /// <summary>
         /// See <see cref="IDefaultBootstrapperApplication.DetectBegin"/>.
         /// </summary>
         [PreserveSig]

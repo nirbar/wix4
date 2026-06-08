@@ -110,6 +110,10 @@ public: // IBootstrapperApplication
         return S_OK;
     }
 
+    virtual void __stdcall OnUnitTestShutdown()
+    {
+    }
+
     virtual STDMETHODIMP OnDetectBegin(
         __in BOOL /*fCached*/,
         __in BOOTSTRAPPER_REGISTRATION_TYPE /*registrationType*/,

@@ -1021,5 +1021,14 @@ namespace WixToolset.Burn.UnitTest
             _messageContext!.ForwardToRealBA(this);
             return _messageContext.ResponseHr;
         }
+
+        /// <summary>
+        /// Called by the unit test framework to request graceful shutdown of the bootstrapper application.
+        /// The engine pipe has already been disconnected; do NOT call engine methods.
+        /// The default implementation is a no-op (the test host process has no UI event loop).
+        /// </summary>
+        public virtual void OnUnitTestShutdown()
+        {
+        }
     }
 }

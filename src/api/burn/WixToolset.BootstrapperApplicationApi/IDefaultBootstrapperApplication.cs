@@ -419,6 +419,12 @@ namespace WixToolset.BootstrapperApplicationApi
         event EventHandler<ShutdownEventArgs> Shutdown;
 
         /// <summary>
+        /// Fired when the unit test engine is shutting down the bootstrapper application.
+        /// Do NOT call any engine methods; the engine pipe has already been disconnected.
+        /// </summary>
+        event EventHandler<EventArgs> UnitTestShutdown;
+
+        /// <summary>
         /// Fired when the engine is starting up the bootstrapper application.
         /// </summary>
         event EventHandler<StartupEventArgs> Startup;

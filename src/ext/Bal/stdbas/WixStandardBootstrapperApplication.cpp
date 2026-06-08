@@ -312,6 +312,21 @@ public: // IBootstrapperApplication
         return hr;
     }
 
+    virtual void __stdcall OnUnitTestShutdown()
+    {
+        // wait for UI thread to terminate
+        if (m_hUiThread)
+        {
+            if (m_hWnd) // Handle premature shutdown message from engine
+            {
+                ::PostMessageW(m_hWnd, WM_CLOSE, 0, 0);
+            }
+            ::WaitForSingleObject(m_hUiThread, INFINITE);
+            ReleaseHandle(m_hUiThread);
+        }
+        __super::OnUnitTestShutdown();
+    }
+
     virtual STDMETHODIMP OnDetectBegin(
         __in BOOL fCached,
         __in BOOTSTRAPPER_REGISTRATION_TYPE registrationType,
@@ -1499,6 +1514,9 @@ public: // IBootstrapperApplication
         case BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN:
             OnShutdownFallback(reinterpret_cast<BA_ONSHUTDOWN_ARGS*>(pvArgs), reinterpret_cast<BA_ONSHUTDOWN_RESULTS*>(pvResults));
             break;
+        case BOOTSTRAPPER_APPLICATION_MESSAGE_ONUNITTESTSHUTDOWN:
+            OnUnitTestShutdownFallback(reinterpret_cast<BA_ONUNITTESTSHUTDOWN_ARGS*>(pvArgs), reinterpret_cast<BA_ONUNITTESTSHUTDOWN_RESULTS*>(pvResults));
+            break;
         case BOOTSTRAPPER_APPLICATION_MESSAGE_ONDETECTBEGIN:
             OnDetectBeginFallback(reinterpret_cast<BA_ONDETECTBEGIN_ARGS*>(pvArgs), reinterpret_cast<BA_ONDETECTBEGIN_RESULTS*>(pvResults));
             break;
@@ -1769,6 +1787,14 @@ private: // privates
     )
     {
         m_pfnBAFunctionsProc(BA_FUNCTIONS_MESSAGE_ONSHUTDOWN, pArgs, pResults, m_pvBAFunctionsProcContext);
+    }
+
+    void OnUnitTestShutdownFallback(
+        __in BA_ONUNITTESTSHUTDOWN_ARGS* pArgs,
+        __inout BA_ONUNITTESTSHUTDOWN_RESULTS* pResults
+    )
+    {
+        m_pfnBAFunctionsProc(BA_FUNCTIONS_MESSAGE_ONUNITTESTSHUTDOWN, pArgs, pResults, m_pvBAFunctionsProcContext);
     }
 
     void OnDetectBeginFallback(

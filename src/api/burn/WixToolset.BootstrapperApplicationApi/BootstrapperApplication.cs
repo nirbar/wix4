@@ -30,6 +30,9 @@ namespace WixToolset.BootstrapperApplicationApi
         public event EventHandler<ShutdownEventArgs> Shutdown;
 
         /// <inheritdoc/>
+        public event EventHandler<EventArgs> UnitTestShutdown;
+
+        /// <inheritdoc/>
         public event EventHandler<DetectBeginEventArgs> DetectBegin;
 
         /// <inheritdoc/>
@@ -352,6 +355,20 @@ namespace WixToolset.BootstrapperApplicationApi
         protected virtual void OnShutdown(ShutdownEventArgs args)
         {
             EventHandler<ShutdownEventArgs> handler = this.Shutdown;
+            if (null != handler)
+            {
+                handler(this, args);
+            }
+        }
+
+        /// <summary>
+        /// Called by the unit test framework to request graceful shutdown.
+        /// Override to close UI or signal event loops to stop.
+        /// Do NOT call any engine methods; the engine pipe has already been disconnected.
+        /// </summary>
+        protected virtual void OnUnitTestShutdown(EventArgs args)
+        {
+            EventHandler<EventArgs> handler = this.UnitTestShutdown;
             if (null != handler)
             {
                 handler(this, args);
@@ -1471,6 +1488,12 @@ namespace WixToolset.BootstrapperApplicationApi
 
             action = args.Action;
             return args.HResult;
+        }
+
+        void IBootstrapperApplication.OnUnitTestShutdown()
+        {
+            EventArgs args = new EventArgs();
+            this.OnUnitTestShutdown(args);
         }
 
         int IBootstrapperApplication.OnDetectBegin(bool fCached, RegistrationType registrationType, int cPackages, ref bool fCancel)

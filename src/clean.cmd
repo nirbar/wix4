@@ -53,6 +53,7 @@ if exist "%_NUGET_CACHE%\panelswwix4.firewall.wixext" rd /s/q "%_NUGET_CACHE%\pa
 if exist "%_NUGET_CACHE%\panelswwix4.http.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.http.wixext"
 if exist "%_NUGET_CACHE%\panelswwix4.iis.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.iis.wixext"
 if exist "%_NUGET_CACHE%\panelswwix4.bootstrapperapplicationapi" rd /s/q "%_NUGET_CACHE%\panelswwix4.bootstrapperapplicationapi"
+if exist "%_NUGET_CACHE%\panelswwix4.wixstandardbootstrapperapplicationfunctionapi" rd /s/q "%_NUGET_CACHE%\panelswwix4.wixstandardbootstrapperapplicationfunctionapi"
 if exist "%_NUGET_CACHE%\panelswwix4.msmq.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.msmq.wixext"
 if exist "%_NUGET_CACHE%\panelswwix4.netfx.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.netfx.wixext"
 if exist "%_NUGET_CACHE%\panelswwix4.powershell.wixext" rd /s/q "%_NUGET_CACHE%\panelswwix4.powershell.wixext"

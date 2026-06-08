@@ -99,6 +99,7 @@ namespace WixToolset.Burn.UnitTest.Internal
         BOOTSTRAPPER_APPLICATION_MESSAGE_ONEXECUTEPROCESSCANCEL,
         BOOTSTRAPPER_APPLICATION_MESSAGE_ONDETECTRELATEDBUNDLEPACKAGE,
         BOOTSTRAPPER_APPLICATION_MESSAGE_ONCACHEPACKAGENONVITALVALIDATIONFAILURE,
+        BOOTSTRAPPER_APPLICATION_MESSAGE_ONUNITTESTSHUTDOWN,
     }
 
     /// <summary>
@@ -1772,6 +1773,16 @@ namespace WixToolset.Burn.UnitTest.Internal
 
                     int hr = CallDispatch(instance, () => instance.OnSystemRestorePointComplete(hrStatus));
                     if (ctx.WasForwarded) { return (ctx.ResponseHr, ctx.ResponseData); }
+                    var w = new BurnBufferWriter();
+                    w.WriteUInt32(BurnProtocolConstants.ApiVersion);
+                    return (hr, w.ToArray());
+                }
+
+                case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONUNITTESTSHUTDOWN:
+                {
+                    // No args beyond apiVersion; no results beyond apiVersion.
+                    // The real BA must not be forwarded — this message is only for the test instance.
+                    int hr = CallDispatch(instance, () => { instance.OnUnitTestShutdown(); return 0; });
                     var w = new BurnBufferWriter();
                     w.WriteUInt32(BurnProtocolConstants.ApiVersion);
                     return (hr, w.ToArray());

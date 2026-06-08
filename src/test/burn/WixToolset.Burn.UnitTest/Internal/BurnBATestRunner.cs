@@ -249,9 +249,9 @@ namespace WixToolset.Burn.UnitTest.Internal
                                 realBAServer.DisconnectEnginePipe();
                                 engineRelayTask = null;
 
-                                // Send synthetic OnShutdown so the real BA terminates cleanly
-                                // instead of hanging on its next pipe-read.
-                                SendShutdownToRealBA(instance, realBAServer);
+                                // Send ONUNITTESTSHUTDOWN so the real BA can close its UI gracefully.
+                                // Engine pipe is already disconnected; the BA must not use it.
+                                SendUnitTestShutdownToRealBA(instance, realBAServer);
 
                                 realBAServer.Dispose();
                                 realBAServer = null;
@@ -406,48 +406,31 @@ namespace WixToolset.Burn.UnitTest.Internal
         }
 
         /// <summary>
-        /// Sends a synthetic <c>OnShutdown</c> message to the real BA so it exits cleanly
+        /// Sends an <c>OnUnitTestShutdown</c> message to the real BA so it can close its UI cleanly
         /// rather than hanging on its next pipe-read after the test autopilot stops
-        /// forwarding messages.
+        /// forwarding messages.  The engine pipe has already been disconnected before this is called.
         /// </summary>
         /// <remarks>
-        /// Wire format (from bacallback.cpp BACallbackOnShutdown):
-        ///   payload = [cbArgs=4][uint32 apiVersion][cbResults=8][uint32 apiVersion][uint32 action=0 (Quit)]
+        ///   payload = [cbArgs=4][uint32 apiVersion][cbResults=4][uint32 apiVersion]
         /// </remarks>
-        private static void SendShutdownToRealBA(BurnBATestBase testInstance, RealBAPipeServer realBAServer)
+        private static void SendUnitTestShutdownToRealBA(BurnBATestBase testInstance, RealBAPipeServer realBAServer)
         {
             try
             {
                 var w = new BurnBufferWriter();
-                w.WriteUInt32(4u);                            // cbArgs (4 bytes for apiVersion)
+                w.WriteUInt32(4u);                               // cbArgs (4 bytes for apiVersion only)
                 w.WriteUInt32(BurnProtocolConstants.ApiVersion); // args.apiVersion
-                w.WriteUInt32(8u);                            // cbResults (8 bytes)
-                w.WriteUInt32(BurnProtocolConstants.ApiVersion); // results.apiVersion
-                w.WriteUInt32(0u);                            // results.action = BOOTSTRAPPER_SHUTDOWN_ACTION_QUIT
-
-                realBAServer.SendBAMessage(
-                    (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN,
-                    w.ToArray());
-
-                // Discard the real BA's response; we are not acting on its action value.
-                realBAServer.ReadBAResponse();
-
-                // Now a destroy message
-                w = new BurnBufferWriter();
-                w.WriteUInt32(8u);                            // cbArgs (8 bytes for apiVersion, fReload)
-                w.WriteUInt32(BurnProtocolConstants.ApiVersion); // args.apiVersion
-                w.WriteBool(false);                           // args.fReload
-                w.WriteUInt32(4u);                            // cbResults (4 bytes)
+                w.WriteUInt32(4u);                               // cbResults (4 bytes for apiVersion only)
                 w.WriteUInt32(BurnProtocolConstants.ApiVersion); // results.apiVersion
 
                 realBAServer.SendBAMessage(
-                    (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONDESTROY,
+                    (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONUNITTESTSHUTDOWN,
                     w.ToArray());
 
-                // Discard the real BA's response
+                // Wait for the real BA to acknowledge the shutdown.
                 realBAServer.ReadBAResponse();
 
-                // Now a disconnect message
+                // Now disconnect the BA pipe as well.
                 realBAServer.SendBAMessage((uint)BurnProtocolConstants.PipeMessageDisconnect, null);
             }
             catch (Exception e)

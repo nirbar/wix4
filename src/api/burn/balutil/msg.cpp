@@ -4747,6 +4747,45 @@ LExit:
     return hr;
 }
 
+static HRESULT OnUnitTestShutdown(
+    __in IBootstrapperApplication* pApplication,
+    __in BUFF_READER* pReaderArgs,
+    __in BUFF_READER* pReaderResults,
+    __in BUFF_BUFFER* pBuffer
+    )
+{
+    HRESULT hr = S_OK;
+    BA_ONUNITTESTSHUTDOWN_ARGS args = { };
+    BA_ONUNITTESTSHUTDOWN_RESULTS results = { };
+
+    // Read args.
+    hr = BuffReaderReadNumber(pReaderArgs, &args.dwApiVersion);
+    ExitOnFailure(hr, "Failed to read API version of OnUnitTestShutdown args.");
+
+    // Read results.
+    hr = BuffReaderReadNumber(pReaderResults, &results.dwApiVersion);
+    ExitOnFailure(hr, "Failed to read API version of OnUnitTestShutdown results.");
+
+    // Callback.
+    hr = pApplication->BAProc(BOOTSTRAPPER_APPLICATION_MESSAGE_ONUNITTESTSHUTDOWN, &args, &results);
+
+    if (E_NOTIMPL == hr)
+    {
+        pApplication->OnUnitTestShutdown();
+        hr = S_OK;
+    }
+
+    pApplication->BAProcFallback(BOOTSTRAPPER_APPLICATION_MESSAGE_ONUNITTESTSHUTDOWN, &args, &results, &hr);
+    BalExitOnFailure(hr, "BA OnUnitTestShutdown failed.");
+
+    // Write results.
+    hr = BuffWriteNumberToBuffer(pBuffer, sizeof(results));
+    ExitOnFailure(hr, "Failed to write size of OnUnitTestShutdown struct.");
+
+LExit:
+    return hr;
+}
+
 static HRESULT OnStartup(
     __in IBootstrapperApplication* pApplication,
     __in BUFF_READER* pReaderArgs,
@@ -5347,6 +5386,10 @@ static HRESULT ProcessMessage(
 
             case BOOTSTRAPPER_APPLICATION_MESSAGE_ONCACHEPACKAGENONVITALVALIDATIONFAILURE:
                 hr = OnCachePackageNonVitalValidationFailure(pApplication, &readerArgs, &readerResults, &bufferResponse);
+                break;
+
+            case BOOTSTRAPPER_APPLICATION_MESSAGE_ONUNITTESTSHUTDOWN:
+                hr = OnUnitTestShutdown(pApplication, &readerArgs, &readerResults, &bufferResponse);
                 break;
 
             default:

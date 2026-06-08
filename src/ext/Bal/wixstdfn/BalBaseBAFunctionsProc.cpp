@@ -65,6 +65,15 @@ static HRESULT BalBaseBAFunctionsProcOnShutdown(
     return pBAFunctions->OnShutdown(&pResults->action);
 }
 
+static void BalBaseBAFunctionsProcOnUnitTestShutdown(
+    __in IBAFunctions* pBAFunctions,
+    __in BA_ONUNITTESTSHUTDOWN_ARGS* /*pArgs*/,
+    __inout BA_ONUNITTESTSHUTDOWN_RESULTS* /*pResults*/
+    )
+{
+    pBAFunctions->OnUnitTestShutdown();
+}
+
 static HRESULT BalBaseBAFunctionsProcOnDetectForwardCompatibleBundle(
     __in IBAFunctions* pBAFunctions,
     __in BA_ONDETECTFORWARDCOMPATIBLEBUNDLE_ARGS* pArgs,
@@ -843,6 +852,10 @@ HRESULT WINAPI BalBaseBAFunctionsProc(
             break;
         case BA_FUNCTIONS_MESSAGE_ONSHUTDOWN:
             hr = BalBaseBAFunctionsProcOnShutdown(pBAFunctions, reinterpret_cast<BA_ONSHUTDOWN_ARGS*>(pvArgs), reinterpret_cast<BA_ONSHUTDOWN_RESULTS*>(pvResults));
+            break;
+        case BA_FUNCTIONS_MESSAGE_ONUNITTESTSHUTDOWN:
+            BalBaseBAFunctionsProcOnUnitTestShutdown(pBAFunctions, reinterpret_cast<BA_ONUNITTESTSHUTDOWN_ARGS*>(pvArgs), reinterpret_cast<BA_ONUNITTESTSHUTDOWN_RESULTS*>(pvResults));
+            hr = S_OK;
             break;
         case BA_FUNCTIONS_MESSAGE_ONDETECTBEGIN:
             hr = BalBaseBAFunctionsProcOnDetectBegin(pBAFunctions, reinterpret_cast<BA_ONDETECTBEGIN_ARGS*>(pvArgs), reinterpret_cast<BA_ONDETECTBEGIN_RESULTS*>(pvResults));
