@@ -50,7 +50,7 @@ namespace WixToolsetTest.BurnUnitTest
         }
 
         /// <inheritdoc/>
-        public override int OnShutdown(ref BOOTSTRAPPER_SHUTDOWN_ACTION action)
+        public override void FinalizeResult()
         {
             // Confirm the failure was seen.
             if (this._applyCompleteHr == 0)
@@ -60,7 +60,7 @@ namespace WixToolsetTest.BurnUnitTest
                     endAutoPilot: false);
             }
 
-            return base.OnShutdown(ref action);
+            base.FinalizeResult();
         }
     }
 }

@@ -158,30 +158,18 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// </summary>
         private static void TrackPhase(BurnBATestBase instance, BurnApplicationMessage msg)
         {
-            switch (msg)
+            if ((msg < BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYBEGIN || msg >= BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYCOMPLETE)
+                && (instance.EndTestAutoPilot || instance.HasExceptions))
             {
-                case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYBEGIN:
-                    instance._applyBeginSeen = true;
-                    break;
-
-                case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYCOMPLETE:
-                    instance._applyCompleteSeen = true;
-                    if (instance.EndTestAutoPilot || instance.HasExceptions)
-                    {
-                        instance._pendingEngineQuit = true;
-                    }
-                    break;
-
-                // After these phase-completion callbacks burn parks waiting for the BA to
-                // call Plan() or Apply().  When autopilot is active there is no test code
-                // to do that, so signal the runner to send Engine.Quit() instead.
-                case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONDETECTCOMPLETE:
-                case BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONPLANCOMPLETE:
-                    if (instance.EndTestAutoPilot || instance.HasExceptions)
-                    {
-                        instance._pendingEngineQuit = true;
-                    }
-                    break;
+                instance._pendingEngineQuit = true;
+            }
+            if (msg == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYBEGIN)
+            {
+                instance._applyBeginSeen = true;
+            }
+            if (msg == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONAPPLYCOMPLETE)
+            {
+                instance._applyCompleteSeen = true;
             }
         }
 

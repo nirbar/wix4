@@ -172,7 +172,7 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         public virtual int OnCreate(IBootstrapperEngine engine, ref Command command)
         {
-            this.Engine.Log(LogLevel.Standard, $"Strting unit test {this.GetType().Name}");
+            this.Engine.Log(LogLevel.Standard, $"Starting unit test '{this.GetType().Name}'");
             _messageContext!.ForwardOnCreateToRealBA(this, new TestBaCommand(command));
             return _messageContext.ResponseHr;
         }

@@ -144,6 +144,7 @@ typedef struct _BURN_UNIT_TEST_CONTEXT
     BOOL fUnitTest;
     BOOL fLastTest;
     BURN_PIPE_CONNECTION unittestConnection;
+    LPWSTR sczUXTempDirectory; // preserved UX temp dir reused across unit-test iterations
 } BURN_UNIT_TEST_CONTEXT;
 
 typedef struct _BURN_ENGINE_STATE

@@ -61,15 +61,24 @@ namespace WixToolset.Burn.UnitTest.Internal
             }
 
             // Unique pipe base name for this run.
+            var entriesWithLast = new List<TestRunEntry>(entries);
+            var lastTestType = typeof(LastTest);
+            entriesWithLast.Add(new TestRunEntry(BurnBATestFrameworkDiscoverer.MakeLastTestCase(), lastTestType, null, 0, false));
             var pipeName = "BurnBATest-" + Guid.NewGuid().ToString("N");
 
             var bundleProcess = StartBundle(bundlePath, password, pipeName);
             bool stopRemaining = false;
             try
             {
-                for (int i = 0; i < entries.Count; i++)
+                for (int i = 0; i < entriesWithLast.Count; i++)
                 {
-                    var entry = entries[i];
+                    var entry = entriesWithLast[i];
+                    if (entry.TestClassType == lastTestType)
+                    {
+                        await RunOneIterationAsync(entry, pipeName, false, bundleProcess, frameworkHandle, new CancellationToken())
+                            .ConfigureAwait(false);
+                        continue;
+                    }
 
                     var result = new TestResult(entry.TestCase)
                     {
@@ -85,7 +94,14 @@ namespace WixToolset.Burn.UnitTest.Internal
                         frameworkHandle.RecordResult(result);
                         continue;
                     }
-
+                    if (ct.IsCancellationRequested)
+                    {
+                        result.Outcome = TestOutcome.Skipped;
+                        result.ErrorMessage = "Canceled";
+                        result.EndTime = DateTimeOffset.UtcNow;
+                        frameworkHandle.RecordResult(result);
+                        continue;
+                    }
                     if (stopRemaining)
                     {
                         result.Outcome = TestOutcome.Skipped;
@@ -138,22 +154,14 @@ namespace WixToolset.Burn.UnitTest.Internal
                         result.Duration = result.EndTime - result.StartTime;
                         frameworkHandle.RecordResult(result);
                     }
-
-                    if (ct.IsCancellationRequested)
-                    {
-                        break;
-                    }
                 }
-
-                // Always connect for a final ghost iteration so burn can exit cleanly,
-                // regardless of how many entries ran or whether the run was cancelled.
-                await RunGhostIterationAsync(pipeName, ct).ConfigureAwait(false);
             }
             finally
             {
                 // Ensure the bundle process is cleaned up.
                 if (bundleProcess != null && !bundleProcess.HasExited)
                 {
+                    Thread.Sleep(1000);
                     bundleProcess.Kill();
                 }
                 bundleProcess?.Dispose();
@@ -204,6 +212,7 @@ namespace WixToolset.Burn.UnitTest.Internal
 
                 // Pump messages until disconnect.
                 bool engineQuitSent = false;
+                bool lastTestSent = false;
                 while (!ct.IsCancellationRequested)
                 {
                     try
@@ -234,6 +243,12 @@ namespace WixToolset.Burn.UnitTest.Internal
                         // Dispatch the message to the test instance.
                         bool isShutdown = msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN;
                         var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(instance, msgType, payload, realBAServer, conn);
+
+                        if ((instance is LastTest) && instance.EndTestAutoPilot && !lastTestSent)
+                        {
+                            lastTestSent = true;
+                            await SendLastTestAsync(conn, new CancellationToken()).ConfigureAwait(false);
+                        }
 
                         if (instance._pendingEngineQuit && !engineQuitSent)
                         {
@@ -368,44 +383,6 @@ namespace WixToolset.Burn.UnitTest.Internal
         }
 
         /// <summary>
-        /// Connects to burn's current cycle and drives it to a clean shutdown in full autopilot
-        /// mode without associating any real test instance.  Always called after all real test
-        /// iterations so burn can exit cleanly even when trailing entries are skipped.
-        /// </summary>
-        private static async Task RunGhostIterationAsync(string pipeName, CancellationToken ct)
-        {
-            using var conn = await BurnPipeConnection.ConnectAsync(pipeName, _pipePassword, false, ct)
-                .ConfigureAwait(false);
-            using var ghost = new BurnBATestBase();
-            ghost.EndTestAutoPilot = true;
-
-            while (!ct.IsCancellationRequested)
-            {
-                var (msgType, payload) = conn.ReadBAMessage();
-
-                if (msgType == BurnProtocolConstants.PipeMessageDisconnect)
-                {
-                    break;
-                }
-
-                if (msgType == BurnProtocolConstants.BaMessageStartRealBA)
-                {
-                    // Ghost iteration: no real BA. Respond with success, mark as last test, quit.
-                    var resp = new BurnBufferWriter();
-                    resp.WriteUInt32(BurnProtocolConstants.ApiVersion);
-                    conn.WriteBAResponse(0, resp.ToArray());
-                    await SendLastTestAsync(conn, ct).ConfigureAwait(false);
-                    await SendQuitAsync(conn, ct).ConfigureAwait(false);
-                    continue;
-                }
-
-                // Drain any remaining messages (e.g. ONSHUTDOWN) with default autopilot responses.
-                var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(ghost, msgType, payload, null, conn);
-                conn.WriteBAResponse(hr, responseData);
-            }
-        }
-
-        /// <summary>
         /// Sends an <c>OnUnitTestShutdown</c> message to the real BA so it can close its UI cleanly
         /// rather than hanging on its next pipe-read after the test autopilot stops
         /// forwarding messages.  The engine pipe has already been disconnected before this is called.
@@ -479,6 +456,8 @@ namespace WixToolset.Burn.UnitTest.Internal
         }
 
         private static string EscapeArg(string arg)
-            => arg.Replace("\"", "\\\"");
+        {
+            return arg.Replace("\"", "\\\"");
+        }
     }
 }

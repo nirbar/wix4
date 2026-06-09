@@ -432,12 +432,18 @@ static void UnitTestUninitializeEngineState(
     BOOL fLastTest = pEngineState->unitTestContext.fLastTest;
     BOOL fUnitTest = pEngineState->unitTestContext.fUnitTest;
 
-    // Full cleanup- this zeros pEngineState via memset.
+    // Steal the UX temp directory so UninitializeEngineState does not free it;
+    // the directory is kept alive on disk and reused in the next iteration.
+    LPWSTR sczUXTempDirectory = pEngineState->userExperience.sczTempDirectory;
+    pEngineState->userExperience.sczTempDirectory = NULL;
+
+    // Full cleanup - this zeros pEngineState via memset.
     UninitializeEngineState(pEngineState);
     pEngineState->command.cbSize = sizeof(BOOTSTRAPPER_COMMAND);
 
     pEngineState->unitTestContext.fUnitTest = fUnitTest;
     pEngineState->unitTestContext.fLastTest = fLastTest;
+    pEngineState->unitTestContext.sczUXTempDirectory = sczUXTempDirectory;
 }
 
 static void UninitializeEngineState(
@@ -463,6 +469,7 @@ static void UninitializeEngineState(
     BurnPipeConnectionUninitialize(&pEngineState->unitTestContext.unittestConnection);
     ReleaseNullStrSecure(pEngineState->unitTestContext.wzCmdLinePassword);
     ReleaseStr(pEngineState->unitTestContext.wzUnittestPasswordHash);
+    ReleaseStr(pEngineState->unitTestContext.sczUXTempDirectory);
 
     ReleaseHandle(pEngineState->hMessageWindowThread);
 

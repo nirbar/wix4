@@ -46,7 +46,7 @@ namespace WixToolsetTest.BurnUnitTest
         }
 
         /// <inheritdoc/>
-        public override int OnShutdown(ref BOOTSTRAPPER_SHUTDOWN_ACTION action)
+        public override void FinalizeResult()
         {
             if (!this._onCreateCalled)
             {
@@ -63,7 +63,7 @@ namespace WixToolsetTest.BurnUnitTest
                 this.AddException(new BurnBAAssertException(
                     "OnPlanComplete was never called before OnShutdown."), endAutoPilot: false);
             }
-            return 0;
+            base.FinalizeResult();
         }
     }
 }

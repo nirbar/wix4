@@ -146,5 +146,20 @@ namespace WixToolset.Burn.UnitTest
             testCase.SetPropertyValue(StopTestsOnErrorProperty, classAttr.StopTestsOnError);
             return testCase;
         }
+
+        internal static TestCase MakeLastTestCase()
+        {
+            var type = typeof(LastTest);
+            var fullyQualifiedName = type.FullName;
+            var testCase = new TestCase(fullyQualifiedName, BurnBATestFrameworkExecutor.ExecutorUri, fullyQualifiedName)
+            {
+                DisplayName = type.Name,
+            };
+            testCase.SetPropertyValue(IterationIndexProperty, 0);
+            testCase.SetPropertyValue(TestClassNameProperty, type.FullName!);
+            testCase.SetPropertyValue(OrderProperty, Int32.MaxValue);
+            testCase.SetPropertyValue(StopTestsOnErrorProperty, false);
+            return testCase;
+        }
     }
 }

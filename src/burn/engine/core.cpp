@@ -167,9 +167,22 @@ extern "C" HRESULT CoreInitialize(
     // the payloads from the BA container.
     if (BURN_MODE_NORMAL == pEngineState->internalCommand.mode || BURN_MODE_EMBEDDED == pEngineState->internalCommand.mode)
     {
-        if (pEngineState->unitTestContext.fUnitTest && pEngineState->userExperience.sczTempDirectory)
+        if (pEngineState->unitTestContext.fUnitTest && pEngineState->unitTestContext.sczUXTempDirectory)
         {
-            // On unit-test restart the payloads are already extracted; just restore the path variables.
+            // On unit-test restart the payloads are already extracted on disk; restore path variables only.
+            // Transfer ownership from the saved context back to userExperience.
+            pEngineState->userExperience.sczTempDirectory = pEngineState->unitTestContext.sczUXTempDirectory;
+            pEngineState->unitTestContext.sczUXTempDirectory = NULL;
+
+            // Restore sczLocalFilePath for each UX payload (same concatenation PayloadExtractUXContainer
+            // would perform, but without any file I/O since the files are already on disk).
+            for (DWORD i = 0; i < pEngineState->userExperience.payloads.cPayloads; ++i)
+            {
+                BURN_PAYLOAD* pPayload = pEngineState->userExperience.payloads.rgPayloads + i;
+                hr = PathConcatRelativeToFullyQualifiedBase(pEngineState->userExperience.sczTempDirectory, pPayload->sczFilePath, &pPayload->sczLocalFilePath);
+                ExitOnFailure(hr, "Failed to restore local file path for UX payload: %ls", pPayload->sczFilePath);
+            }
+
             hr = PathConcat(pEngineState->userExperience.sczTempDirectory, L"BootstrapperApplicationData.xml", &pEngineState->command.wzBootstrapperApplicationDataPath);
             ExitOnFailure(hr, "Failed to get BootstrapperApplicationDataPath.");
 
