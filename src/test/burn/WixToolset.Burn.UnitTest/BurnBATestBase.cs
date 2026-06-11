@@ -6,6 +6,7 @@ namespace WixToolset.Burn.UnitTest
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.ExceptionServices;
     using WixToolset.BootstrapperApplicationApi;
     using WixToolset.Burn.UnitTest.Internal;
 
@@ -138,7 +139,8 @@ namespace WixToolset.Burn.UnitTest
             var ex = this.Exceptions.FirstOrDefault();
             if (ex != null)
             {
-                throw ex;
+                var exRethrow = ExceptionDispatchInfo.Capture(ex);
+                exRethrow.Throw();
             }
         }
 
