@@ -45,6 +45,20 @@ namespace WixToolset.Burn.UnitTest.Internal
                 {
                     result.Password = passwordNode.InnerText.Trim();
                 }
+
+                // TestRunParameters override the section values, allowing dotnet test command-line
+                //   dotnet test -- TestRunParameters.Parameter(name=\"BundlePath\",value=\"C:\path.exe\")
+                var bundlePathParam = doc.SelectSingleNode("/RunSettings/TestRunParameters/Parameter[@name='BundlePath']");
+                if (bundlePathParam?.Attributes?["value"]?.Value?.Trim() is { Length: > 0 } bp)
+                {
+                    result.BundlePath = bp;
+                }
+
+                var passwordParam = doc.SelectSingleNode("/RunSettings/TestRunParameters/Parameter[@name='Password']");
+                if (passwordParam?.Attributes?["value"]?.Value?.Trim() is { Length: > 0 } pw)
+                {
+                    result.Password = pw;
+                }
             }
             catch
             {
