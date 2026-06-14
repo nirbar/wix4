@@ -142,6 +142,15 @@ namespace WixToolset.Burn.UnitTest.Internal
                         result.Outcome = TestOutcome.Failed;
                         result.ErrorMessage = ex.Message;
                         result.ErrorStackTrace = ex.StackTrace;
+                        if (ex is BurnBAAssertException burnEx && burnEx.LogFiles.Any())
+                        {
+                            var attachmentSet = new AttachmentSet(BurnBATestFrameworkExecutor.ExecutorUri, "Log Files");
+                            result.Attachments.Add(attachmentSet);
+                            foreach (var log in burnEx.LogFiles)
+                            {
+                                attachmentSet.Attachments.Add(UriDataAttachment.CreateFrom(log, Path.GetFileNameWithoutExtension(log)));
+                            }
+                        }
 
                         if (entry.StopTestsOnError)
                         {
@@ -266,7 +275,7 @@ namespace WixToolset.Burn.UnitTest.Internal
 
                                 // Send ONUNITTESTSHUTDOWN so the real BA can close its UI gracefully.
                                 // Engine pipe is already disconnected; the BA must not use it.
-                                SendUnitTestShutdownToRealBA(instance, realBAServer);
+                                SendUnitTestShutdownToRealBA(realBAServer);
 
                                 realBAServer.Dispose();
                                 realBAServer = null;
@@ -385,12 +394,12 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// <summary>
         /// Sends an <c>OnUnitTestShutdown</c> message to the real BA so it can close its UI cleanly
         /// rather than hanging on its next pipe-read after the test autopilot stops
-        /// forwarding messages.  The engine pipe has already been disconnected before this is called.
+        /// forwarding messages. The engine pipe has already been disconnected before this is called.
         /// </summary>
         /// <remarks>
         ///   payload = [cbArgs=4][uint32 apiVersion][cbResults=4][uint32 apiVersion]
         /// </remarks>
-        private static void SendUnitTestShutdownToRealBA(BurnBATestBase testInstance, RealBAPipeServer realBAServer)
+        private static void SendUnitTestShutdownToRealBA(RealBAPipeServer realBAServer)
         {
             try
             {
@@ -410,10 +419,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                 // Now disconnect the BA pipe as well.
                 realBAServer.SendBAMessage((uint)BurnProtocolConstants.PipeMessageDisconnect, null);
             }
-            catch (Exception e)
-            {
-                testInstance.AddException(e);
-            }
+            catch { } // Ignore an exception to dump the real BA. Usualy the real BA calls Environment.Exit() so an exception is normal here.
         }
 
         private static async Task SendQuitAsync(BurnPipeConnection conn, CancellationToken ct)

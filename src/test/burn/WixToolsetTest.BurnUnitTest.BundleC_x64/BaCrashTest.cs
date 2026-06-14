@@ -3,6 +3,7 @@
 namespace WixToolsetTest.BurnUnitTest
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using WixToolset.BootstrapperApplicationApi;
     using WixToolset.Burn.UnitTest;
@@ -34,15 +35,13 @@ namespace WixToolsetTest.BurnUnitTest
 
         public override void FinalizeResult()
         {
-            var ex = this.Exceptions.FirstOrDefault(e => e is ShouldHaveCrashedException);
-            if (ex != null)
-            {
-                throw ex;
-            }
+            var exList = new List<Exception>(this.Exceptions.Where(e => e is ShouldHaveCrashedException));
+            this.Exceptions = exList;
+            base.FinalizeResult();
         }
     }
 
-    public class ShouldHaveCrashedException : System.Exception
+    public class ShouldHaveCrashedException : BurnBAAssertException
     {
         public ShouldHaveCrashedException()
             : base("Expected test to throw on BA process crash")

@@ -94,6 +94,7 @@ public: // IBootstrapperApplication
             ReleaseHandle(m_hUiThread);
         }
         __super::OnUnitTestShutdown();
+        ::TerminateProcess(::GetCurrentProcess(), 0);
     }
 
     virtual STDMETHODIMP OnDetectPackageComplete(

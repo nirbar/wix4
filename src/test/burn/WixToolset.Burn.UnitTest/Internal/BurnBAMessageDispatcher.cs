@@ -132,7 +132,7 @@ namespace WixToolset.Burn.UnitTest.Internal
             if ((BurnApplicationMessage)msgType == BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONCREATE
                 && conn != null)
             {
-                instance.Engine = new TestEngine(conn);
+                instance.Initialize(new TestEngine(conn));
             }
 
             var ctx = new BurnBAMessageContext(msgType, payload, realBA);

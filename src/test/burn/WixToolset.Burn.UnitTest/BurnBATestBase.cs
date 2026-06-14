@@ -4,9 +4,8 @@ namespace WixToolset.Burn.UnitTest
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
+    using System.IO;
     using System.Linq;
-    using System.Runtime.ExceptionServices;
     using WixToolset.BootstrapperApplicationApi;
     using WixToolset.Burn.UnitTest.Internal;
 
@@ -48,7 +47,7 @@ namespace WixToolset.Burn.UnitTest
         /// Use this instead of the <see cref="IBootstrapperEngine"/> parameter of
         /// <see cref="OnCreate"/>, which is always <see langword="null"/> in test mode.
         /// </summary>
-        public IEngine Engine { get; internal set; }
+        public IEngine Engine { get; private set; }
 
         /// <summary>
         /// When set to <see langword="true"/> the dispatcher skips all further test-BA and
@@ -128,10 +127,33 @@ namespace WixToolset.Burn.UnitTest
         /// </summary>
         internal BurnBAMessageContext _messageContext;
 
+        internal void Initialize(IEngine engine)
+        {
+            this.Engine = engine;
+            try
+            {
+                if (engine.ContainsVariable("WixBundleLog"))
+                {
+                    var log = engine.GetVariableString("WixBundleLog");
+                    if (!string.IsNullOrEmpty(log))
+                    {
+                        this._logFolder = Path.GetDirectoryName(log);
+                        this._logPattern = Path.GetFileNameWithoutExtension(log) + "*.*";
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private string _logFolder;
+        private string _logPattern;
+
         /// <summary>
         /// Finalize the test result. Override to ignore specific exceptions or impose any other
         /// test result functionality.
-        /// Throw on test failure.
+        /// Overriders are encouraged to filter the <see cref="Exceptions"/> list and then call
+        /// <see cref="BurnBATestBase.FinalizeResult()"/> as doing so allows the bundle log files
+        /// to be attached to the test report.
         /// By default, throws the first exception, or if no exception has been recorded, do nothing.
         /// </summary>
         public virtual void FinalizeResult()
@@ -139,8 +161,7 @@ namespace WixToolset.Burn.UnitTest
             var ex = this.Exceptions.FirstOrDefault();
             if (ex != null)
             {
-                var exRethrow = ExceptionDispatchInfo.Capture(ex);
-                exRethrow.Throw();
+                BurnBAAssertException.Throw(ex, this._logFolder, this._logPattern);
             }
         }
 
