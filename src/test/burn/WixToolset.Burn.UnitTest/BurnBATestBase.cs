@@ -6,6 +6,7 @@ namespace WixToolset.Burn.UnitTest
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Runtime.ExceptionServices;
     using WixToolset.BootstrapperApplicationApi;
     using WixToolset.Burn.UnitTest.Internal;
 
@@ -147,6 +148,19 @@ namespace WixToolset.Burn.UnitTest
 
         private string _logFolder;
         private string _logPattern;
+        public IEnumerable<string> GetLogFiles()
+        {
+            List<string> logFiles = new List<string>();
+            try
+            {
+                foreach (var log in Directory.GetFiles(this._logFolder, this._logPattern))
+                {
+                    logFiles.Add(log);
+                }
+            }
+            catch { }
+            return logFiles;
+        }
 
         /// <summary>
         /// Finalize the test result. Override to ignore specific exceptions or impose any other
@@ -161,7 +175,7 @@ namespace WixToolset.Burn.UnitTest
             var ex = this.Exceptions.FirstOrDefault();
             if (ex != null)
             {
-                BurnBAAssertException.Throw(ex, this._logFolder, this._logPattern);
+                ExceptionDispatchInfo.Capture(ex).Throw();
             }
         }
 

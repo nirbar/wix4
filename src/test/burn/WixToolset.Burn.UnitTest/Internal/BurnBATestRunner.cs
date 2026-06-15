@@ -8,7 +8,6 @@ namespace WixToolset.Burn.UnitTest.Internal
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -26,6 +25,8 @@ namespace WixToolset.Burn.UnitTest.Internal
             this.TestData = testData;
             this.IterationIndex = iterationIndex;
             this.StopTestsOnError = stopTestsOnError;
+            this.LogFiles = new List<string>();
+            this.TestClassAttribute = testClassType.GetCustomAttribute<BurnBATestClassAttribute>(inherit: false);
         }
 
         internal TestCase TestCase { get; }
@@ -33,6 +34,8 @@ namespace WixToolset.Burn.UnitTest.Internal
         internal object[] TestData { get; }
         internal int IterationIndex { get; }
         internal bool StopTestsOnError { get; }
+        internal List<string> LogFiles { get; }
+        internal BurnBATestClassAttribute TestClassAttribute {  get; }
     }
 
     /// <summary>
@@ -85,11 +88,10 @@ namespace WixToolset.Burn.UnitTest.Internal
                         StartTime = DateTimeOffset.UtcNow,
                     };
 
-                    var classAttr = entry.TestClassType.GetCustomAttribute<BurnBATestClassAttribute>(inherit: false);
-                    if (!string.IsNullOrEmpty(classAttr?.Skip))
+                    if (!string.IsNullOrEmpty(entry.TestClassAttribute?.Skip))
                     {
                         result.Outcome = TestOutcome.Skipped;
-                        result.ErrorMessage = classAttr.Skip;
+                        result.ErrorMessage = entry.TestClassAttribute.Skip;
                         result.EndTime = DateTimeOffset.UtcNow;
                         frameworkHandle.RecordResult(result);
                         continue;
@@ -142,15 +144,6 @@ namespace WixToolset.Burn.UnitTest.Internal
                         result.Outcome = TestOutcome.Failed;
                         result.ErrorMessage = ex.Message;
                         result.ErrorStackTrace = ex.StackTrace;
-                        if (ex is BurnBAAssertException burnEx && burnEx.LogFiles.Any())
-                        {
-                            var attachmentSet = new AttachmentSet(BurnBATestFrameworkExecutor.ExecutorUri, "Log Files");
-                            result.Attachments.Add(attachmentSet);
-                            foreach (var log in burnEx.LogFiles)
-                            {
-                                attachmentSet.Attachments.Add(UriDataAttachment.CreateFrom(log, Path.GetFileNameWithoutExtension(log)));
-                            }
-                        }
 
                         if (entry.StopTestsOnError)
                         {
@@ -162,6 +155,17 @@ namespace WixToolset.Burn.UnitTest.Internal
                         result.EndTime = DateTimeOffset.UtcNow;
                         result.Duration = result.EndTime - result.StartTime;
                         frameworkHandle.RecordResult(result);
+
+                        if (entry.LogFiles.Any() && ((entry.TestClassAttribute.AttachLogs == AttachLogs.Always) || ((entry.TestClassAttribute.AttachLogs == AttachLogs.OnFailure) && (result.Outcome == TestOutcome.Failed))))
+                        {
+                            var attachmentSet = new AttachmentSet(BurnBATestFrameworkExecutor.ExecutorUri, "Log Files");
+                            result.Attachments.Add(attachmentSet);
+                            foreach (var log in entry.LogFiles)
+                            {
+                                attachmentSet.Attachments.Add(UriDataAttachment.CreateFrom(log, Path.GetFileNameWithoutExtension(log)));
+                            }
+                            frameworkHandle.RecordAttachments(result.Attachments);
+                        }
                     }
                 }
             }
@@ -306,6 +310,7 @@ namespace WixToolset.Burn.UnitTest.Internal
                 realBAServer?.Dispose();
 
                 // Finalize the result. Throws on errors.
+                entry.LogFiles.AddRange(instance.GetLogFiles());
                 instance.FinalizeResult();
             }
         }

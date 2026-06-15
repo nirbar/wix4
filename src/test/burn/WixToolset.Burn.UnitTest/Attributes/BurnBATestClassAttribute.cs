@@ -6,6 +6,25 @@ namespace WixToolset.Burn.UnitTest
     using System.Security.Principal;
 
     /// <summary>
+    /// A <see cref="BurnBATestClassAttribute"/> specifying when to attach bundle logs to test results
+    /// </summary>
+    public enum AttachLogs
+    {
+        /// <summary>
+        /// Always attach bundle logs to test results
+        /// </summary>
+        Always,
+        /// <summary>
+        /// Attach bundle logs to test results on test failures
+        /// </summary>
+        OnFailure,
+        /// <summary>
+        /// Never attach bundle logs to test results
+        /// </summary>
+        Never
+    }
+
+    /// <summary>
     /// Marks a class as a burn bootstrapper application unit test.
     /// Each class decorated with this attribute is treated as one test case by the MTP test framework.
     /// The class should inherit from <see cref="BurnBATestBase"/>.
@@ -34,6 +53,11 @@ namespace WixToolset.Burn.UnitTest
         /// Defaults to <see langword="false"/>.
         /// </summary>
         public bool StopTestsOnError { get; init; } = false;
+
+        /// <summary>
+        /// Under what test results to attach bundle log files. Defaults to <see cref="AttachLogs.OnFailure"/>
+        /// </summary>
+        public AttachLogs AttachLogs {  get; init; } = AttachLogs.OnFailure;
 
         private string _Skip = null;
         /// <summary>

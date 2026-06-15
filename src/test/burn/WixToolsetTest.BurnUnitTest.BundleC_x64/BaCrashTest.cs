@@ -11,7 +11,7 @@ namespace WixToolsetTest.BurnUnitTest
     /// <summary>
     /// The test verifies that the test framework can recover from RealBA process crash
     /// </summary>
-    [BurnBATestClass(Order = Int32.MaxValue)]
+    [BurnBATestClass(Order = Int32.MaxValue, AttachLogs = AttachLogs.Always)]
     public sealed class BaCrashTest : BurnBATestBase
     {
         /// <inheritdoc/>

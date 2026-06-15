@@ -4,8 +4,6 @@ namespace WixToolset.Burn.UnitTest
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.Runtime.ExceptionServices;
 
     /// <summary>
     /// Provides assertion methods for use inside burn BA unit tests.
@@ -112,33 +110,5 @@ namespace WixToolset.Burn.UnitTest
 
         /// <inheritdoc/>
         public BurnBAAssertException(string message, Exception innerException) : base(message, innerException) { }
-
-        public IEnumerable<string> LogFiles { get; private set; } = new List<string>();
-
-        internal static void Throw(Exception exception, string logFolder, string logPattern)
-        {
-            var burnEx = exception as BurnBAAssertException ?? new BurnBAAssertException(exception.Message, exception);
-            var logFiles = new List<string>();
-            burnEx.LogFiles = logFiles;
-            try
-            {
-                foreach (var log in Directory.GetFiles(logFolder, logPattern))
-                {
-                    logFiles.Add(log);
-                }
-            }
-            catch { }
-            finally
-            {
-                if (logFiles.Count > 0)
-                {
-                    ExceptionDispatchInfo.Capture(burnEx).Throw();
-                }
-                else
-                {
-                    ExceptionDispatchInfo.Capture(exception).Throw();
-                }
-            }
-        }
     }
 }
