@@ -49,6 +49,7 @@ Key assemblies:
 3. Select the runsettings in Visual Studio (`Test › Configure Run Settings`) or
    pass `--settings BurnBaTests.runsettings` to `dotnet test`.
 4. Write `[BurnBATestClass]`-decorated classes — no `[Fact]`, no fixture class.
+5. Note that, users are encouraged to execute `dotnet test` with command line override for at least the password, such that passwords are not kept in CI source code: `dotnet test ... --% -- TestRunParameters.Parameter(name=\"Password\", value=\"$(WixUnitTestsPassword)\") --`
 
 ---
 
@@ -250,12 +251,10 @@ as failing. Default implementation throws an exception if the `BurnBATestBase.Ex
 is not empty:
 
 ```csharp
-private IDisposable _resource;
-
-public override void Dispose()
+public override void FinalizeResult()
 {
-    _resource?.Dispose();
-    _resource = null;
+	base.FinalizeResult(); // Throw on first exception if occurred
+	BurnAssert.True(this._myCustomCheck);
 }
 ```
 ---
@@ -313,12 +312,10 @@ public override int OnApplyComplete(int hrStatus, ...)
     return base.OnApplyComplete(hrStatus, ...);
 }
 
-public override int OnShutdown(ref BOOTSTRAPPER_SHUTDOWN_ACTION action)
+public override void FinalizeResult()
 {
-    if (!this._applyCompleteCalled)
-        this.AddException(new BurnBAAssertException(
-            "OnApplyComplete was not called."), endAutoPilot: false);
-    return base.OnShutdown(ref action);
+	base.FinalizeResult();
+	BurnAssert.True(this._applyCompleteCalled);
 }
 ```
 

@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
 
 <!-- Example project demonstrating how to write burn BA unit tests using WixToolset.Burn.UnitTest. -->
 <!-- Tests in this project are gated behind the RuntimeTestsEnabled=true environment variable and -->
