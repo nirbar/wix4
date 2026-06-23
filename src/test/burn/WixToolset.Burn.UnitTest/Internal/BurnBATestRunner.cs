@@ -10,6 +10,8 @@ namespace WixToolset.Burn.UnitTest.Internal
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+    using WixToolset.BootstrapperApplicationApi;
+    using WixToolset.Burn.UnitTest.Mimic;
 
     /// <summary>
     /// One entry in the globally-ordered list of test iterations to execute.
@@ -217,6 +219,14 @@ namespace WixToolset.Burn.UnitTest.Internal
                 instance.TestData = entry.TestData;
                 instance.TestIteration = entry.IterationIndex;
 
+                bool isMimic = entry.TestClassAttribute?.MimicEngine == true;
+                if (isMimic) { instance._isMimicMode = true; }
+
+                // In mimic mode, planned packages are collected here and fed to the simulator.
+                var mimicPlannedPackages = isMimic
+                    ? new List<(string PackageId, ActionState ExecuteAction)>()
+                    : null;
+
                 // Start the engine relay: forward engine RPC calls from the real BA back to burn.
                 RealBAPipeServer realBAServer = null;
                 Task engineRelayTask = null;
@@ -255,10 +265,54 @@ namespace WixToolset.Burn.UnitTest.Internal
                         bool isShutdown = msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONSHUTDOWN;
                         var (hr, responseData) = BurnBAMessageDispatcher.Dispatch(instance, msgType, payload, realBAServer, conn);
 
+                        // Mimic mode: after OnCreate is dispatched the engine has been set;
+                        // replace it with the intercepting wrapper so Apply() is never sent to burn.
+                        if (isMimic && msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONCREATE)
+                        {
+                            instance.Engine = new MimicApplyEngine(instance.Engine, instance);
+                        }
+
+                        // Mimic mode: record each package's committed execute action so the
+                        // simulator knows which packages (and with what action) to simulate.
+                        if (isMimic && msgType == (uint)BurnApplicationMessage.BOOTSTRAPPER_APPLICATION_MESSAGE_ONPLANNEDPACKAGE)
+                        {
+                            // Payload layout: [cbArgs (uint32)][argsBytes][cbResults (uint32)][defaultResultsBytes]
+                            // argsBytes: [apiVersion (uint32)][packageId (string)][execute (uint32)][rollback (uint32)]...
+                            var a = new BurnBufferReader(payload, startOffset: 4); // skip cbArgs
+                            a.ReadUInt32(); // apiVersion
+                            var pkgId = a.ReadString()!;
+                            var execute = (ActionState)a.ReadUInt32();
+                            mimicPlannedPackages!.Add((pkgId, execute));
+                        }
+
                         if ((instance is LastTest) && instance.EndTestAutoPilot && !lastTestSent)
                         {
                             lastTestSent = true;
                             await SendLastTestAsync(conn, new CancellationToken()).ConfigureAwait(false);
+                        }
+
+                        // Mimic mode: Apply() was intercepted — run the simulator then quit.
+                        if (isMimic && instance._mimicApplyPending && !engineQuitSent)
+                        {
+                            instance._mimicApplyPending = false;
+                            conn.WriteBAResponse(hr, responseData);
+
+                            MimicApplySimulator.Simulate(instance, mimicPlannedPackages!);
+
+                            // Burn is parked waiting for a command; send Quit so it shuts down
+                            // cleanly and delivers the OnShutdown message.
+                            if (realBAServer != null)
+                            {
+                                realBAServer.DisconnectEnginePipe();
+                                engineRelayTask = null;
+                                SendUnitTestShutdownToRealBA(realBAServer);
+                                realBAServer.Dispose();
+                                realBAServer = null;
+                            }
+
+                            await SendQuitAsync(conn, ct).ConfigureAwait(false);
+                            engineQuitSent = true;
+                            continue;
                         }
 
                         if (instance._pendingEngineQuit && !engineQuitSent)

@@ -7,7 +7,7 @@ namespace WixToolset.Burn.UnitTest.Internal
     /// Per-dispatch context set on <see cref="BurnBATestBase"/> before each BA message call.
     /// Holds the raw payload from burn and optionally the forwarded response from the real BA.
     /// </summary>
-    internal sealed class BurnBAMessageContext
+    internal class BurnBAMessageContext
     {
         internal BurnBAMessageContext(uint messageType, byte[] rawPayload, RealBAPipeServer realBA)
         {
@@ -15,6 +15,23 @@ namespace WixToolset.Burn.UnitTest.Internal
             this.RawPayload = rawPayload ?? Array.Empty<byte>();
             this.RealBA = realBA;
         }
+
+        private BurnBAMessageContext(uint messageType)
+        {
+            this.MessageType = messageType;
+            this.RawPayload = Array.Empty<byte>();
+            this.RealBA = null;
+            this._isMimic = true;
+        }
+
+        /// <summary>
+        /// Creates a mimic context for simulated apply callbacks.
+        /// <see cref="ForwardToRealBA"/> is a no-op that returns zero-filled defaults;
+        /// no pipe I/O is performed.
+        /// </summary>
+        internal static BurnBAMessageContext CreateForMimic(uint messageType) => new BurnBAMessageContext(messageType);
+
+        private readonly bool _isMimic;
 
         internal uint MessageType { get; }
 
@@ -34,9 +51,23 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// <summary>
         /// Forwards the current message to the real BA and caches its response.
         /// Idempotent: subsequent calls return the cached response.
+        /// In mimic mode (created via <see cref="CreateForMimic"/>) this is a no-op that
+        /// sets a zero-filled <see cref="ResponseData"/> buffer so base-class virtual method
+        /// defaults (fCancel=false, action=None, etc.) are returned safely without pipe I/O.
         /// </summary>
         internal void ForwardToRealBA(BurnBATestBase testInstance)
         {
+            if (this._isMimic)
+            {
+                if (!this.WasForwarded)
+                {
+                    this.ResponseHr = 0;
+                    this.ResponseData = new byte[256]; // zero-filled: fCancel=false, action=None, etc.
+                    this.WasForwarded = true;
+                }
+                return;
+            }
+
             try
             {
                 if (this.WasForwarded)
@@ -69,6 +100,17 @@ namespace WixToolset.Burn.UnitTest.Internal
         /// </summary>
         internal void ForwardOnCreateToRealBA(BurnBATestBase testInstance, TestBaCommand cmd)
         {
+            if (this._isMimic)
+            {
+                if (!this.WasForwarded)
+                {
+                    this.ResponseHr = 0;
+                    this.ResponseData = new byte[256];
+                    this.WasForwarded = true;
+                }
+                return;
+            }
+
             try
             {
                 if (this.WasForwarded)

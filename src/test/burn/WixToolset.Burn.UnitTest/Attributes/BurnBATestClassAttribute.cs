@@ -65,7 +65,7 @@ namespace WixToolset.Burn.UnitTest
         {
             get
             {
-                if (string.IsNullOrEmpty(_Skip) && RequireAdmin && (!RuntimeTestsEnabled || !RunningAsAdministrator))
+                if (string.IsNullOrEmpty(_Skip) && RequireAdmin && !MimicEngine && (!RuntimeTestsEnabled || !RunningAsAdministrator))
                 {
                     this.Skip = $"This test must run elevated and with environment variable '{nameof(RuntimeTestsEnabled)}' set to true.";
                 }
@@ -81,6 +81,17 @@ namespace WixToolset.Burn.UnitTest
         /// If set, this test will run only if the process is executed with admin privileges
         /// </summary>
         public bool RequireAdmin { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets whether this test uses mimic-engine mode.
+        /// When <see langword="true"/>, the bundle process still runs for Detect, Plan, and all
+        /// variable/engine API calls, but <c>Apply()</c> is intercepted: no packages are actually
+        /// installed or uninstalled.  The runner fires synthetic apply callbacks directly on the
+        /// test instance so BA decision logic can be asserted without machine changes.
+        /// Tests in mimic mode do not require elevation regardless of <see cref="RequireAdmin"/>.
+        /// Defaults to <see langword="false"/>.
+        /// </summary>
+        public bool MimicEngine { get; init; } = false;
 
         public static bool RuntimeTestsEnabled { get; }
         public static bool RunningAsAdministrator { get; }

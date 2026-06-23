@@ -7,6 +7,7 @@ namespace WixToolset.Burn.UnitTest
     using System.Runtime.ExceptionServices;
     using WixToolset.BootstrapperApplicationApi;
     using WixToolset.Burn.UnitTest.Internal;
+    using WixToolset.Burn.UnitTest.Mimic;
 
     /// <summary>
     /// Base class for burn bootstrapper application unit tests.
@@ -45,8 +46,10 @@ namespace WixToolset.Burn.UnitTest
         /// <see cref="OnCreate"/> has been called.
         /// Use this instead of the <see cref="IBootstrapperEngine"/> parameter of
         /// <see cref="OnCreate"/>, which is always <see langword="null"/> in test mode.
+        /// In mimic mode this is replaced with a <c>MimicApplyEngine</c> wrapper after
+        /// <see cref="OnCreate"/> is dispatched.
         /// </summary>
-        public IEngine Engine { get; private set; }
+        public IEngine Engine { get; internal set; }
 
         /// <summary>
         /// When set to <see langword="true"/> the dispatcher skips all further test-BA and
@@ -89,6 +92,41 @@ namespace WixToolset.Burn.UnitTest
         /// Unhandled exceptions store
         /// </summary>
         public List<Exception> Exceptions { get; set; } = new List<Exception>();
+
+        // -----------------------------------------------------------------------
+        // Mimic-engine mode
+        // -----------------------------------------------------------------------
+
+        /// <summary>
+        /// Per-package HRESULT overrides for the simulated apply phase.
+        /// Key = package id, Value = HRESULT returned in
+        /// <see cref="OnExecutePackageComplete"/> for that package.
+        /// Any package not present in the dictionary defaults to <c>S_OK (0)</c>.
+        /// Only meaningful when <see cref="BurnBATestClassAttribute.MimicEngine"/> is
+        /// <see langword="true"/>.
+        /// </summary>
+        public Dictionary<string, int> MimicApplyResults { get; } = new Dictionary<string, int>();
+
+        /// <summary>
+        /// Per-package MSI messages to fire during the simulated execute phase, in order.
+        /// Key = package id; Value = ordered list of messages sent via
+        /// <see cref="OnExecuteMsiMessage"/> after <see cref="OnExecutePackageBegin"/>.
+        /// Only meaningful when <see cref="BurnBATestClassAttribute.MimicEngine"/> is
+        /// <see langword="true"/>.
+        /// </summary>
+        public Dictionary<string, List<MimicMsiMessage>> MimicMsiMessages { get; } = new Dictionary<string, List<MimicMsiMessage>>();
+
+        /// <summary>
+        /// Set to <see langword="true"/> by <c>MimicApplyEngine.Apply()</c> to signal the
+        /// runner that the apply phase should be simulated rather than sent to burn.
+        /// </summary>
+        internal bool _mimicApplyPending;
+
+        /// <summary>
+        /// <see langword="true"/> when the test is running in mimic-engine mode.
+        /// Set by the runner before <see cref="Initialize"/> is called.
+        /// </summary>
+        internal bool _isMimicMode;
 
         /// <summary>
         /// Whether or not any unhandled exceptions occured.
