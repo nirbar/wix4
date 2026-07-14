@@ -38,6 +38,8 @@
   <UsingTask TaskName="CreateItemAvoidingInference" AssemblyFile="$(WixTasksPath)" />
   <UsingTask TaskName="UpdateProjectReferenceMetadata" AssemblyFile="$(WixTasksPath)" />
   <UsingTask TaskName="CreateProjectReferenceDefineConstantsAndBindPaths" AssemblyFile="$(WixTasksPath)" />
+  <UsingTask TaskName="GetFileVersion" AssemblyFile="$(WixTasksPath)" />
+  <UsingTask TaskName="GetMsiProperty" AssemblyFile="$(WixTasksPath)" />
   <UsingTask TaskName="WixAssignCulture" AssemblyFile="$(WixTasksPath)" />
   <UsingTask TaskName="ReadTracking" AssemblyFile="$(WixTasksPath)" />
   <UsingTask TaskName="ResolveInstallerPlatform" AssemblyFile="$(WixTasksPath)" />

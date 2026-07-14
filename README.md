@@ -26,6 +26,7 @@ This repository contains the PanelSwWix4: A custom WiX Toolset codebase
 - BundlePackage/@ExternalPayloadsVital: BundlePackage external payloads may be non-vital.
 - Payload/@Vital: Payloads may be non-vital.
 - MSBuild property BuildTimer=true: print some build time measurements
+- MSBuild tasks: `GetMsiProperty` to read a MSI property; `GetFileVersion` to read a file version
 - CommandLine/@Quote: Support escaping command line argument.
 
 Testing framework nugets: 
