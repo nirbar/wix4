@@ -86,7 +86,7 @@
   <!-- MSBuild (aligned with VS 17.13 toolset) -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="17.13.26" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.3" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.4" />
   </ItemGroup>
 
   <ItemGroup>

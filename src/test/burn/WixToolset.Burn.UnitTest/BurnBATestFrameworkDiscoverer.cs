@@ -2,6 +2,7 @@ namespace WixToolset.Burn.UnitTest
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -30,12 +31,22 @@ namespace WixToolset.Burn.UnitTest
                 typeof(BurnBATestFrameworkDiscoverer));
 
         /// <summary>
-        /// TestProperty that stores the fully-qualified type name of the test class.
+        /// TestProperty that stores the name of the test class.
         /// </summary>
-        public static readonly TestProperty TestClassNameProperty =
+        public static readonly TestProperty ClassNameProperty =
             TestProperty.Register(
                 "BurnBA.ClassName",
                 "Burn BA Test Class Name",
+                typeof(string),
+                typeof(BurnBATestFrameworkDiscoverer));
+
+        /// <summary>
+        /// TestProperty that stores the fully-qualified type name of the test class.
+        /// </summary>
+        public static readonly TestProperty FullyQualifiedNameProperty =
+            TestProperty.Register(
+                "BurnBA.FullyQualifiedName",
+                "Burn BA Test Fully Qualified Name",
                 typeof(string),
                 typeof(BurnBATestFrameworkDiscoverer));
 
@@ -139,7 +150,8 @@ namespace WixToolset.Burn.UnitTest
                 DisplayName = type.Name + displaySuffix,
             };
             testCase.SetPropertyValue(IterationIndexProperty, iterationIndex);
-            testCase.SetPropertyValue(TestClassNameProperty, type.FullName!);
+            testCase.SetPropertyValue(FullyQualifiedNameProperty, type.FullName!);
+            testCase.SetPropertyValue(ClassNameProperty, type.Name!);
             testCase.SetPropertyValue(OrderProperty, classAttr.Order);
             testCase.SetPropertyValue(StopTestsOnErrorProperty, classAttr.StopTestsOnError);
             return testCase;
@@ -154,10 +166,64 @@ namespace WixToolset.Burn.UnitTest
                 DisplayName = type.Name,
             };
             testCase.SetPropertyValue(IterationIndexProperty, 0);
-            testCase.SetPropertyValue(TestClassNameProperty, type.FullName!);
+            testCase.SetPropertyValue(FullyQualifiedNameProperty, type.FullName!);
+            testCase.SetPropertyValue(ClassNameProperty, type.Name!);
             testCase.SetPropertyValue(OrderProperty, Int32.MaxValue);
             testCase.SetPropertyValue(StopTestsOnErrorProperty, false);
             return testCase;
+        }
+
+        internal static object GetTestCasePropertyValue(TestCase testCase, string propertyId)
+        {
+            var prop = testCase.Properties.FirstOrDefault(p => (p.Id.Equals(propertyId) || p.Id.Equals("BurnBA." + propertyId)));
+            if (prop == null)
+            {
+                return null;
+            }
+
+            return testCase.GetPropertyValue(prop);
+        }
+
+        internal static TestProperty GetTestCaseProperty(string propertyId)
+        {
+            switch (propertyId)
+            {
+                case "IterationIndex":
+                case "BurnBA.IterationIndex":
+                    return IterationIndexProperty;
+                case "FullyQualifiedName":
+                case "BurnBA.FullyQualifiedName":
+                    return FullyQualifiedNameProperty;
+                case "ClassName":
+                case "BurnBA.IterClassNameationIndex":
+                    return ClassNameProperty;
+                case "Order":
+                case "BurnBA.Order":
+                    return OrderProperty;
+                case "StopTestsOnError":
+                case "BurnBA.StopTestsOnError":
+                    return StopTestsOnErrorProperty;
+                default:
+                    return null;
+            }
+        }
+
+        internal static IEnumerable<string> GetSupportedProperties()
+        {
+            return new string[]
+            {
+                "IterationIndex",
+                "FullyQualifiedName",
+                "ClassName",
+                "Order",
+                "StopTestsOnError",
+
+                "BurnBA.IterationIndex",
+                "BurnBA.FullyQualifiedName",
+                "BurnBA.ClassName",
+                "BurnBA.Order",
+                "BurnBA.StopTestsOnError",
+            };
         }
     }
 }

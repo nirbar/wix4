@@ -41,7 +41,8 @@ namespace WixToolset.Burn.UnitTest
             foreach (var source in sources)
             {
                 var testCases = DiscoverTestCasesFromSource(source);
-                this.RunTestCasesFromSource(source, testCases, settings, frameworkHandle);
+                var filteredList = this.ApplyFilters(testCases, runContext);
+                this.RunTestCasesFromSource(source, filteredList, settings, frameworkHandle);
             }
         }
 
@@ -57,7 +58,8 @@ namespace WixToolset.Burn.UnitTest
             var settings = BurnBATestFrameworkRunSettings.Load(runContext?.RunSettings);
 
             // Group by source assembly so we can do one burn launch per assembly.
-            var bySource = tests.GroupBy(t => t.Source);
+            var filteredList = this.ApplyFilters(tests, runContext);
+            var bySource = filteredList.GroupBy(t => t.Source);
             foreach (var group in bySource)
             {
                 this.RunTestCasesFromSource(group.Key, group, settings, frameworkHandle);
@@ -68,6 +70,18 @@ namespace WixToolset.Burn.UnitTest
         public void Cancel()
         {
             this._cts?.Cancel();
+        }
+
+        private IEnumerable<TestCase> ApplyFilters(IEnumerable<TestCase> testCases, IRunContext runContext)
+        {
+            var filter = runContext?.GetTestCaseFilter(BurnBATestFrameworkDiscoverer.GetSupportedProperties(), p => BurnBATestFrameworkDiscoverer.GetTestCaseProperty(p));
+            if (filter == null)
+            {
+                return testCases;
+            }
+
+            var filteredList = testCases.Where(test => filter.MatchTestCase(test, k => BurnBATestFrameworkDiscoverer.GetTestCasePropertyValue(test, k)));
+            return filteredList;
         }
 
         private void RunTestCasesFromSource(
@@ -117,7 +131,7 @@ namespace WixToolset.Burn.UnitTest
             {
                 frameworkHandle.RecordStart(testCase);
 
-                var className = testCase.GetPropertyValue<string>(BurnBATestFrameworkDiscoverer.TestClassNameProperty, null);
+                var className = testCase.GetPropertyValue<string>(BurnBATestFrameworkDiscoverer.FullyQualifiedNameProperty, null);
                 var iterationIndex = testCase.GetPropertyValue<int>(BurnBATestFrameworkDiscoverer.IterationIndexProperty, 0);
                 var order = testCase.GetPropertyValue<int>(BurnBATestFrameworkDiscoverer.OrderProperty, 0);
                 var stopTestsOnError = testCase.GetPropertyValue<bool>(BurnBATestFrameworkDiscoverer.StopTestsOnErrorProperty, false);

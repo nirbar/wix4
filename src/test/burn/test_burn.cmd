@@ -27,7 +27,7 @@ msbuild -Restore TestData6\TestData6.proj -p:Configuration=%_C% -tl -nologo -m -
 "%_B%\net462\win-x86\testexe.exe" /dm "%_B%\net8.0-windows\testhost.exe"
 mt.exe -manifest "WixToolsetTest.BurnE2E\testhost.longpathaware.manifest" -updateresource:"%_B%\net8.0-windows\testhost.exe"
 
-dotnet test ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\WixToolsetTest.BurnUnitTest.dll --settings ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\BurnBaTests.runsettings --nologo --results-directory "%_L%\TestResults" --logger "trx;LogFileName=WixToolsetTest.BurnUnitTests.trx" || exit /b
+dotnet test ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\WixToolsetTest.BurnUnitTest.dll --filter "ClassName!=WouldFailfRun" --settings ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\BurnBaTests.runsettings --nologo --results-directory "%_L%\TestResults" --logger "trx;LogFileName=WixToolsetTest.BurnUnitTests.trx" || exit /b
 dotnet test ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\WixToolsetTest.BurnUnitTest.BundleC_x64.dll --settings ..\..\..\build\BurnUnitTest\%_C%\net8.0-windows\WixToolsetTest.BurnUnitTest.BundleC_x64.runsettings --nologo --results-directory "%_L%\TestResults" --logger "trx;LogFileName=WixToolsetTest.BurnUnitTests.BundleC_x64.trx" || exit /b
 
 @if not "%RuntimeTestsEnabled%"=="true" goto :LExit
