@@ -3722,6 +3722,64 @@ namespace Bootstrapper
             NativeAssert::SpecificReturnCode(HRESULT_FROM_WIN32(ERROR_DISK_FULL), hr, "CorePlan should have failed on missing disk space for package cache");
         }
 
+        [Fact]
+        void PlanCheckSpaceNonVitalTest()
+        {
+            HRESULT hr = S_OK;
+            BOOL fRes = TRUE;
+            BURN_ENGINE_STATE engineState = { };
+            BURN_ENGINE_STATE* pEngineState = &engineState;
+            ULARGE_INTEGER ullAvailable = {};
+            DWORD64 qwAvailable = 0;
+
+            InitializeEngineStateForCorePlan(wzPlanCheckSpaceManifestFileName, pEngineState);
+            DetectPackagesAsPresentAndUnCached(pEngineState);
+
+            hr = CorePlan(pEngineState, BOOTSTRAPPER_ACTION_UNINSTALL, BOOTSTRAPPER_SCOPE_DEFAULT);
+            NativeAssert::Succeeded(hr, "CorePlan failed");
+
+            fRes = ::GetDiskFreeSpaceExW(engineState.cache.sczBaseWorkingFolder, NULL, NULL, &ullAvailable);
+            NativeAssert::True(fRes, "GetDiskFreeSpaceExW failed");
+            qwAvailable = (((DWORD64)ullAvailable.HighPart) << (8 * sizeof(ullAvailable.HighPart)) | ullAvailable.LowPart) + 1;
+
+            for (DWORD i = 0; i < engineState.containers.cContainers; ++i)
+            {
+                BURN_CONTAINER* pContainer = engineState.containers.rgContainers + i;
+                if (!pContainer->fAttached)
+                {
+                    LPCWSTR szContainerPath = pContainer->sczSourcePath;
+                    DWORD64 qwContainerSize = pContainer->qwFileSize;
+
+                    // Make the container too big
+                    pContainer->sczSourcePath = NULL;
+                    pContainer->qwFileSize = qwAvailable;
+
+                    hr = CorePlan(pEngineState, BOOTSTRAPPER_ACTION_UNINSTALL, BOOTSTRAPPER_SCOPE_DEFAULT);
+                    NativeAssert::Succeeded(hr, "CorePlan should have passed because msi packages are non cache-vital during uninstall");
+
+                    // Reset
+                    pContainer->sczSourcePath = const_cast<LPWSTR>(szContainerPath);
+                    pContainer->qwFileSize = qwContainerSize;
+                }
+            }
+
+            // Make the packages too big
+            for (DWORD i = 0; i < engineState.packages.cPackages; ++i)
+            {
+                BURN_PACKAGE* pPackage = engineState.packages.rgPackages + i;
+
+                for (DWORD j = 0; j < pPackage->payloads.cItems; ++j)
+                {
+                    BURN_PAYLOAD* pPayload = pPackage->payloads.rgItems[j].pPayload;
+
+                    pPayload->qwFileSize = qwAvailable;
+                }
+            }
+
+            hr = CorePlan(pEngineState, BOOTSTRAPPER_ACTION_UNINSTALL, BOOTSTRAPPER_SCOPE_DEFAULT);
+            NativeAssert::Succeeded(hr, "CorePlan should have passed because msi packages are non cache-vital during uninstall");
+        }
+
     private:
         // This doesn't initialize everything, just enough for CorePlan to work.
         void InitializeEngineStateForCorePlan(LPCWSTR wzManifestFileName, BURN_ENGINE_STATE* pEngineState)
@@ -3870,6 +3928,17 @@ namespace Bootstrapper
             }
         }
 
+        void DetectPackageAsPresentAndUnCached(BURN_PACKAGE* pPackage)
+        {
+            pPackage->currentState = BOOTSTRAPPER_PACKAGE_STATE_PRESENT;
+            pPackage->fCached = FALSE;
+            if (pPackage->fCanAffectRegistration)
+            {
+                pPackage->cacheRegistrationState = BURN_PACKAGE_REGISTRATION_STATE_ABSENT;
+                pPackage->installRegistrationState = BURN_PACKAGE_REGISTRATION_STATE_PRESENT;
+            }
+        }
+
         void DetectBundleDependent(BURN_ENGINE_STATE* pEngineState, LPCWSTR wzId)
         {
             HRESULT hr = S_OK;
@@ -3935,6 +4004,38 @@ namespace Bootstrapper
             {
                 BURN_PACKAGE* pPackage = pEngineState->packages.rgPackages + i;
                 DetectPackageAsPresentAndCached(pPackage);
+                DetectPackageDependent(pPackage, pEngineState->registration.sczCode);
+
+                if (BURN_PACKAGE_TYPE_MSI == pPackage->type)
+                {
+                    for (DWORD j = 0; j < pPackage->Msi.cSlipstreamMspPackages; ++j)
+                    {
+                        BURN_PACKAGE* pMspPackage = pPackage->Msi.rgSlipstreamMsps[j].pMspPackage;
+                        MspEngineAddDetectedTargetProduct(&pEngineState->packages, pMspPackage, j, pPackage->Msi.sczProductCode, pPackage->scope == BOOTSTRAPPER_PACKAGE_SCOPE_PER_MACHINE ? MSIINSTALLCONTEXT_MACHINE : MSIINSTALLCONTEXT_USERUNMANAGED);
+
+                        BURN_MSPTARGETPRODUCT* pTargetProduct = pMspPackage->Msp.rgTargetProducts + (pMspPackage->Msp.cTargetProductCodes - 1);
+                        pTargetProduct->patchPackageState = BOOTSTRAPPER_PACKAGE_STATE_PRESENT;
+                        pTargetProduct->registrationState = BURN_PACKAGE_REGISTRATION_STATE_PRESENT;
+                    }
+                }
+            }
+        }
+
+        void DetectPackagesAsPresentAndUnCached(BURN_ENGINE_STATE* pEngineState)
+        {
+            PlanTestDetect(pEngineState);
+
+            pEngineState->registration.detectedRegistrationType = BOOTSTRAPPER_REGISTRATION_TYPE_FULL;
+
+            if (pEngineState->dependencies.wzSelfDependent)
+            {
+                DetectBundleDependent(pEngineState, pEngineState->dependencies.wzSelfDependent);
+            }
+
+            for (DWORD i = 0; i < pEngineState->packages.cPackages; ++i)
+            {
+                BURN_PACKAGE* pPackage = pEngineState->packages.rgPackages + i;
+                DetectPackageAsPresentAndUnCached(pPackage);
                 DetectPackageDependent(pPackage, pEngineState->registration.sczCode);
 
                 if (BURN_PACKAGE_TYPE_MSI == pPackage->type)

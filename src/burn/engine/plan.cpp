@@ -3208,7 +3208,7 @@ HRESULT PlanCheckSpace(
         {
         case BURN_CACHE_ACTION_TYPE_PACKAGE:
             BURN_PACKAGE* pPackage = pCacheAction->package.pPackage;
-            if (!pPackage->fCached)
+            if (pPackage->fCacheVital && !pPackage->fCached)
             {
                 DWORD64* pqw = pPackage->fPerMachine ? &qwMinNeededMachine : &qwMinNeededUser;
 
