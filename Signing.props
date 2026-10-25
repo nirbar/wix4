@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+	<!-- The brand that Rebrand.ps1 applies. Keep PanelSwWix4 to keep the repository's own name. -->
+	<Brand>PanelSwWix4</Brand>
+	<SigningPublisherName>WiX Toolset</SigningPublisherName>
+	<SigningDescription>WiX Toolset</SigningDescription>
+	<SigningDescriptionUrl>https://wixtoolset.org/</SigningDescriptionUrl>
+  </PropertyGroup>
+</Project>
