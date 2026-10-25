@@ -2,10 +2,11 @@
 <!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
 
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)\..\Signing.props"/>
   <PropertyGroup>
     <SigningToolExe>$(ToolsFolder)\sign.exe</SigningToolExe>
     <SigningCommand>code azure-key-vault</SigningCommand>
-    <SigningConfiguration>--publisher-name "WiX Toolset" --description "WiX Toolset" --description-url "https://wixtoolset.org/" --recurse-containers=false --azure-credential-type azure-cli --azure-key-vault-url "$(SigningKeyVaultUri)" --azure-key-vault-certificate "$(SigningCertName)"</SigningConfiguration>
+    <SigningConfiguration>--publisher-name "$(SigningPublisherName)" --description "$(SigningDescription)" --description-url "$(SigningDescriptionUrl)" --recurse-containers=false --azure-credential-type azure-cli --azure-key-vault-url "$(SigningKeyVaultUri)" --azure-key-vault-certificate "$(SigningCertName)"</SigningConfiguration>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsWixTestSupportProject)'=='true' ">

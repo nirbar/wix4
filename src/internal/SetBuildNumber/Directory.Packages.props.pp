@@ -73,7 +73,7 @@
     <PackageVersion Include="System.Private.Uri" Version="4.3.2" />
 
     <!-- Use System.Memory v4.5.5 as it is compatible with VS2022 -->
-    <PackageVersion Include="System.Memory" Version="4.5.5" />
+    <PackageVersion Include="System.Memory" Version="4.6.3" />
   </ItemGroup>
 
   <!-- NuGet stack -->
@@ -86,11 +86,11 @@
   <!-- MSBuild (aligned with VS 17.13 toolset) -->
   <ItemGroup>
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="17.13.26" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.4" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.5" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />
 
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="18.6.0" />

@@ -8,6 +8,16 @@ on:
         required: true
         default: false
         type: boolean
+      rebrand:
+        description: 'Rebrand to the Brand defined in Signing.props?'
+        required: true
+        default: false
+        type: boolean
+      sign:
+        description: 'Sign binaries? Expects github secrets: WIX_SIGNING_CLIENTID, WIX_SIGNING_TENANTID, WIX_SIGNING_VAULTURI, WIX_SIGNING_CERTNAME'
+        required: true
+        default: false
+        type: boolean
 
 env:
   DOTNET_NOLOGO: true
@@ -21,7 +31,7 @@ jobs:
     runs-on: windows-2022
     env:
       RepoOrg: ${{ github.repository_owner }}
-      SignBuild: ${{ github.repository_owner == 'wixtoolset' && startsWith(github.ref, 'refs/tags/v') }}
+      SignBuild: ${{ github.event.inputs.sign }}
       WixOfficialBuild: ${{ github.repository_owner == 'wixtoolset' && startsWith(github.ref, 'refs/tags/v') }}
     permissions:
       packages: write
@@ -61,8 +71,21 @@ jobs:
           client-id: ${{ secrets.WIX_SIGNING_CLIENTID }}
           tenant-id: ${{ secrets.WIX_SIGNING_TENANTID }}
 
+      - name: Rebrand
+        if: ${{ github.event.inputs.rebrand == 'true' }}
+        run: ./Rebrand.ps1
+
+      - name: Resolve brand
+        run: |
+          $brand = 'PanelSwWix4'
+          if ('${{ github.event.inputs.rebrand }}' -eq 'true') {
+            $brand = ([xml](Get-Content Signing.props -Raw)).Project.PropertyGroup.Brand
+          }
+          Add-Content -Path ${{ github.env }} -Value ("BRAND=" + $brand)
+
       - name: Decrypt snk
-        run: gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.GPG_PASSPHRASE }}" --output "${{ github.workspace }}\src\psw-wix.snk" "${{ github.workspace }}\src\psw-wix.snk.gpg"
+        if: ${{ github.event.inputs.rebrand != 'true' }}
+        run: gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.GPG_PASSPHRASE }}" --output "${{ github.workspace }}\src\wix.snk" "${{ github.workspace }}\src\psw-wix.snk.gpg"
 
       - name: Build psw-wix-7.1
         shell: cmd
@@ -81,7 +104,7 @@ jobs:
           $xmlDoc = New-Object System.Xml.XmlDocument
           $file = [System.IO.Path]::Combine("${{ github.workspace }}", "Directory.Packages.props")
           [xml]$xmlDoc = Get-Content $file
-          $node = $xmlDoc.SelectSingleNode('//PackageVersion[@Include="PanelSwWix4.Dtf.Compression"]/@Version')
+          $node = $xmlDoc.SelectSingleNode('//PackageVersion[@Include="${{ env.BRAND }}.Dtf.Compression"]/@Version')
           Add-Content -Path ${{ github.env }} -Value ("WIX_VERSION=" + $node.Value)
 
       - name: Validate test results
@@ -120,13 +143,14 @@ jobs:
     
       # Generate NuGet API key
       - name: NuGet login (OIDC → temp API key)
+        if: ${{ github.event.inputs.publish_nuget == 'true' && github.event.inputs.rebrand != 'true' }}
         uses: NuGet/login@v1
         id: login
         with:
           user: Nir.Bar
 
       - name: Publish nuget packages to github
-        if: ${{ github.event.inputs.publish_nuget == 'true' }}
+        if: ${{ github.event.inputs.publish_nuget == 'true' && github.event.inputs.rebrand != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.TAGGER_PAT }}
         run: |

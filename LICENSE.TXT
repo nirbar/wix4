@@ -34,3 +34,5 @@ The following parts are released under MIT-no-attribution license:
 - src\test\burn\WixToolsetTest.BurnUnitTest.BundleC_x64
 - .agent\skills\burn-ba-unit-test-authoring
 - .agent\skills\burn-pipe-sync
+- Rebrand.ps1
+- Signing.props
