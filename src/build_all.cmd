@@ -84,11 +84,11 @@ if not "%WixSkipVsDevCmd%"=="" (
 echo Initializing developer command prompt
 
 if not exist "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" (
-  "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+  echo vswhere.exe not found; install Visual Studio or Build Tools for Visual Studio
   exit /b 2
 )
 
-for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -version [17^,19^) -latest -property installationPath`) do (
+for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -products * -version [17^,19^) -latest -property installationPath`) do (
   if exist "%%i\Common7\Tools\vsdevcmd.bat" (
     call "%%i\Common7\Tools\vsdevcmd.bat" -no_logo
     exit /b
