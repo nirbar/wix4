@@ -24,6 +24,17 @@ namespace WixToolset.Extensibility
         void PreBackendBind(IBindContext context);
 
         /// <summary>
+        /// Called once the full list of files that will be in the package is known, and before
+        /// the files are read to calculate size, version, hash and to create cabinets.
+        /// The extension may inspect or modify the files, for example, sign them, and may
+        /// redirect <see cref="IFileFacade.SourcePath"/> to a processed copy.
+        /// The extension must not change the identity or target name of any file.
+        /// </summary>
+        /// <param name="section">The linked section.</param>
+        /// <param name="files">All files, including files from merge modules.</param>
+        void PreProcessFiles(IntermediateSection section, IReadOnlyCollection<IFileFacade> files);
+
+        /// <summary>
         /// Extension can process the intermediate before the Windows Installer data is created.
         /// </summary>
         /// <param name="section">The finalized intermediate section.</param>

@@ -68,8 +68,11 @@ namespace WixToolset.Extensibility.Data
 
         /// <summary>
         /// Source to the file.
+        /// Setting the path before the file is processed (for example from
+        /// <c>IWindowsInstallerBackendBinderExtension.PreProcessFiles</c>) causes the
+        /// new path to be used for hashing, versioning and cabinet creation.
         /// </summary>
-        string SourcePath { get; }
+        string SourcePath { get; set; }
 
         /// <summary>
         /// Indicates whether the file is to be uncompressed.

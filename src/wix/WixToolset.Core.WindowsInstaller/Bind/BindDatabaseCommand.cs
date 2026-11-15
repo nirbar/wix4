@@ -309,6 +309,18 @@ namespace WixToolset.Core.WindowsInstaller.Bind
                 return null;
             }
 
+            // Give extensions a chance to process (for example sign) the complete list of files
+            // before they are read to calculate size, version and hash.
+            foreach (var extension in this.BackendExtensions)
+            {
+                extension.PreProcessFiles(section, allFileFacades);
+            }
+
+            if (this.Messaging.EncounteredError)
+            {
+                return null;
+            }
+
             // Gather information about files that do not come from merge modules.
             {
                 var command = new UpdateFileFacadesCommand(this.Messaging, this.FileSystem, section, allFileFacades, fileFacadesFromIntermediate, variableCache, overwriteHash: true, this.CancellationToken, calculatedCabbingThreadCount, this.TimeTakerFactory);

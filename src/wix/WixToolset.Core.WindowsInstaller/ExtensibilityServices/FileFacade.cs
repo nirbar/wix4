@@ -11,8 +11,12 @@ namespace WixToolset.Core.WindowsInstaller.ExtensibilityServices
 
     internal class FileFacade : IFileFacade
     {
+        private readonly FileSymbol fileSymbol;
+        private string sourcePath;
+
         public FileFacade(FileSymbol file)
         {
+            this.fileSymbol = file;
             this.Identifier = file.Id;
             this.ComponentRef = file.ComponentRef;
             this.DiskId = file.DiskId ?? 1;
@@ -22,7 +26,7 @@ namespace WixToolset.Core.WindowsInstaller.ExtensibilityServices
             this.PatchGroup = file.PatchGroup;
             this.Sequence = file.Sequence;
             this.SourceLineNumber = file.SourceLineNumbers;
-            this.SourcePath = file.Source?.Path;
+            this.sourcePath = file.Source?.Path;
             this.Compressed = (file.Attributes & FileSymbolAttributes.Compressed) == FileSymbolAttributes.Compressed;
             this.Uncompressed = (file.Attributes & FileSymbolAttributes.Uncompressed) == FileSymbolAttributes.Uncompressed;
             this.Version = file.Version;
@@ -40,7 +44,7 @@ namespace WixToolset.Core.WindowsInstaller.ExtensibilityServices
             this.PatchGroup = null;
             this.Sequence = row.Sequence;
             this.SourceLineNumber = row.SourceLineNumbers;
-            this.SourcePath = row.Source;
+            this.sourcePath = row.Source;
             this.Compressed = (row.Attributes & WindowsInstallerConstants.MsidbFileAttributesCompressed) == WindowsInstallerConstants.MsidbFileAttributesCompressed;
             this.Uncompressed = (row.Attributes & WindowsInstallerConstants.MsidbFileAttributesNoncompressed) == WindowsInstallerConstants.MsidbFileAttributesNoncompressed;
             this.Version = row.Version;
@@ -67,7 +71,20 @@ namespace WixToolset.Core.WindowsInstaller.ExtensibilityServices
 
         public SourceLineNumber SourceLineNumber { get; }
 
-        public string SourcePath { get; }
+        public string SourcePath
+        {
+            get => this.sourcePath;
+            set
+            {
+                this.sourcePath = value;
+
+                if (this.fileSymbol != null)
+                {
+                    var previous = this.fileSymbol.Source;
+                    this.fileSymbol.Source = new IntermediateFieldPathValue { Path = value, BaseUri = previous?.BaseUri, Embed = previous?.Embed ?? false };
+                }
+            }
+        }
 
         public bool Compressed { get; }
 

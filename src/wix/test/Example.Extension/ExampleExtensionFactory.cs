@@ -47,6 +47,10 @@ namespace Example.Extension
             {
                 extension = new ExampleWindowsInstallerBackendExtension();
             }
+            else if (extensionType == typeof(IBurnBackendBinderExtension))
+            {
+                extension = new ExampleBurnBackendExtension();
+            }
             else if (extensionType == typeof(IWindowsInstallerDecompilerExtension))
             {
                 extension = new ExampleWindowsInstallerDecompilerExtension();

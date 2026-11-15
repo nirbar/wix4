@@ -2,7 +2,9 @@
 
 namespace WixToolset.Extensibility
 {
+    using System.Collections.Generic;
     using WixToolset.Data;
+    using WixToolset.Data.Symbols;
     using WixToolset.Extensibility.Data;
 
     /// <summary>
@@ -25,6 +27,18 @@ namespace WixToolset.Extensibility
         /// <param name="sourceLineNumbers">Source line number of source package.</param>
         /// <returns><c>IResolveFileResult</c> if the related file was found, or null for default handling.</returns>
         IResolveFileResult ResolveRelatedFile(string source, string relatedSource, string type, SourceLineNumber sourceLineNumbers);
+
+        /// <summary>
+        /// Called with payloads that are about to be processed, which is before their size and hash
+        /// are calculated and before they are packed into containers.
+        /// Called once for the authored payloads and again for payloads added while processing packages.
+        /// The extension may inspect or modify the payload files, for example, sign them, and may
+        /// redirect <see cref="WixBundlePayloadSymbol.SourceFile"/> to a processed copy.
+        /// The extension must not change the identity or name of any payload.
+        /// </summary>
+        /// <param name="section">The linked section.</param>
+        /// <param name="payloads">Payloads about to be processed.</param>
+        void PreProcessPayloads(IntermediateSection section, IReadOnlyCollection<WixBundlePayloadSymbol> payloads);
 
         /// <summary>
         /// Called right before the output is bound into its final format.

@@ -160,6 +160,11 @@ namespace WixToolset.Core.Burn
             // Process the explicitly authored payloads.
             ISet<string> processedPayloads;
             {
+                if (!this.PreProcessPayloads(section, payloadSymbols.Values.ToList()))
+                {
+                    return;
+                }
+
                 var command = new ProcessPayloadsCommand(this.InternalBurnBackendHelper, this.PayloadHarvester, payloadSymbols.Values, bundleSymbol.DefaultPackagingType, layoutDirectory);
                 command.Execute();
 
@@ -259,6 +264,11 @@ namespace WixToolset.Core.Burn
             // Process the payloads that were added by processing the packages.
             {
                 var toProcess = payloadSymbols.Values.Where(r => !processedPayloads.Contains(r.Id.Id)).ToList();
+
+                if (!this.PreProcessPayloads(section, toProcess))
+                {
+                    return;
+                }
 
                 var command = new ProcessPayloadsCommand(this.InternalBurnBackendHelper, this.PayloadHarvester, toProcess, bundleSymbol.DefaultPackagingType, layoutDirectory);
                 command.Execute();
@@ -527,6 +537,19 @@ namespace WixToolset.Core.Burn
             this.FileTransfers = fileTransfers;
             this.TrackedFiles = trackedFiles;
             this.Wixout = this.CreateWixout(trackedFiles, this.Output, manifestPath, baManifestPath, bextManifestPath);
+        }
+
+        private bool PreProcessPayloads(IntermediateSection section, IReadOnlyCollection<WixBundlePayloadSymbol> payloads)
+        {
+            if (payloads.Count > 0)
+            {
+                foreach (var extension in this.BackendExtensions)
+                {
+                    extension.PreProcessPayloads(section, payloads);
+                }
+            }
+
+            return !this.Messaging.EncounteredError;
         }
 
         private void ProcessBundleVersion(WixBundleSymbol bundleSymbol)

@@ -56,6 +56,13 @@ namespace WixToolset.Extensibility
         }
 
         /// <summary>
+        /// See <see cref="IWindowsInstallerBackendBinderExtension.PreProcessFiles(IntermediateSection, IReadOnlyCollection{IFileFacade})"/>
+        /// </summary>
+        public virtual void PreProcessFiles(IntermediateSection section, IReadOnlyCollection<IFileFacade> files)
+        {
+        }
+
+        /// <summary>
         /// See <see cref="IWindowsInstallerBackendBinderExtension.SymbolsFinalized(IntermediateSection)"/>
         /// </summary>
         public virtual void SymbolsFinalized(IntermediateSection section)

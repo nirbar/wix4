@@ -1,0 +1,18 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Bundle Name="PreProcessHooks" Version="1.0.0.0" Manufacturer="Example Corporation" UpgradeCode="{6B3A6C36-2E5B-4B8A-9E0D-0A5B0F0D3E21}">
+    <BootstrapperApplication SourceFile="fakeba.dll" />
+
+    <Chain>
+      <ExePackage SourceFile="burn.exe" DetectCondition="none" UninstallArguments="-u" />
+    </Chain>
+
+    <PayloadGroupRef Id="ExtraPayloads" />
+  </Bundle>
+
+  <Fragment>
+    <PayloadGroup Id="ExtraPayloads">
+      <Payload Id="SignedPayload" SourceFile="sign_payload.txt" />
+      <Payload Id="PlainPayload" SourceFile="plain.txt" />
+    </PayloadGroup>
+  </Fragment>
+</Wix>

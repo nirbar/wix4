@@ -7,6 +7,7 @@ namespace WixToolset.Extensibility
     using System.Linq;
     using WixToolset.Data;
     using WixToolset.Data.Burn;
+    using WixToolset.Data.Symbols;
     using WixToolset.Extensibility.Data;
     using WixToolset.Extensibility.Services;
 
@@ -51,6 +52,13 @@ namespace WixToolset.Extensibility
         public virtual IResolveFileResult ResolveRelatedFile(string source, string relatedSource, string type, SourceLineNumber sourceLineNumbers)
         {
             return null;
+        }
+
+        /// <summary>
+        /// See <see cref="IBurnBackendBinderExtension.PreProcessPayloads(IntermediateSection, IReadOnlyCollection{WixBundlePayloadSymbol})"/>
+        /// </summary>
+        public virtual void PreProcessPayloads(IntermediateSection section, IReadOnlyCollection<WixBundlePayloadSymbol> payloads)
+        {
         }
 
         /// <summary>
