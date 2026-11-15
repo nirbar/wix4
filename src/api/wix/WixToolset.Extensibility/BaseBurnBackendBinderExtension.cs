@@ -55,9 +55,9 @@ namespace WixToolset.Extensibility
         }
 
         /// <summary>
-        /// See <see cref="IBurnBackendBinderExtension.PreProcessPayloads(IntermediateSection, IReadOnlyCollection{WixBundlePayloadSymbol})"/>
+        /// See <see cref="IBurnBackendBinderExtension.PreProcessSourceFiles(IntermediateSection, IReadOnlyCollection{ISourceFile})"/>
         /// </summary>
-        public virtual void PreProcessPayloads(IntermediateSection section, IReadOnlyCollection<WixBundlePayloadSymbol> payloads)
+        public virtual void PreProcessSourceFiles(IntermediateSection section, IReadOnlyCollection<ISourceFile> files)
         {
         }
 

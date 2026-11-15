@@ -8,6 +8,7 @@ namespace WixToolset.Core.WindowsInstaller.Bind
     using System.Linq;
     using System.Threading;
     using WixToolset.Data;
+    using WixToolset.Core.WindowsInstaller.ExtensibilityServices;
     using WixToolset.Data.Symbols;
     using WixToolset.Data.WindowsInstaller;
     using WixToolset.Extensibility;
@@ -311,9 +312,14 @@ namespace WixToolset.Core.WindowsInstaller.Bind
 
             // Give extensions a chance to process (for example sign) the complete list of files
             // before they are read to calculate size, version and hash.
-            foreach (var extension in this.BackendExtensions)
+            if (this.BackendExtensions.Any())
             {
-                extension.PreProcessFiles(section, allFileFacades);
+                var sourceFiles = GetSourceFiles(section, allFileFacades);
+
+                foreach (var extension in this.BackendExtensions)
+                {
+                    extension.PreProcessSourceFiles(section, sourceFiles);
+                }
             }
 
             if (this.Messaging.EncounteredError)
@@ -568,6 +574,31 @@ namespace WixToolset.Core.WindowsInstaller.Bind
             result.Wixout = this.CreateWixout(trackedFiles, this.Intermediate, data);
 
             return result;
+        }
+
+        private static IReadOnlyCollection<ISourceFile> GetSourceFiles(IntermediateSection section, IEnumerable<IFileFacade> fileFacades)
+        {
+            var sourceFiles = new List<ISourceFile>();
+
+            sourceFiles.AddRange(fileFacades.OfType<ISourceFile>().Where(f => !String.IsNullOrEmpty(f.SourcePath)));
+
+            foreach (var symbol in section.Symbols)
+            {
+                switch (symbol)
+                {
+                    case BinarySymbol binary when !String.IsNullOrEmpty(binary.Data?.Path):
+                        sourceFiles.Add(new SymbolSourceFile(SourceFileKind.Binary, binary, () => binary.Data.Path, path => binary.Data = new IntermediateFieldPathValue { Path = path, BaseUri = binary.Data.BaseUri }));
+                        break;
+                    case IconSymbol icon when !String.IsNullOrEmpty(icon.Data?.Path):
+                        sourceFiles.Add(new SymbolSourceFile(SourceFileKind.Icon, icon, () => icon.Data.Path, path => icon.Data = new IntermediateFieldPathValue { Path = path, BaseUri = icon.Data.BaseUri }));
+                        break;
+                    case MsiEmbeddedUISymbol embeddedUI when !String.IsNullOrEmpty(embeddedUI.Source):
+                        sourceFiles.Add(new SymbolSourceFile(SourceFileKind.EmbeddedUI, embeddedUI, () => embeddedUI.Source, path => embeddedUI.Source = path));
+                        break;
+                }
+            }
+
+            return sourceFiles;
         }
 
         private void ProcessProductVersion(WixPackageSymbol packageSymbol, IntermediateSection section, bool validate)

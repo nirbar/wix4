@@ -29,16 +29,16 @@ namespace WixToolset.Extensibility
         IResolveFileResult ResolveRelatedFile(string source, string relatedSource, string type, SourceLineNumber sourceLineNumbers);
 
         /// <summary>
-        /// Called with payloads that are about to be processed, which is before their size and hash
-        /// are calculated and before they are packed into containers.
+        /// Called with the payloads (including bootstrapper application payloads) that are about to be
+        /// processed, which is before their size and hash are calculated and before they are packed into containers.
         /// Called once for the authored payloads and again for payloads added while processing packages.
-        /// The extension may inspect or modify the payload files, for example, sign them, and may
-        /// redirect <see cref="WixBundlePayloadSymbol.SourceFile"/> to a processed copy.
-        /// The extension must not change the identity or name of any payload.
+        /// The extension may inspect or modify the files, for example, sign them, and may redirect
+        /// <see cref="ISourceFile.SourcePath"/> to a processed copy.
+        /// The extension must not change the identity or the name of any payload.
         /// </summary>
         /// <param name="section">The linked section.</param>
-        /// <param name="payloads">Payloads about to be processed.</param>
-        void PreProcessPayloads(IntermediateSection section, IReadOnlyCollection<WixBundlePayloadSymbol> payloads);
+        /// <param name="files">Payloads about to be processed, all of kind <see cref="SourceFileKind.Payload"/>.</param>
+        void PreProcessSourceFiles(IntermediateSection section, IReadOnlyCollection<ISourceFile> files);
 
         /// <summary>
         /// Called right before the output is bound into its final format.

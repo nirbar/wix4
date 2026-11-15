@@ -541,11 +541,15 @@ namespace WixToolset.Core.Burn
 
         private bool PreProcessPayloads(IntermediateSection section, IReadOnlyCollection<WixBundlePayloadSymbol> payloads)
         {
-            if (payloads.Count > 0)
+            if (payloads.Count > 0 && this.BackendExtensions.Any())
             {
+                var sourceFiles = payloads.Where(p => !String.IsNullOrEmpty(p.SourceFile?.Path))
+                                          .Select(p => (ISourceFile)new PayloadSourceFile(p))
+                                          .ToList();
+
                 foreach (var extension in this.BackendExtensions)
                 {
-                    extension.PreProcessPayloads(section, payloads);
+                    extension.PreProcessSourceFiles(section, sourceFiles);
                 }
             }
 

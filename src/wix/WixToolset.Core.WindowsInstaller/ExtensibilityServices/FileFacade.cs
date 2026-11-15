@@ -9,7 +9,7 @@ namespace WixToolset.Core.WindowsInstaller.ExtensibilityServices
     using WixToolset.Data.WindowsInstaller.Rows;
     using WixToolset.Extensibility.Data;
 
-    internal class FileFacade : IFileFacade
+    internal class FileFacade : IFileFacade, ISourceFile
     {
         private readonly FileSymbol fileSymbol;
         private string sourcePath;
@@ -53,6 +53,8 @@ namespace WixToolset.Core.WindowsInstaller.ExtensibilityServices
 
         public string Id => this.Identifier.Id;
 
+        SourceFileKind ISourceFile.Kind => SourceFileKind.File;
+
         public Identifier Identifier { get; }
 
         public string ComponentRef { get; }
@@ -81,7 +83,7 @@ namespace WixToolset.Core.WindowsInstaller.ExtensibilityServices
                 if (this.fileSymbol != null)
                 {
                     var previous = this.fileSymbol.Source;
-                    this.fileSymbol.Source = new IntermediateFieldPathValue { Path = value, BaseUri = previous?.BaseUri, Embed = previous?.Embed ?? false };
+                    this.fileSymbol.Source = new IntermediateFieldPathValue { Path = value, BaseUri = previous?.BaseUri };
                 }
             }
         }

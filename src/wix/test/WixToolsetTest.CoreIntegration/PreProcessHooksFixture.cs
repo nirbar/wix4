@@ -7,6 +7,7 @@ namespace WixToolsetTest.CoreIntegration
     using Example.Extension;
     using WixInternal.Core.TestPackage;
     using WixToolset.Data;
+    using WixToolset.Data.Burn;
     using WixToolset.Data.Symbols;
     using WixToolset.TestSupport;
     using Xunit;
@@ -59,6 +60,15 @@ namespace WixToolsetTest.CoreIntegration
                 Assert.Equal(new FileInfo(Path.Combine(dataFolder, "plain.txt")).Length, plain.FileSize);
                 Assert.Equal(Path.Combine(dataFolder, "plain.txt"), plain.Source.Path);
 
+                // Binary streams are processed too, but icons are skipped by the example extension.
+                var symbols = intermediate.Sections.Single().Symbols;
+                var binary = symbols.OfType<BinarySymbol>().Single(b => b.Id.Id == "SignedBinary");
+                Assert.StartsWith(Path.Combine(intermediateFolder, "signed"), binary.Data.Path);
+                Assert.Equal(new FileInfo(Path.Combine(dataFolder, "sign_binary.dll")).Length + SignedMarkerLength, new FileInfo(binary.Data.Path).Length);
+
+                var icon = symbols.OfType<IconSymbol>().Single();
+                Assert.Equal(Path.Combine(dataFolder, "sign_icon.ico"), icon.Data.Path);
+
                 // The original is never modified.
                 Assert.Equal(originalLength, new FileInfo(originalPath).Length);
             }
@@ -102,6 +112,12 @@ namespace WixToolsetTest.CoreIntegration
                 var plain = payloads["PlainPayload"];
                 Assert.Equal(new FileInfo(Path.Combine(dataFolder, "plain.txt")).Length, plain.FileSize);
                 Assert.Equal(Path.Combine(dataFolder, "plain.txt"), plain.SourceFile.Path);
+
+                // Bootstrapper application payloads are included.
+                var ba = payloads.Values.Single(p => p.Name == "sign_ba.dll");
+                Assert.Equal(BurnConstants.BurnUXContainerName, ba.ContainerRef);
+                Assert.StartsWith(Path.Combine(intermediateFolder, "signed"), ba.SourceFile.Path);
+                Assert.Equal(new FileInfo(Path.Combine(dataFolder, "sign_ba.dll")).Length + SignedMarkerLength, new FileInfo(ba.SourceFile.Path).Length);
 
                 Assert.Equal(originalLength, new FileInfo(originalPath).Length);
             }

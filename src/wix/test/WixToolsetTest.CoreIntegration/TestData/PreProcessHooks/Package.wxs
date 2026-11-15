@@ -1,5 +1,8 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="PreProcessHooks" Language="1033" Version="1.0.0.0" Manufacturer="Example Corporation" UpgradeCode="3d8b6f0e-6a0f-4a8e-9f59-6f1d2f7b8a11" Compressed="no" Scope="perMachine">
+    <Binary Id="SignedBinary" SourceFile="sign_binary.dll" />
+    <Icon Id="SignedIcon.ico" SourceFile="sign_icon.ico" />
+
     <Feature Id="ProductFeature" Title="Feature">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>

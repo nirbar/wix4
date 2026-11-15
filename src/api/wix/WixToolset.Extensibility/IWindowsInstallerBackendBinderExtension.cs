@@ -24,15 +24,17 @@ namespace WixToolset.Extensibility
         void PreBackendBind(IBindContext context);
 
         /// <summary>
-        /// Called once the full list of files that will be in the package is known, and before
-        /// the files are read to calculate size, version, hash and to create cabinets.
-        /// The extension may inspect or modify the files, for example, sign them, and may
-        /// redirect <see cref="IFileFacade.SourcePath"/> to a processed copy.
-        /// The extension must not change the identity or target name of any file.
+        /// Called once the full list of files that will be placed in the package is known: installed files
+        /// (including files from merge modules), and Binary, Icon and EmbeddedUI streams (including those
+        /// that come from other extensions). Called before the files are read to calculate size, version, hash,
+        /// to create cabinets or to store streams.
+        /// The extension may inspect or modify the files, for example, sign them, and may redirect
+        /// <see cref="ISourceFile.SourcePath"/> to a processed copy.
+        /// The extension must not change the identity or the name of any file in the output.
         /// </summary>
         /// <param name="section">The linked section.</param>
-        /// <param name="files">All files, including files from merge modules.</param>
-        void PreProcessFiles(IntermediateSection section, IReadOnlyCollection<IFileFacade> files);
+        /// <param name="files">All source files of the package.</param>
+        void PreProcessSourceFiles(IntermediateSection section, IReadOnlyCollection<ISourceFile> files);
 
         /// <summary>
         /// Extension can process the intermediate before the Windows Installer data is created.
