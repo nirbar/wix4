@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) .NET Foundation and contributors. All rights reserved. Licensed under the Microsoft Reciprocal License. See LICENSE.TXT file in the project root for full license information. -->
+
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <IsWixMSTestProject>true</IsWixMSTestProject>
+    <!-- The .NET Framework test adapter brings in an old Newtonsoft.Json. This is a test-only project. -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WixToolset.Dtf.CustomAction\WixToolset.Dtf.CustomAction.csproj" />
+    <ProjectReference Include="..\..\WixToolset.Dtf.WindowsInstaller\WixToolset.Dtf.WindowsInstaller.csproj" />
+  </ItemGroup>
+</Project>

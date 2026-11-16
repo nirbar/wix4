@@ -12,5 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WixToolset.Dtf.MakeSfxCA\WixToolset.Dtf.MakeSfxCA.csproj" />
+    <ProjectReference Include="..\WixToolset.Dtf.Compression.Cab\WixToolset.Dtf.Compression.Cab.csproj" />
+    <ProjectReference Include="..\WixToolset.Dtf.Compression\WixToolset.Dtf.Compression.csproj" />
   </ItemGroup>
 </Project>

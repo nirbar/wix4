@@ -11,6 +11,9 @@
     <Project Path="test/WixToolsetTests.Dtf.Compression.Zip/WixToolsetTests.Dtf.Compression.Zip.csproj" Id="328799bb-7b03-4b28-8180-4132211fd07d">
       <BuildType Solution="Release|Any CPU" Project="Debug" />
     </Project>
+    <Project Path="test/WixToolsetTests.Dtf.CustomAction/WixToolsetTests.Dtf.CustomAction.csproj">
+      <BuildType Solution="Release|Any CPU" Project="Debug" />
+    </Project>
     <Project Path="test/WixToolsetTests.Dtf.Compression/WixToolsetTests.Dtf.Compression.csproj" Id="f045ffc1-05f9-4ea2-9f03-e1cbdb7bc4f9">
       <BuildType Solution="Release|Any CPU" Project="Debug" />
     </Project>
